@@ -1,10 +1,13 @@
-import 'dart:math' as math;
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../widgets/common/glass_empty_state.dart';
+import '../services/aria_config.dart';
 
 // ---------------------------------------------------------------------------
 // DATA MODELS
@@ -55,7 +58,6 @@ class SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
   // ─── Controllers ────────────────────────────────────────────────────────
-  late AnimationController _nebulaCtrl;
   late AnimationController _searchPulseCtrl;
   late AnimationController _ariaPulseCtrl;
   final TextEditingController _searchCtrl = TextEditingController();
@@ -64,19 +66,25 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
   // ─── State ───────────────────────────────────────────────────────────────
   bool _isSearchFocused = false;
   int _activeFilter = 0;
+  bool _isLoading = false;
+  bool _hasError = false;
+  String _activeBaseUrl = 'http://localhost:3004';
+  Timer? _debounceTimer;
+
+  List<String> _ariaSuggestions = [];
+  List<_TrendingItem> _trending = [];
+  List<_DiscoveryCard> _discoveryCards = [];
+  List<dynamic> _searchResults = [];
 
   // ─── Design Tokens (matching AI page) ───────────────────────────────────
   static const Color _bg = Color(0xFF020105);
   static const Color _primary = Color(0xFFCC97FF);
   static const Color _primaryDim = Color(0xFF9C48EA);
   static const Color _secondary = Color(0xFFFF67AD);
-  static const Color _tertiary = Color(0xFF8CE7FF);
   static const Color _surfaceContainer = Color(0xFF1C1823);
   static const Color _surfaceContainerHigh = Color(0xFF221D2A);
-  static const Color _surfaceBright = Color(0xFF2F2A38);
   static const Color _onSurface = Color(0xFFF6EEFC);
   static const Color _onSurfaceVariant = Color(0xFFAFA8B5);
-  static const Color _outlineVariant = Color(0xFF4B4651);
 
   // ─── Static Data ─────────────────────────────────────────────────────────
   static const List<String> _filters = [
@@ -88,133 +96,11 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
     'LIVE',
   ];
 
-  static const List<String> _ariaSuggestions = [
-    '⚛  Quantum Physics',
-    '🎨  Neural Art',
-    '🚀  Space Exploration',
-    '🧬  Bio-Hacking',
-  ];
-
-  static const List<_TrendingItem> _trending = [
-    _TrendingItem(
-      rank: 1,
-      topic: 'Dyson Sphere Architecture',
-      category: 'Technology',
-      postCount: 48200,
-    ),
-    _TrendingItem(
-      rank: 2,
-      topic: 'Neural Interface v4',
-      category: 'AI & Tech',
-      postCount: 31700,
-    ),
-    _TrendingItem(
-      rank: 3,
-      topic: 'Digital Consciousness',
-      category: 'Philosophy',
-      postCount: 27500,
-    ),
-    _TrendingItem(
-      rank: 4,
-      topic: 'Exoplanet Colonies',
-      category: 'Space',
-      postCount: 19900,
-    ),
-    _TrendingItem(
-      rank: 5,
-      topic: 'Quantum Entanglement',
-      category: 'Science',
-      postCount: 15400,
-    ),
-  ];
-
-  static final List<_DiscoveryCard> _discoveryCards = [
-    _DiscoveryCard(
-      tag: '#CyberPunk',
-      tagColor: const Color(0xFF8CE7FF),
-      title: 'Neon Dystopia Series',
-      author: '@void_walker',
-      height: 200,
-      gradientColors: [
-        const Color(0xFF0D0D2B),
-        const Color(0xFF1A0533),
-        const Color(0xFF06B6D4),
-      ],
-    ),
-    _DiscoveryCard(
-      tag: '#AIArt',
-      tagColor: const Color(0xFFFF67AD),
-      title: 'Machine Dreams',
-      author: '@aria.mind',
-      height: 250,
-      gradientColors: [
-        const Color(0xFF1A0820),
-        const Color(0xFF3D1050),
-        const Color(0xFFFF67AD),
-      ],
-    ),
-    _DiscoveryCard(
-      tag: '#SpaceX',
-      tagColor: const Color(0xFFCC97FF),
-      title: 'Mars at Dawn',
-      author: '@stellar_eye',
-      height: 170,
-      gradientColors: [
-        const Color(0xFF0A0516),
-        const Color(0xFF2A1060),
-        const Color(0xFF9C48EA),
-      ],
-    ),
-    _DiscoveryCard(
-      tag: '#FutureFreq',
-      tagColor: const Color(0xFFF59E0B),
-      title: 'Temporal Echoes',
-      author: '@chrono_nexus',
-      height: 220,
-      gradientColors: [
-        const Color(0xFF150B00),
-        const Color(0xFF3D2200),
-        const Color(0xFFF59E0B),
-      ],
-    ),
-    _DiscoveryCard(
-      tag: '#BioHack',
-      tagColor: const Color(0xFF34D399),
-      title: 'Hybrid Organisms',
-      author: '@gen_splice',
-      height: 190,
-      gradientColors: [
-        const Color(0xFF001A10),
-        const Color(0xFF003D25),
-        const Color(0xFF34D399),
-      ],
-    ),
-    _DiscoveryCard(
-      tag: '#QuantumArt',
-      tagColor: const Color(0xFFFF67AD),
-      title: 'Infinite Loop',
-      author: '@quanta_kai',
-      height: 240,
-      gradientColors: [
-        const Color(0xFF1A0820),
-        const Color(0xFF400D4A),
-        const Color(0xFFCC97FF),
-      ],
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
 
-    _searchCtrl.addListener(() {
-      setState(() {});
-    });
-
-    _nebulaCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat(reverse: true);
+    _searchCtrl.addListener(_onSearchChanged);
 
     _searchPulseCtrl = AnimationController(
       vsync: this,
@@ -229,16 +115,174 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
     _focusNode.addListener(() {
       setState(() => _isSearchFocused = _focusNode.hasFocus);
     });
+
+    _fetchInitialData();
   }
 
   @override
   void dispose() {
-    _nebulaCtrl.dispose();
+    _debounceTimer?.cancel();
     _searchPulseCtrl.dispose();
     _ariaPulseCtrl.dispose();
     _searchCtrl.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  // ─── Net Methods ─────────────────────────────────────────────────────────
+
+  Future<http.Response> _makeGetRequest(String path) async {
+    final uri = Uri.parse('$_activeBaseUrl$path');
+    return await http.get(uri).timeout(const Duration(seconds: 4));
+  }
+
+  Future<bool> _testConnection(String baseUrl) async {
+    try {
+      final uri = Uri.parse('$baseUrl/health');
+      final response = await http.get(uri).timeout(const Duration(milliseconds: 1000));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _determineActiveBaseUrl() async {
+    // ── 1. Check if AriaConfig has a custom backend URL (local dev) ──
+    try {
+      final config = await AriaConfig.load();
+      final backendUri = Uri.parse(config.backendUrl);
+      // If user has set a non-Render custom host, build the search URL from it
+      if (backendUri.host.isNotEmpty && !backendUri.host.contains('onrender.com')) {
+        final settingsBaseUrl = 'http://${backendUri.host}:3004';
+        if (await _testConnection(settingsBaseUrl)) {
+          _activeBaseUrl = settingsBaseUrl;
+          debugPrint('[SearchView] Using settings-configured base URL: $_activeBaseUrl');
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('[SearchView] Error checking AriaConfig: $e');
+    }
+
+    // ── 2. Try all candidates in order (Render gateway first) ──
+    final candidates = [
+      'https://nexal-backend.onrender.com', // Render gateway (search routes via /api/*)
+      'http://localhost:3004',              // local dev direct
+      'http://10.0.2.2:3004',              // Android emulator
+      'http://192.168.100.70:3004',         // LAN dev
+    ];
+
+    for (final candidate in candidates) {
+      if (await _testConnection(candidate)) {
+        _activeBaseUrl = candidate;
+        debugPrint('[SearchView] Selected working base URL: $_activeBaseUrl');
+        return;
+      }
+    }
+
+    // ── 3. Last resort ──
+    _activeBaseUrl = 'https://nexal-backend.onrender.com';
+    debugPrint('[SearchView] No connection found. Defaulting to Render gateway.');
+  }
+
+  Future<void> _fetchInitialData() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    await _determineActiveBaseUrl();
+
+    try {
+      final responses = await Future.wait([
+        _makeGetRequest('/api/suggestions'),
+        _makeGetRequest('/api/trending'),
+        _makeGetRequest('/api/discovery'),
+      ]);
+
+      if (responses[0].statusCode == 200 &&
+          responses[1].statusCode == 200 &&
+          responses[2].statusCode == 200) {
+        final suggestions = List<String>.from(jsonDecode(responses[0].body));
+        
+        final trendingList = (jsonDecode(responses[1].body) as List).map((e) => _TrendingItem(
+          rank: e['rank'] as int,
+          topic: e['topic'] as String,
+          category: e['category'] as String,
+          postCount: e['postCount'] as int,
+        )).toList();
+
+        final discoveryList = (jsonDecode(responses[2].body) as List).map((e) {
+          final tagColorStr = e['tagColor'] as String;
+          final tagColorVal = int.parse(tagColorStr.replaceFirst('0x', ''), radix: 16);
+          final gradientColorsList = (e['gradientColors'] as List).map((c) {
+            return Color(int.parse((c as String).replaceFirst('0x', ''), radix: 16));
+          }).toList();
+          return _DiscoveryCard(
+            tag: e['tag'] as String,
+            tagColor: Color(tagColorVal),
+            title: e['title'] as String,
+            author: e['author'] as String,
+            height: (e['height'] as num).toDouble(),
+            gradientColors: gradientColorsList,
+          );
+        }).toList();
+
+        if (mounted) {
+          setState(() {
+            _ariaSuggestions = suggestions;
+            _trending = trendingList;
+            _discoveryCards = discoveryList;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _hasError = true);
+      }
+    } catch (e) {
+      debugPrint('[SearchView] Error fetching data: $e');
+      if (mounted) setState(() => _hasError = true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+    _performSearch();
+  }
+
+  void _onSearchChanged() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _performSearch();
+    });
+  }
+
+  Future<void> _performSearch() async {
+    final query = Uri.encodeComponent(_searchCtrl.text.trim());
+    final filter = _filters[_activeFilter];
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    try {
+      final response = await _makeGetRequest('/api/search?q=$query&filter=$filter');
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body) as List<dynamic>;
+        if (mounted) {
+          setState(() {
+            _searchResults = decoded;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _hasError = true);
+      }
+    } catch (e) {
+      debugPrint('[SearchView] Error performing search: $e');
+      if (mounted) setState(() => _hasError = true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -259,6 +303,8 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final isFilteringOrSearching = _searchCtrl.text.trim().isNotEmpty || _activeFilter != 0;
+
     return Scaffold(
       backgroundColor: _bg,
       extendBodyBehindAppBar: true,
@@ -270,8 +316,21 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
       ),
       body: Stack(
         children: [
-          // 1. Nebula Background
-          _NebulaBackground(controller: _nebulaCtrl),
+          // 1. Image Background
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/search_background.png'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Color(0x99000000), // 60% black overlay to ensure readability
+                    BlendMode.darken,
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           // 2. Main scrollable content
           SafeArea(
@@ -290,15 +349,27 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
                 // Filter tabs
                 SliverToBoxAdapter(child: _buildFilterTabs()),
 
-                // Trending section
-                SliverToBoxAdapter(child: _buildTrendingSection()),
+                // If loading and we have no results yet, show loading shimmer
+                if (_isLoading && _searchResults.isEmpty)
+                  SliverToBoxAdapter(child: _buildShimmerLoading())
+                else if (_hasError)
+                  SliverToBoxAdapter(child: _buildErrorState())
+                else if (isFilteringOrSearching) ...[
+                  // Dynamic Search Results
+                  SliverToBoxAdapter(child: _buildSearchResultsHeader()),
+                  _buildSearchResultsGrid(),
+                ] else ...[
+                  // Default/Home exploration view
+                  // Trending section
+                  SliverToBoxAdapter(child: _buildTrendingSection()),
 
-                // 4. Discovery header
-                SliverToBoxAdapter(child: _buildDiscoveryHeader()),
+                  // Discovery header
+                  SliverToBoxAdapter(child: _buildDiscoveryHeader()),
 
-                // 5. Discovery grid (contains empty state logic)
-                _buildDiscoveryGrid(),
-                  
+                  // Discovery grid
+                  _buildDiscoveryGrid(),
+                ],
+
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
@@ -318,20 +389,52 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: Icon button
-          _GlassIconButton(
-            icon: LucideIcons.search,
-            onTap: () {},
+          // Left: Premium chevron back button
+          GestureDetector(
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFCC97FF).withValues(alpha: 0.25),
+                  width: 0.8,
+                ),
+              ),
+              child: const Icon(LucideIcons.chevronLeft, color: Colors.white, size: 20),
+            ),
           ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.3),
 
-          // Center: EXPLORE label
-          Text(
-            'EXPLORE',
-            style: GoogleFonts.rye(
-              color: _onSurface,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 4,
+          // Center: EXPLORE label with breathing color gradient animation
+          AnimatedBuilder(
+            animation: _ariaPulseCtrl,
+            builder: (context, child) {
+              final t = _ariaPulseCtrl.value;
+              final color1 = Color.lerp(const Color(0xFFCC97FF), const Color(0xFFFF67AD), t)!;
+              final color2 = Color.lerp(const Color(0xFFFF67AD), const Color(0xFF8CE7FF), t)!;
+              return ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [color1, color2],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: child,
+              );
+            },
+            child: Text(
+              'EXPLORE',
+              style: GoogleFonts.rye(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 4,
+              ),
             ),
           ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
 
@@ -374,7 +477,7 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
                 // Pulsing search icon
                 AnimatedBuilder(
                   animation: _searchPulseCtrl,
-                  builder: (_, __) => Icon(
+                  builder: (context, child) => Icon(
                     LucideIcons.search,
                     color: _primary.withValues(
                       alpha: 0.6 + _searchPulseCtrl.value * 0.4,
@@ -494,13 +597,19 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 12),
                 // Suggestion chips
-                Wrap(
+                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: _ariaSuggestions.asMap().entries.map((e) {
                     return _SuggestionChip(
                       label: e.value,
                       delay: Duration(milliseconds: 300 + e.key * 80),
+                      onTap: () {
+                        // Strip emoji, e.g. "⚛  Quantum Physics" -> "Quantum Physics"
+                        final cleanQuery = e.value.replaceAll(RegExp(r'[^\w\s-]'), '').trim();
+                        _searchCtrl.text = cleanQuery;
+                        _performSearch();
+                      },
                     );
                   }).toList(),
                 ),
@@ -528,11 +637,14 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: _filters.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
           itemBuilder: (context, i) {
             final isActive = i == _activeFilter;
             return GestureDetector(
-              onTap: () => setState(() => _activeFilter = i),
+              onTap: () {
+                setState(() => _activeFilter = i);
+                _performSearch();
+              },
               child: AnimatedContainer(
                 duration: 250.ms,
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -678,131 +790,611 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
       ),
     );
   }
-}
 
-// ===========================================================================
-// NEBULA BACKGROUND PAINTER
-// ===========================================================================
+  // ─── Search Result UI Helpers ──────────────────────────────────────────────
 
-class _NebulaBackground extends StatelessWidget {
-  final AnimationController controller;
-
-  const _NebulaBackground({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (_, __) {
-        return CustomPaint(
-          size: MediaQuery.of(context).size,
-          painter: _NebulaPainter(t: controller.value),
-        );
-      },
+  Widget _buildShimmerLoading() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: List.generate(3, (index) => Container(
+          height: 100,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                margin: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 140,
+                        height: 14,
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1.5.seconds),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 90,
+                        height: 10,
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1.5.seconds),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )),
+      ),
     );
   }
-}
 
-class _NebulaPainter extends CustomPainter {
-  final double t;
-  _NebulaPainter({required this.t});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Deep space background
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = const Color(0xFF020105),
+  Widget _buildErrorState() {
+    return GlassEmptyState(
+      icon: LucideIcons.wifiOff,
+      title: 'Connection Error',
+      subtitle: 'Could not connect to the search service. Make sure the backend is running.',
+      ctaLabel: 'Try Again',
+      onCtaTap: _fetchInitialData,
     );
+  }
 
-    // Top-left purple nebula glow
-    final topLeftRadius = size.width * (0.7 + t * 0.1);
-    canvas.drawCircle(
-      Offset(-size.width * 0.1, -size.height * 0.05),
-      topLeftRadius,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            const Color(0xFF7C3AED).withValues(alpha: 0.18 + t * 0.06),
-            const Color(0xFF020105).withValues(alpha: 0),
-          ],
-        ).createShader(Rect.fromCircle(
-          center: Offset(-size.width * 0.1, -size.height * 0.05),
-          radius: topLeftRadius,
-        )),
+  Widget _buildSearchResultsHeader() {
+    final count = _searchResults.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _SectionTitle(label: 'SEARCH RESULTS'),
+          Text(
+            '$count items found',
+            style: GoogleFonts.outfit(
+              color: _onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
+  }
 
-    // Bottom-right pink nebula glow
-    final bottomRightRadius = size.width * (0.65 + (1 - t) * 0.1);
-    canvas.drawCircle(
-      Offset(size.width * 1.1, size.height * 1.05),
-      bottomRightRadius,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            const Color(0xFFEC4899).withValues(alpha: 0.14 + (1 - t) * 0.06),
-            const Color(0xFF020105).withValues(alpha: 0),
-          ],
-        ).createShader(Rect.fromCircle(
-          center: Offset(size.width * 1.1, size.height * 1.05),
-          radius: bottomRightRadius,
-        )),
-    );
-
-    // Scattered stars
-    final rng = math.Random(42);
-    final starPaint = Paint()..color = Colors.white;
-    for (int i = 0; i < 60; i++) {
-      final x = rng.nextDouble() * size.width;
-      final y = rng.nextDouble() * size.height;
-      final r = rng.nextDouble() * 1.0 + 0.3;
-      final alpha = (0.2 + rng.nextDouble() * 0.5 +
-              math.sin(t * math.pi * 2 + i) * 0.15)
-          .clamp(0.0, 1.0);
-      canvas.drawCircle(
-        Offset(x, y),
-        r,
-        starPaint..color = Colors.white.withValues(alpha: alpha),
+  Widget _buildSearchResultsGrid() {
+    if (_searchResults.isEmpty) {
+      return SliverToBoxAdapter(
+        child: GlassEmptyState(
+          icon: LucideIcons.searchX,
+          title: 'No results found',
+          subtitle: 'We couldn\'t find anything matching "${_searchCtrl.text}". Try a different term.',
+          ctaLabel: 'Clear Search',
+          onCtaTap: () => _searchCtrl.clear(),
+        ),
       );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final item = _searchResults[index] as Map<String, dynamic>;
+            return _buildResultCard(item);
+          },
+          childCount: _searchResults.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultCard(Map<String, dynamic> item) {
+    final category = item['category'] as String;
+
+    switch (category) {
+      case 'PEOPLE':
+        return _buildPeopleCard(item);
+      case 'PHOTOS':
+        return _buildPhotoCard(item);
+      case 'VIDEOS':
+        return _buildVideoCard(item);
+      case 'PLACES':
+        return _buildPlaceCard(item);
+      case 'LIVE':
+        return _buildLiveCard(item);
+      default:
+        return _buildDefaultCard(item);
     }
   }
 
-  @override
-  bool shouldRepaint(_NebulaPainter old) => old.t != t;
+  Widget _buildPeopleCard(Map<String, dynamic> item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: Container(
+              width: 52,
+              height: 52,
+              color: _surfaceContainer,
+              child: Image.network(
+                item['imageUrl'] ?? '',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: _surfaceContainer,
+                  child: const Icon(LucideIcons.user, color: _onSurfaceVariant, size: 20),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['title'] ?? '',
+                  style: GoogleFonts.outfit(
+                    color: _onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  item['tag'] ?? '',
+                  style: GoogleFonts.outfit(
+                    color: _primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${item['followers'] ?? '0'} followers • ${item['subtitle'] ?? ''}',
+                  style: GoogleFonts.outfit(
+                    color: _onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primary.withValues(alpha: 0.15),
+              foregroundColor: _primary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: _primary.withValues(alpha: 0.3)),
+              ),
+            ),
+            child: Text(
+              'Follow',
+              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoCard(Map<String, dynamic> item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              Image.network(
+                item['imageUrl'] ?? '',
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 180,
+                  color: _surfaceContainer,
+                  child: const Icon(LucideIcons.image, color: _onSurfaceVariant, size: 32),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _secondary.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    item['tag'] ?? '',
+                    style: GoogleFonts.outfit(
+                      color: _secondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['title'] ?? '',
+                      style: GoogleFonts.outfit(
+                        color: _onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'by ${item['author'] ?? ''}',
+                      style: GoogleFonts.outfit(
+                        color: _onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Icon(LucideIcons.heart, color: _secondary, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      item['likes'] ?? '0',
+                      style: GoogleFonts.outfit(
+                        color: _onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoCard(Map<String, dynamic> item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.network(
+                item['imageUrl'] ?? '',
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 180,
+                  color: _surfaceContainer,
+                  child: const Icon(LucideIcons.video, color: _onSurfaceVariant, size: 32),
+                ),
+              ),
+              Container(
+                height: 180,
+                color: Colors.black.withValues(alpha: 0.3),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _primary.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(LucideIcons.play, color: Colors.white, size: 24),
+              ),
+              Positioned(
+                bottom: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    item['duration'] ?? '',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['title'] ?? '',
+                        style: GoogleFonts.outfit(
+                          color: _onSurface,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'by ${item['author'] ?? ''}',
+                        style: GoogleFonts.outfit(
+                          color: _onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  item['views'] ?? '0 views',
+                  style: GoogleFonts.outfit(
+                    color: _onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceCard(Map<String, dynamic> item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 80,
+              height: 80,
+              color: _surfaceContainer,
+              child: Image.network(
+                item['imageUrl'] ?? '',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: _surfaceContainer,
+                  child: const Icon(LucideIcons.mapPin, color: _onSurfaceVariant, size: 24),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['title'] ?? '',
+                  style: GoogleFonts.outfit(
+                    color: _onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(LucideIcons.mapPin, color: _primary, size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      item['distance'] ?? '',
+                      style: GoogleFonts.outfit(
+                        color: _primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  item['coordinates'] ?? '',
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    color: _onSurfaceVariant,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveCard(Map<String, dynamic> item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              Image.network(
+                item['imageUrl'] ?? '',
+                height: 160,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 160,
+                  color: _surfaceContainer,
+                  child: const Icon(LucideIcons.tv, color: _onSurfaceVariant, size: 32),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade600,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'LIVE',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 10,
+                left: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    item['viewers'] ?? '0 watching',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['title'] ?? '',
+                  style: GoogleFonts.outfit(
+                    color: _onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'Stream by ${item['author'] ?? ''}',
+                  style: GoogleFonts.outfit(
+                    color: _onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultCard(Map<String, dynamic> item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Text(
+        item['title'] ?? '',
+        style: GoogleFonts.outfit(color: _onSurface),
+      ),
+    );
+  }
 }
 
 // ===========================================================================
 // REUSABLE WIDGETS
 // ===========================================================================
-
-// ── Glass Icon Button ────────────────────────────────────────────────────────
-
-class _GlassIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _GlassIconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1823),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFF4B4651).withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-        child: Icon(icon, color: const Color(0xFFAFA8B5), size: 18),
-      ),
-    );
-  }
-}
 
 // ── Avatar With Notification Dot ─────────────────────────────────────────────
 
@@ -812,37 +1404,51 @@ class _AvatarWithDot extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
+        // Outer glowing border ring
         Container(
-          width: 40,
-          height: 40,
+          padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF9C48EA), Color(0xFFFF67AD)],
-            ),
             border: Border.all(
-              color: const Color(0xFF4B4651).withValues(alpha: 0.3),
-              width: 0.5,
+              color: const Color(0xFFCC97FF).withValues(alpha: 0.35),
+              width: 1,
             ),
           ),
-          child: const Icon(
-            LucideIcons.user,
-            color: Colors.white,
-            size: 18,
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF9C48EA), Color(0xFFFF67AD)],
+              ),
+            ),
+            child: const Icon(
+              LucideIcons.user,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
         ),
         Positioned(
-          top: 0,
-          right: 0,
+          top: 2,
+          right: 2,
           child: Container(
-            width: 10,
-            height: 10,
+            width: 9,
+            height: 9,
             decoration: BoxDecoration(
               color: const Color(0xFF34D399),
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFF020105), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF34D399).withValues(alpha: 0.5),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
           ),
         ),
@@ -856,27 +1462,31 @@ class _AvatarWithDot extends StatelessWidget {
 class _SuggestionChip extends StatelessWidget {
   final String label;
   final Duration delay;
+  final VoidCallback onTap;
 
-  const _SuggestionChip({required this.label, required this.delay});
+  const _SuggestionChip({required this.label, required this.delay, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2F2A38),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFCC97FF).withValues(alpha: 0.15),
-          width: 0.5,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2F2A38),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFCC97FF).withValues(alpha: 0.15),
+            width: 0.5,
+          ),
         ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.outfit(
-          color: const Color(0xFFF6EEFC),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            color: const Color(0xFFF6EEFC),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     )
