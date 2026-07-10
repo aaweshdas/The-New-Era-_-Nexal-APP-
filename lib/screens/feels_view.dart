@@ -112,7 +112,13 @@ class _FeelsViewState extends State<FeelsView> {
               const SizedBox(height: 22),
 
               // Like
-              _sideAction(isLiked ? LucideIcons.heart : LucideIcons.heart, _fmtNum(feel.likes + (isLiked ? 1 : 0)), isLiked ? AppTheme.pink500 : Colors.white, () => setState(() { if (isLiked) _likedIndices.remove(index); else _likedIndices.add(index); })),
+              _sideAction(isLiked ? LucideIcons.heart : LucideIcons.heart, _fmtNum(feel.likes + (isLiked ? 1 : 0)), isLiked ? AppTheme.pink500 : Colors.white, () => setState(() {
+                if (isLiked) {
+                  _likedIndices.remove(index);
+                } else {
+                  _likedIndices.add(index);
+                }
+              })),
               const SizedBox(height: 18),
 
               // Comment

@@ -3,10 +3,73 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
+import '../../services/aria_config.dart';
+import '../../services/aria_service.dart';
 
-class SettingsModal extends StatelessWidget {
+class SettingsModal extends StatefulWidget {
   const SettingsModal({super.key});
 
+  @override
+  State<SettingsModal> createState() => _SettingsModalState();
+}
+
+class _SettingsModalState extends State<SettingsModal> {
+  final _backendUrlCtrl   = TextEditingController();
+  final _groqKeyCtrl      = TextEditingController();
+  final _deepgramKeyCtrl  = TextEditingController();
+  final _livekitUrlCtrl   = TextEditingController();
+  final _livekitKeyCtrl   = TextEditingController();
+  final _livekitSecCtrl   = TextEditingController();
+  bool _loading = true;
+  bool _saved   = false;
+  bool _obscureGroq     = true;
+  bool _obscureDeepgram = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConfig();
+  }
+
+  Future<void> _loadConfig() async {
+    final config = await AriaConfig.load();
+    _backendUrlCtrl.text   = config.backendUrl;
+    _groqKeyCtrl.text      = config.groqApiKey;
+    _deepgramKeyCtrl.text  = config.deepgramApiKey;
+    _livekitUrlCtrl.text   = config.livekitUrl;
+    _livekitKeyCtrl.text   = config.livekitApiKey;
+    _livekitSecCtrl.text   = config.livekitApiSecret;
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _saveConfig() async {
+    final config = await AriaConfig.load();
+    config.backendUrl       = _backendUrlCtrl.text.trim();
+    config.groqApiKey       = _groqKeyCtrl.text.trim();
+    config.deepgramApiKey   = _deepgramKeyCtrl.text.trim();
+    config.livekitUrl       = _livekitUrlCtrl.text.trim();
+    config.livekitApiKey    = _livekitKeyCtrl.text.trim();
+    config.livekitApiSecret = _livekitSecCtrl.text.trim();
+    await config.save();
+    await AriaService.instance.pushConfigToBackend();
+    if (mounted) {
+      setState(() => _saved = true);
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _saved = false);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _backendUrlCtrl.dispose();
+    _groqKeyCtrl.dispose();
+    _deepgramKeyCtrl.dispose();
+    _livekitUrlCtrl.dispose();
+    _livekitKeyCtrl.dispose();
+    _livekitSecCtrl.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     // Determine height based on screen size (e.g., 90% of screen height)
@@ -105,7 +168,7 @@ class SettingsModal extends StatelessWidget {
                         trailing: Switch.adaptive(
                           value: true,
                           onChanged: (val) {},
-                          activeColor: AppTheme.cyan500,
+                          activeThumbColor: AppTheme.cyan500,
                         ),
                       ),
                       _SettingsTile(
@@ -115,7 +178,7 @@ class SettingsModal extends StatelessWidget {
                         trailing: Switch.adaptive(
                           value: true,
                           onChanged: (val) {},
-                          activeColor: AppTheme.cyan500,
+                          activeThumbColor: AppTheme.cyan500,
                         ),
                       ),
                       _SettingsTile(
@@ -124,6 +187,107 @@ class SettingsModal extends StatelessWidget {
                         subtitle: "English (US)",
                         onTap: () {},
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _SettingsCategory(
+                    title: "NEXAL AI",
+                    children: [
+                      if (_loading)
+                        const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppTheme.cyan500,
+                              ),
+                            ),
+                          ),
+                        )
+                      else ...[
+                        _ApiKeyField(
+                          icon: LucideIcons.server,
+                          label: "Backend URL",
+                          controller: _backendUrlCtrl,
+                          obscure: false,
+                        ),
+                        Divider(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          height: 1,
+                          indent: 56,
+                          endIndent: 16,
+                        ),
+                        _ApiKeyField(
+                          icon: LucideIcons.brain,
+                          label: "Groq API Key",
+                          controller: _groqKeyCtrl,
+                          obscure: _obscureGroq,
+                          onToggleObscure: () =>
+                              setState(() => _obscureGroq = !_obscureGroq),
+                        ),
+                        Divider(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          height: 1,
+                          indent: 56,
+                          endIndent: 16,
+                        ),
+                        _ApiKeyField(
+                          icon: LucideIcons.mic,
+                          label: "Deepgram API Key",
+                          controller: _deepgramKeyCtrl,
+                          obscure: _obscureDeepgram,
+                          onToggleObscure: () =>
+                              setState(() => _obscureDeepgram = !_obscureDeepgram),
+                        ),
+                        Divider(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          height: 1,
+                          indent: 56,
+                          endIndent: 16,
+                        ),
+                        // Save button
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _saved
+                                    ? Colors.green.withValues(alpha: 0.3)
+                                    : AppTheme.cyan500.withValues(alpha: 0.2),
+                                foregroundColor: _saved
+                                    ? Colors.greenAccent
+                                    : AppTheme.cyan500,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: _saved
+                                        ? Colors.greenAccent.withValues(alpha: 0.4)
+                                        : AppTheme.cyan500.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                elevation: 0,
+                              ),
+                              onPressed: _saveConfig,
+                              child: Text(
+                                _saved ? '✓  Saved' : 'Save & Apply',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -253,6 +417,84 @@ class _SettingsTile extends StatelessWidget {
       trailing:
           trailing ??
           const Icon(LucideIcons.chevronRight, color: Colors.white30, size: 20),
+    );
+  }
+}
+
+class _ApiKeyField extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final TextEditingController controller;
+  final bool obscure;
+  final VoidCallback? onToggleObscure;
+
+  const _ApiKeyField({
+    required this.icon,
+    required this.label,
+    required this.controller,
+    required this.obscure,
+    this.onToggleObscure,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                TextField(
+                  controller: controller,
+                  obscureText: obscure,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                    hintText: 'Enter $label',
+                    hintStyle: GoogleFonts.outfit(
+                      color: Colors.white30,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onToggleObscure != null)
+            IconButton(
+              icon: Icon(
+                obscure ? LucideIcons.eyeOff : LucideIcons.eye,
+                color: Colors.white30,
+                size: 20,
+              ),
+              onPressed: onToggleObscure,
+            ),
+        ],
+      ),
     );
   }
 }

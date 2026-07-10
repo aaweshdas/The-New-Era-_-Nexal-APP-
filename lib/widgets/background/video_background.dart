@@ -28,7 +28,12 @@ class _VideoBackgroundState extends State<VideoBackground>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeVideo();
+    // Defer background video initialization slightly to allow screen transition to finish smoothly
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) {
+        _initializeVideo();
+      }
+    });
   }
 
   Future<void> _initializeVideo() async {

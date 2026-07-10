@@ -102,7 +102,7 @@ class _DomeGalleryState extends State<DomeGallery>
 
       // How the image itself should be rotated to face outwards from the center of the sphere
       Matrix4 itemTransform = Matrix4.identity()
-        ..translate(tx, ty, tz)
+        ..translateByDouble(tx, ty, tz, 1.0)
         ..multiply(Matrix4.rotationY(math.atan2(x, z)))
         ..multiply(Matrix4.rotationX(-math.asin(y))); // Tilt up/down
 

@@ -66,6 +66,7 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
     ),
     _NavItem('search', 'SEARCH', LucideIcons.search),
     _NavItem('ai', 'NEXAL AI', LucideIcons.cpu),
+    _NavItem('arcade', 'ARCADE', LucideIcons.gamepad2),
     _NavItem(
       'messages',
       'MESSAGE',
@@ -77,6 +78,12 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
       'GALLERY',
       LucideIcons.image,
       imagePath: 'assets/nav_icons/Gallery.png',
+    ),
+    _NavItem(
+      'maps',
+      'MAPS',
+      LucideIcons.map,
+      imagePath: 'assets/nav_icons/map.png',
     ),
   ];
 
@@ -282,8 +289,10 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
 
             // Arc Items
             ...List.generate(_items.length, (i) {
-              final offset = i - _scrollOffset;
-              final angle = offset * (pi / 4.5);
+              final double rawOffset = i - _scrollOffset;
+              final double halfLength = _items.length / 2.0;
+              final double offset = ((rawOffset + halfLength) % _items.length) - halfLength;
+              final angle = offset * (2 * pi / _items.length);
 
               // Position on ellipse
               final x = arcCenterX + sin(angle) * arcRadiusX;

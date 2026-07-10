@@ -119,7 +119,7 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
                   gradient: RadialGradient(
                     center: Alignment.center,
                     radius: 0.85,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.9)],
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.9)],
                     stops: const [0.4, 1.0],
                   ),
                 ),
@@ -156,12 +156,12 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           constraints: const BoxConstraints(maxWidth: 400),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -181,7 +181,7 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
                         decoration: InputDecoration(
                           hintText: 'Search memories...',
                           hintStyle: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -236,12 +236,12 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           constraints: const BoxConstraints(maxWidth: 320),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             borderRadius: BorderRadius.circular(40),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -269,7 +269,7 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00E5FF).withOpacity(0.4),
+                        color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
                         blurRadius: 20,
                         spreadRadius: 0,
                       ),
@@ -376,7 +376,7 @@ class _NavIconButton extends StatelessWidget {
             icon,
             color: isActive
                 ? const Color(0xFF00E5FF)
-                : Colors.white.withOpacity(0.5),
+                : Colors.white.withValues(alpha: 0.5),
             size: 24,
           ),
         ),

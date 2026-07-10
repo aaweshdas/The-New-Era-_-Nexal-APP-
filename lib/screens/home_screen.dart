@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../theme/cached_styles.dart';
 import '../widgets/background/video_background.dart';
 import '../widgets/effects/gyro_parallax.dart';
 import '../widgets/navigation/quantum_arc_menu.dart';
@@ -16,6 +16,8 @@ import 'camera_view.dart';
 import 'search_view.dart';
 import 'ai_assist_view.dart';
 import 'gallery_view.dart';
+import 'open_world_games_view.dart';
+import 'map_view.dart';
 import '../main.dart'; // Import to access routeObserver
 
 class HomeScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProviderStateMixin {
   bool _isVideoPaused = false;
   late AnimationController _shimmerCtrl;
+  bool _showIcons = false;
 
   @override
   void initState() {
@@ -36,13 +39,25 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat();
+
+    // Trigger one-shot fade in of icons after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          _showIcons = true;
+        });
+      }
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Subscribe to the global route observer
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+    // Subscribe to the global route observer only when inside a proper PageRoute
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
   }
 
   @override
@@ -54,18 +69,18 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
 
   @override
   void didPushNext() {
-    // Called when a new route is pushed OVER this screen
-    setState(() {
-      _isVideoPaused = true;
-    });
+    // A sub-screen was pushed over the home screen — pause the video
+    if (!_isVideoPaused) {
+      setState(() => _isVideoPaused = true);
+    }
   }
 
   @override
   void didPopNext() {
-    // Called when the top route is popped, revealing this screen again
-    setState(() {
-      _isVideoPaused = false;
-    });
+    // The sub-screen was popped — resume the video
+    if (_isVideoPaused) {
+      setState(() => _isVideoPaused = false);
+    }
   }
 
   void _navigateToDestination(String tab) {
@@ -97,6 +112,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
         break;
       case 'gallery':
         destination = const GalleryView();
+        break;
+      case 'arcade':
+        destination = const OpenWorldGamesView();
+        break;
+      case 'maps':
+        destination = const MapView();
         break;
       default:
         return;
@@ -162,56 +183,49 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AnimatedBuilder(
-                    animation: _shimmerCtrl,
-                    builder: (context, child) {
-                      return ShaderMask(
-                        shaderCallback: (bounds) {
-                          return LinearGradient(
-                            colors: const [
-                              Color(0xFFD4A843),  // Gold
-                              Color(0xFFC084FC),  // Purple
-                              Color(0xFF22D3EE),  // Cyan
-                              Color(0xFFEC4899),  // Pink
-                              Color(0xFFD4A843),  // Gold again
-                            ],
-                            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                            begin: Alignment(-2.0 + 4.0 * _shimmerCtrl.value, 0),
-                            end: Alignment(-1.0 + 4.0 * _shimmerCtrl.value, 0),
-                          ).createShader(bounds);
-                        },
-                        blendMode: BlendMode.srcIn,
-                        child: Text(
-                          "NEXAL GALAXY",
-                          style: GoogleFonts.rye(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 4,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: const Color(0xFFD4A843).withValues(alpha: 0.5),
-                                blurRadius: 16,
-                              ),
-                              Shadow(
-                                color: const Color(0xFFC084FC).withValues(alpha: 0.3),
-                                blurRadius: 24,
-                              ),
-                            ],
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _shimmerCtrl,
+                      builder: (context, child) {
+                        return ShaderMask(
+                          shaderCallback: (bounds) {
+                            return LinearGradient(
+                              colors: const [
+                                Color(0xFFD4A843),  // Gold
+                                Color(0xFFC084FC),  // Purple
+                                Color(0xFF22D3EE),  // Cyan
+                                Color(0xFFEC4899),  // Pink
+                                Color(0xFFD4A843),  // Gold again
+                              ],
+                              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                              begin: Alignment(-2.0 + 4.0 * _shimmerCtrl.value, 0),
+                              end: Alignment(-1.0 + 4.0 * _shimmerCtrl.value, 0),
+                            ).createShader(bounds);
+                          },
+                          blendMode: BlendMode.srcIn,
+                          child: Text(
+                            "NEXAL GALAXY",
+                            style: CachedStyles.ryeBoldSize32L4White.copyWith(
+                              shadows: [
+                                Shadow(
+                                  color: const Color(0xFFD4A843).withValues(alpha: 0.5),
+                                  blurRadius: 16,
+                                ),
+                                Shadow(
+                                  color: const Color(0xFFC084FC).withValues(alpha: 0.3),
+                                  blurRadius: 24,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "Select a star to explore",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 1,
-                      color: Colors.white54,
-                    ),
+                    style: CachedStyles.outfitW400Size14L1White54,
                   ),
                 ],
               ),
@@ -222,12 +236,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
           Positioned(
             top: 80, // Moved down slightly
             right: 20,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
+            child: AnimatedOpacity(
+              opacity: _showIcons ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 600),
-              builder: (context, value, child) {
-                return Opacity(opacity: value, child: child);
-              },
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.3),
@@ -264,12 +275,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
           Positioned(
             bottom: 30,
             right: 20,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
+            child: AnimatedOpacity(
+              opacity: _showIcons ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 600),
-              builder: (context, value, child) {
-                return Opacity(opacity: value, child: child);
-              },
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.3),
@@ -306,3 +314,4 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
     );
   }
 }
+

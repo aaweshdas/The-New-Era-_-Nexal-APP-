@@ -422,6 +422,8 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
               if (mounted) {
                 setState(() { _profileName = nameCtrl.text; _profileBio = bioCtrl.text; _profileLink = linkCtrl.text; });
+              }
+              if (ctx.mounted) {
                 Navigator.pop(ctx);
                 _snack('Profile updated!');
               }

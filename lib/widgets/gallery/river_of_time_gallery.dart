@@ -64,9 +64,9 @@ class _RiverOfTimeGalleryState extends State<RiverOfTimeGallery> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.8), // Singularity is darker
+                  Colors.black.withValues(alpha: 0.8), // Singularity is darker
                   Colors.transparent,
-                  Colors.black.withOpacity(0.5), // Foreground grounding
+                  Colors.black.withValues(alpha: 0.5), // Foreground grounding
                 ],
               ),
             ),
@@ -186,7 +186,7 @@ class _RiverOfTimeGalleryState extends State<RiverOfTimeGallery> {
         child: Transform(
           transform: Matrix4.identity()
             ..setEntry(3, 2, 0.001) // perspective
-            ..scale(scale, scale)
+            ..scaleByDouble(scale, scale, 1.0, 1.0)
             ..rotateZ(zRotation),
           alignment: Alignment.center,
           child: GestureDetector(
@@ -203,7 +203,7 @@ class _RiverOfTimeGalleryState extends State<RiverOfTimeGallery> {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.cyanAccent.withOpacity(0.3),
+                        color: Colors.cyanAccent.withValues(alpha: 0.3),
                         blurRadius: 20,
                         spreadRadius: -5,
                       ),

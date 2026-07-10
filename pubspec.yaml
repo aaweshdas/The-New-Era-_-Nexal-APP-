@@ -44,11 +44,22 @@ dependencies:
   video_player: ^2.11.0
   camera: ^0.12.0
   permission_handler: ^12.0.1
+  google_mlkit_face_detection: ^0.13.0
   image_picker: ^1.2.1
   flutter_launcher_icons: ^0.14.3
   shared_preferences: ^2.5.5
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
+  socket_io_client: ^3.0.2
+  record: ^6.2.1
+  audioplayers: ^6.0.0
+  speech_to_text: ^7.0.0
+  http: ^1.2.0
+  url_launcher: ^6.3.1
+  webview_flutter: ^4.13.1
+  webview_flutter_android: ^4.12.0
+  geolocator: ^13.0.2
+
 
 dev_dependencies:
   flutter_test:
@@ -74,10 +85,66 @@ flutter:
 
   assets:
     - assets/nav_icons/
+    - assets/map/
+    - assets/map/assets/
     - assets/videos/Background.mp4
     - assets/videos/startup.mp4
     - assets/gallery/
     - assets/nexal_logo.png
+    - assets/aria_background.png
+    - assets/starting_screen.png
+    - assets/search_background.png
+    - assets/wordl/
+    - assets/wordl/assets/
+    - assets/wordl/assets/audio/ambiances/
+    - assets/wordl/assets/audio/camera/
+    - assets/wordl/assets/audio/character/
+    - assets/wordl/assets/audio/dialogues/
+    - assets/wordl/assets/audio/intro/
+    - assets/wordl/assets/audio/music/
+    - assets/wordl/assets/audio/ui/
+    - assets/wordl/assets/fonts/
+    - assets/wordl/assets/geometries/avatar/
+    - assets/wordl/assets/geometries/avatar/accessories/
+    - assets/wordl/assets/geometries/birds/
+    - assets/wordl/assets/geometries/deliveries/
+    - assets/wordl/assets/geometries/emojis/
+    - assets/wordl/assets/geometries/npcs/present/
+    - assets/wordl/assets/geometries/npcs/present/alien/
+    - assets/wordl/assets/geometries/npcs/present/boss/
+    - assets/wordl/assets/geometries/npcs/present/caveman/
+    - assets/wordl/assets/geometries/npcs/present/chef/
+    - assets/wordl/assets/geometries/npcs/present/diver/
+    - assets/wordl/assets/geometries/npcs/present/factory-worker-a/
+    - assets/wordl/assets/geometries/npcs/present/factory-worker-b/
+    - assets/wordl/assets/geometries/npcs/present/factory-worker-c/
+    - assets/wordl/assets/geometries/npcs/present/female-scientist/
+    - assets/wordl/assets/geometries/npcs/present/fox/
+    - assets/wordl/assets/geometries/npcs/present/male-scientist/
+    - assets/wordl/assets/geometries/npcs/present/mountainman/
+    - assets/wordl/assets/geometries/npcs/present/musician/
+    - assets/wordl/assets/geometries/npcs/present/office-worker/
+    - assets/wordl/assets/geometries/npcs/present/oldwoman/
+    - assets/wordl/assets/geometries/npcs/present/owl/
+    - assets/wordl/assets/geometries/npcs/present/scout/
+    - assets/wordl/assets/geometries/npcs/present/threekid/
+    - assets/wordl/assets/geometries/npcs/present/young-lady/
+    - assets/wordl/assets/geometries/planets/intro/
+    - assets/wordl/assets/geometries/planets/present/
+    - assets/wordl/assets/geometries/planets/present/intro/
+    - assets/wordl/assets/geometries/planets/present/intro/low/
+    - assets/wordl/assets/geometries/planets/present/low/
+    - assets/wordl/assets/images/
+    - assets/wordl/assets/images/controls/
+    - assets/wordl/assets/images/ui/
+    - assets/wordl/assets/images/ui/emojis/
+    - assets/wordl/assets/images/ui/npc-icons/
+    - assets/wordl/assets/images/ui/quests/
+    - assets/wordl/assets/images/ui/sidebuttons/
+    - assets/wordl/assets/images/uv/
+    - assets/wordl/assets/libs/basis/
+    - assets/wordl/assets/libs/draco/
+    - assets/wordl/assets/libs/glyph/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -61,3 +61,14 @@ Desktop.ini
 # Metadata
 .metadata
 devtools_options.yaml
+
+# ARIA Backend secrets
+aria_backend/.env
+aria_backend/__pycache__/
+aria_backend/services/__pycache__/
+
+# Node backend node_modules (camera_backend, search_backend, etc.)
+camera_backend/node_modules/
+camera_backend/dist/
+search_backend/node_modules/
+search_backend/dist/

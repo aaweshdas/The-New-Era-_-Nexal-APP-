@@ -1,0 +1,11 @@
+{
+  "name": "messenger-wordle-clone",
+  "version": "1.0.0",
+  "description": "Local clone of messenger.abeto.co",
+  "scripts": {
+    "dev": "npx -y http-server -c3600 -p 3000 -o"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
