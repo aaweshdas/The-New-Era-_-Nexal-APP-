@@ -121,6 +121,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _gpsSub?.cancel();
+    // Load empty page to force WebWebView/Chromium to release WebGL context and tile memory immediately
+    _ctrl?.loadRequest(Uri.parse('about:blank'));
     _server?.close(force: true);
     _assetCache.clear();
     _globeRotCtrl.dispose();
@@ -854,7 +856,6 @@ class _QuantumOrbPainter extends CustomPainter {
   static const _cyan    = Color(0xFF22D3EE);
   static const _blue    = Color(0xFF3B82F6);
   static const _white   = Color(0xFFE0E7FF);
-  static const _magenta = Color(0xFFA855F7);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -902,74 +903,220 @@ class _QuantumOrbPainter extends CustomPainter {
         ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r)),
     );
 
-      canvas.drawLine(
-        Offset(cx - scanHalfW, cy + scanY),
-        Offset(cx + scanHalfW, cy + scanY),
+    // ================================================================
+    // LAYER 3 — Rotating energy arcs (3 arcs, 120° apart)
+    // ================================================================
+    for (int i = 0; i < 3; i++) {
+      final baseAngle = (rotation * 2 * math.pi) + (i / 3.0) * 2 * math.pi;
+      final arcLen = math.pi * (0.55 + 0.2 * math.sin(energyProgress * math.pi + i));
+
+      // Outer arc
+      final arcRect = Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.88);
+      final arcPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = i == 0 ? 1.6 : 1.0
+        ..strokeCap = StrokeCap.round
+        ..shader = SweepGradient(
+          startAngle: baseAngle,
+          endAngle: baseAngle + arcLen,
+          colors: i == 0
+            ? [_cyan.withOpacity(0.0), _cyan.withOpacity(0.85), _cyan.withOpacity(0.0)]
+            : [_violet.withOpacity(0.0), _violet.withOpacity(0.5), _violet.withOpacity(0.0)],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(arcRect);
+      canvas.drawArc(arcRect, baseAngle, arcLen, false, arcPaint);
+
+      // Inner counter-arc (opposite direction, smaller)
+      if (i < 2) {
+        final innerRect = Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.62);
+        final innerAngle = -baseAngle + energyProgress * math.pi * 2;
+        final innerLen   = math.pi * 0.38;
+        canvas.drawArc(
+          innerRect, innerAngle, innerLen, false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.8
+            ..strokeCap = StrokeCap.round
+            ..color = _indigo.withOpacity(0.45)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+        );
+      }
+    }
+
+    // ================================================================
+    // LAYER 4 — Equatorial energy ring (static, glowing)
+    // ================================================================
+    final eqRect = Rect.fromCenter(
+      center: Offset(cx, cy), width: r * 2 * 0.96, height: r * 0.28);
+    canvas.drawOval(
+      eqRect,
+      Paint()
+        ..color = _cyan.withOpacity(0.28)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+    // Bright equator highlight on near side
+    canvas.drawArc(
+      eqRect,
+      -0.3, 0.6 * math.pi, false,
+      Paint()
+        ..color = _cyan.withOpacity(0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+
+    // ================================================================
+    // LAYER 5 — Inner energy core (pulsing bright dot)
+    // ================================================================
+    final coreGlow = 0.65 + 0.35 * math.sin(energyProgress * math.pi * 2);
+    // Outer bloom
+    canvas.drawCircle(
+      Offset(cx, cy), r * 0.22 * coreGlow,
+      Paint()
+        ..color = _violet.withOpacity(0.18 * coreGlow)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+    );
+    // Mid bloom
+    canvas.drawCircle(
+      Offset(cx, cy), r * 0.10 * coreGlow,
+      Paint()
+        ..color = _white.withOpacity(0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    // Bright center
+    canvas.drawCircle(
+      Offset(cx, cy), 3.5,
+      Paint()..color = _white.withOpacity(0.92),
+    );
+    // Hot inner ring
+    canvas.drawCircle(
+      Offset(cx, cy), r * 0.06,
+      Paint()
+        ..color = _cyan.withOpacity(0.45)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+
+    // ================================================================
+    // LAYER 6 — Specular plasma highlight (upper-left highlight)
+    // ================================================================
+    final hlCenter = Offset(cx - r * 0.32, cy - r * 0.38);
+    canvas.drawCircle(
+      hlCenter, r * 0.28,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            _white.withOpacity(0.14),
+            _blue.withOpacity(0.06),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.4, 1.0],
+        ).createShader(Rect.fromCircle(center: hlCenter, radius: r * 0.28))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+
+    // ================================================================
+    // LAYER 7 — Rotating energy particles
+    // ================================================================
+    final partR  = r * 0.75;
+    final partPhase = rotation * 2 * math.pi;
+    for (int p = 0; p < 6; p++) {
+      final angle   = partPhase + (p / 6.0) * 2 * math.pi;
+      final px      = cx + math.cos(angle) * partR;
+      final py      = cy + math.sin(angle) * partR * 0.32; // squished ellipse
+      final bright  = 0.5 + 0.5 * math.sin(energyProgress * math.pi * 4 + p);
+      canvas.drawCircle(
+        Offset(px, py), p % 2 == 0 ? 2.0 : 1.2,
         Paint()
-          ..color = _cyan.withOpacity(0.7)
-          ..strokeWidth = 1.2
+          ..color = (p % 3 == 0 ? _cyan : _violet).withOpacity(0.75 * bright)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
     }
 
-    // ── Location pin at center ────────────────────────────────────────────────
-    final pinPaint = Paint()
-      ..color = _violet.withOpacity(0.9)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    canvas.drawCircle(Offset(cx, cy), 5, pinPaint);
-    canvas.drawCircle(Offset(cx, cy), 3, Paint()..color = Colors.white);
+    canvas.restore(); // end orb clip
 
-    canvas.restore(); // unclip
-
-    // ── Globe border ring ─────────────────────────────────────────────────────
+    // ================================================================
+    // LAYER 8 — Orb border edge glow
+    // ================================================================
     canvas.drawCircle(
       Offset(cx, cy), r,
       Paint()
-        ..color = _purple.withOpacity(0.55)
+        ..color = _violet.withOpacity(0.35)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ..strokeWidth = 3.5
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.drawCircle(
+      Offset(cx, cy), r,
+      Paint()
+        ..color = _cyan.withOpacity(0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8,
     );
 
-    // ── Outer tick marks ─────────────────────────────────────────────────────
-    final tickPaint = Paint()
-      ..color = _purple.withOpacity(0.35)
-      ..strokeWidth = 1.2;
-    for (int i = 0; i < 32; i++) {
-      final a = (i / 32.0) * 2 * math.pi;
-      final inner = r + 4;
-      final outer = r + (i % 4 == 0 ? 12 : 7);
+    // ================================================================
+    // LAYER 9 — Outer ticks and targeting brackets
+    // ================================================================
+    final orbitAngle = rotation * 2 * math.pi;
+    for (int i = 0; i < 24; i++) {
+      final a     = orbitAngle + (i / 24.0) * 2 * math.pi;
+      final inner = r + 5;
+      final outer = r + (i % 6 == 0 ? 14 : i % 3 == 0 ? 9 : 5);
+      final bright = i % 6 == 0 ? 0.65 : i % 3 == 0 ? 0.38 : 0.18;
       canvas.drawLine(
         Offset(cx + math.cos(a) * inner, cy + math.sin(a) * inner),
         Offset(cx + math.cos(a) * outer, cy + math.sin(a) * outer),
-        tickPaint,
+        Paint()
+          ..color = (i % 6 == 0 ? _cyan : _violet).withOpacity(bright)
+          ..strokeWidth = i % 6 == 0 ? 1.4 : 0.9,
       );
     }
 
-    // ── Corner brackets ───────────────────────────────────────────────────────
-    final bracketPaint = Paint()
-      ..color = _cyan.withOpacity(0.5)
+    final bPaint = Paint()
+      ..color = _cyan.withOpacity(0.6)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8;
+      ..strokeWidth = 1.6;
     const bL = 14.0;
-    const bO = 6.0;
-    final pts = [
+    const bO = 8.0;
+    final corners = [
       [Offset(cx - r - bO - bL, cy - r - bO), Offset(cx - r - bO, cy - r - bO), Offset(cx - r - bO, cy - r - bO + bL)],
       [Offset(cx + r + bO + bL, cy - r - bO), Offset(cx + r + bO, cy - r - bO), Offset(cx + r + bO, cy - r - bO + bL)],
       [Offset(cx - r - bO - bL, cy + r + bO), Offset(cx - r - bO, cy + r + bO), Offset(cx - r - bO, cy + r + bO - bL)],
       [Offset(cx + r + bO + bL, cy + r + bO), Offset(cx + r + bO, cy + r + bO), Offset(cx + r + bO, cy + r + bO - bL)],
     ];
-    for (final seg in pts) {
-      canvas.drawLine(seg[0], seg[1], bracketPaint);
-      canvas.drawLine(seg[1], seg[2], bracketPaint);
+    for (final seg in corners) {
+      canvas.drawLine(seg[0], seg[1], bPaint);
+      canvas.drawLine(seg[1], seg[2], bPaint);
     }
+
+    // ================================================================
+    // LAYER 10 — Signal indicator north light
+    // ================================================================
+    final locked = energyProgress > 0.5;
+    final lockA  = -math.pi / 2;
+    final lockX  = cx + math.cos(lockA) * (r + 18);
+    final lockY  = cy + math.sin(lockA) * (r + 18);
+    canvas.drawCircle(
+      Offset(lockX, lockY), 3.5,
+      Paint()
+        ..color = (locked ? _cyan : _violet).withOpacity(0.85)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawCircle(
+      Offset(lockX, lockY), 1.8,
+      Paint()..color = locked ? _white : _violet.withOpacity(0.7),
+    );
   }
 
   @override
-  bool shouldRepaint(_HolographicGlobePainter old) =>
-    old.rotation != rotation ||
-    old.scanProgress != scanProgress ||
-    old.pulseProgress != pulseProgress;
+  bool shouldRepaint(_QuantumOrbPainter old) =>
+    old.rotation       != rotation       ||
+    old.pulseProgress  != pulseProgress  ||
+    old.energyProgress != energyProgress;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
