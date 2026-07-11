@@ -5,9 +5,9 @@ import 'package:video_player/video_player.dart';
 /// so it plays immediately with zero delay when MapView opens.
 ///
 /// Usage:
-///   • Call [preload()] early (e.g. HomeScreen.initState).
-///   • In MapView, call [play()] and read [controller] directly.
-///   • On MapView.dispose, call [reset()] so the next open is instant too.
+///   â€¢ Call [preload()] early (e.g. HomeScreen.initState).
+///   â€¢ In MapView, call [play()] and read [controller] directly.
+///   â€¢ On MapView.dispose, call [reset()] so the next open is instant too.
 class MapVideoPreloader {
   MapVideoPreloader._();
   static final MapVideoPreloader instance = MapVideoPreloader._();
@@ -24,8 +24,8 @@ class MapVideoPreloader {
     try {
       _ctrl = VideoPlayerController.asset('assets/videos/map_startup.mp4');
       await _ctrl!.initialize();
-      await _ctrl!.setVolume(0);           // muted — background visual only
-      await _ctrl!.setPlaybackSpeed(2.0);  // 2x speed as requested
+      await _ctrl!.setVolume(0);           // muted â€” background visual only
+      await _ctrl!.setPlaybackSpeed(1.4);  // 1.4x speed as requested
       await _ctrl!.setLooping(true);
       _initialized = true;
     } catch (e) {
@@ -45,14 +45,14 @@ class MapVideoPreloader {
   VideoPlayerController? get controller => isReady ? _ctrl : null;
 
   // -- Lifecycle helpers ------------------------------------------------------
-  /// Call when MapView opens — starts playback from the beginning instantly.
+  /// Call when MapView opens â€” starts playback from the beginning instantly.
   Future<void> play() async {
     if (!isReady) return;
     await _ctrl!.seekTo(Duration.zero);
     await _ctrl!.play();
   }
 
-  /// Call on MapView.dispose — pauses & rewinds so the next open is instant.
+  /// Call on MapView.dispose â€” pauses & rewinds so the next open is instant.
   Future<void> reset() async {
     if (!isReady) return;
     await _ctrl!.pause();
