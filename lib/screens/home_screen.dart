@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -73,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
 
   @override
   void didPushNext() {
-    // A sub-screen was pushed over the home screen — pause the video
+    // A sub-screen was pushed over the home screen â€” pause the video
     if (!_isVideoPaused) {
       setState(() => _isVideoPaused = true);
     }
@@ -81,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
 
   @override
   void didPopNext() {
-    // The sub-screen was popped — resume the video
+    // The sub-screen was popped â€” resume the video
     if (_isVideoPaused) {
       setState(() => _isVideoPaused = false);
     }
@@ -209,24 +210,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
                     child: AnimatedBuilder(
                       animation: _shimmerCtrl,
                       builder: (context, child) {
-                        return ShaderMask(
-                          shaderCallback: (bounds) {
-                            return LinearGradient(
-                              colors: const [
-                                Color(0xFFD4A843),  // Gold
-                                Color(0xFFC084FC),  // Purple
-                                Color(0xFF22D3EE),  // Cyan
-                                Color(0xFFEC4899),  // Pink
-                                Color(0xFFD4A843),  // Gold again
-                              ],
-                              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                              begin: Alignment(-2.0 + 4.0 * _shimmerCtrl.value, 0),
-                              end: Alignment(-1.0 + 4.0 * _shimmerCtrl.value, 0),
-                            ).createShader(bounds);
-                          },
-                          blendMode: BlendMode.srcIn,
-                          child: Text(
-                            "NEXAL GALAXY",
+                        return CustomPaint(
+                          size: const Size(360, 48),
+                          painter: _CelestialTextPainter(
+                            animationValue: _shimmerCtrl.value,
+                            text: "NEXAL GALAXY",
                             style: CachedStyles.ryeBoldSize32L4White.copyWith(
                               shadows: [
                                 Shadow(
@@ -334,6 +322,124 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
         ],
       ),
     );
+  }
+}
+
+// ── Celestial Text Painter (Masks dynamic twinkling stars inside text letters) ──
+class _CelestialTextPainter extends CustomPainter {
+  final double animationValue;
+  final String text;
+  final TextStyle style;
+
+  _CelestialTextPainter({
+    required this.animationValue,
+    required this.text,
+    required this.style,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 1. Save layer for masking
+    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+
+    // 2. Draw text as the source mask (solid white)
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: style.copyWith(color: Colors.white)),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: size.width);
+
+    // Center the text horizontally and vertically in the box
+    final textWidth = textPainter.width;
+    final textHeight = textPainter.height;
+    final x = (size.width - textWidth) / 2;
+    final y = (size.height - textHeight) / 2;
+    textPainter.paint(canvas, Offset(x, y));
+
+    // 3. Set blend mode to SrcIn so next drawings clip exactly to the text letters
+    final maskPaint = Paint()..blendMode = BlendMode.srcIn;
+    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), maskPaint);
+
+    // 4. Draw the celestial space background (indigo-violet-magenta space nebula gradient)
+    final spaceRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    
+    // Create space nebula gradient
+    final spaceGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: const [
+        Color(0xFF03001e), // deep space black-purple
+        Color(0xFF7303c0), // nebula magenta
+        Color(0xFFec38bc), // hot nebula pink
+        Color(0xFF03001e), // dark blue
+      ],
+      stops: const [0.0, 0.45, 0.75, 1.0],
+    );
+    canvas.drawRect(spaceRect, Paint()..shader = spaceGradient.createShader(spaceRect));
+
+    // Draw additional deep space color spots
+    canvas.drawCircle(
+      Offset(x + textWidth * 0.2, y + textHeight * 0.5),
+      textHeight * 1.5,
+      Paint()
+        ..color = const Color(0xFF22D3EE).withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15),
+    );
+
+    canvas.drawCircle(
+      Offset(x + textWidth * 0.7, y + textHeight * 0.3),
+      textHeight * 1.8,
+      Paint()
+        ..color = const Color(0xFFC084FC).withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
+    );
+
+    // 5. Draw dynamic twinkling stars inside the letters!
+    final rng = math.Random(108); // Seeded random for consistent star placements
+    final starPaint = Paint()..style = PaintingStyle.fill;
+    
+    for (int i = 0; i < 45; i++) {
+      // Place stars within text bounding box coordinates
+      final sx = rng.nextDouble() * textWidth + x;
+      final sy = rng.nextDouble() * textHeight + y;
+      final baseSize = rng.nextDouble() * 2.2 + 0.6;
+      
+      // Compute twinkle sine wave
+      final phase = rng.nextDouble() * math.pi * 2;
+      final twinkle = 0.2 + 0.8 * math.sin(animationValue * math.pi * 2 + phase).abs();
+      
+      // Star Color (white, electric cyan, golden yellow)
+      Color starColor = Colors.white;
+      final colorType = rng.nextInt(3);
+      if (colorType == 1) {
+        starColor = const Color(0xFF22D3EE); // Cyan
+      } else if (colorType == 2) {
+        starColor = const Color(0xFFFDE047); // Gold
+      }
+      
+      starPaint.color = starColor.withValues(alpha: twinkle);
+      
+      // Draw cross-hair/glow for bright twinkling stars
+      if (baseSize > 1.8 && twinkle > 0.65) {
+        final glowPaint = Paint()
+          ..color = starColor.withValues(alpha: twinkle * 0.45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5;
+        canvas.drawLine(Offset(sx - 4, sy), Offset(sx + 4, sy), glowPaint);
+        canvas.drawLine(Offset(sx, sy - 4), Offset(sx, sy + 4), glowPaint);
+      }
+      
+      canvas.drawCircle(Offset(sx, sy), baseSize * (0.8 + 0.2 * twinkle), starPaint);
+    }
+
+    // 6. Restore layers
+    canvas.restore();
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_CelestialTextPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue ||
+           oldDelegate.text != text;
   }
 }
 
