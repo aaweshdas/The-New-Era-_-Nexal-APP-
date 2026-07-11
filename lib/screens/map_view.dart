@@ -39,6 +39,12 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   late AnimationController _fadeCtrl;       // final fade-to-map
   late Animation<double> _fadeAnim;
 
+  // Synchronization flags for ending the loading screen
+  bool _pageFinished = false;
+  bool _videoEnded = false;
+  VoidCallback? _videoListener;
+  Timer? _fallbackTimeout;
+
   // Background video — provided by the pre-warmed singleton (zero-delay)
   VideoPlayerController? get _bgVideoCtrl => MapVideoPreloader.instance.controller;
 
@@ -66,6 +72,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     _initLoadingAnimations();
     _startStatusCycler();
     _requestLocationThenInit();
+    _setupVideoListener();
     // Start the pre-warmed video immediately — zero codec init delay
     MapVideoPreloader.instance.play();
   }
@@ -121,6 +128,10 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _gpsSub?.cancel();
+    if (_videoListener != null) {
+      MapVideoPreloader.instance.controller?.removeListener(_videoListener!);
+    }
+    _fallbackTimeout?.cancel();
     // Load empty page to force WebWebView/Chromium to release WebGL context and tile memory immediately
     _ctrl?.loadRequest(Uri.parse('about:blank'));
     _server?.close(force: true);
@@ -135,6 +146,68 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     // Rewind the preloaded video (not dispose) so the next Maps open is instant
     MapVideoPreloader.instance.reset();
     super.dispose();
+  }
+
+  // ── Video Completion & Page Loading Synchronization ────────────────────────
+  void _setupVideoListener() {
+    final ctrl = MapVideoPreloader.instance.controller;
+    if (ctrl == null) {
+      _videoEnded = true;
+      return;
+    }
+
+    _videoListener = () {
+      if (!mounted) return;
+      final val = ctrl.value;
+      if (val.isInitialized && !val.isPlaying) {
+        // Video has ended if position is at or near duration
+        final diff = (val.duration - val.position).inMilliseconds.abs();
+        if (diff < 250 || val.position >= val.duration) {
+          if (_videoListener != null) {
+            ctrl.removeListener(_videoListener!);
+            _videoListener = null;
+          }
+          if (mounted) {
+            setState(() {
+              _videoEnded = true;
+            });
+            _checkAndDismissLoading();
+          }
+        }
+      }
+    };
+    ctrl.addListener(_videoListener!);
+
+    // Safety fallback timeout to prevent being stuck if video/page load fails
+    _fallbackTimeout = Timer(const Duration(seconds: 10), () {
+      if (mounted && _isLoading) {
+        debugPrint('[MapView] Safety fallback triggered');
+        _dismissLoading();
+      }
+    });
+  }
+
+  void _checkAndDismissLoading() {
+    if (_pageFinished && _videoEnded && _isLoading) {
+      _dismissLoading();
+    }
+  }
+
+  void _dismissLoading() {
+    if (!mounted || !_isLoading) return;
+    _fallbackTimeout?.cancel();
+    _fadeCtrl.forward();
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // Stop animations
+        _globeRotCtrl.stop();
+        _scanCtrl.stop();
+        _particleCtrl.stop();
+        _signalCtrl.stop();
+        _pulseCtrl.stop();
+      }
+    });
   }
 
   // ── 1. Ask for location permission ────────────────────────────────────────────
@@ -372,23 +445,13 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
             } catch (_) {}
           });
 
-          // Dismiss loading screen after a short delay to ensure map renders
-          Future.delayed(const Duration(milliseconds: 1200), () {
-            if (mounted) {
-              _fadeCtrl.forward();
-              Future.delayed(const Duration(milliseconds: 700), () {
-                if (mounted) {
-                  setState(() => _isLoading = false);
-                  // Stop heavy loading animations to free GPU/CPU now that map is visible
-                  _globeRotCtrl.stop();
-                  _scanCtrl.stop();
-                  _particleCtrl.stop();
-                  _signalCtrl.stop();
-                  _pulseCtrl.stop();
-                }
-              });
-            }
-          });
+          // Page load finished: update page status flag & check if we can dismiss the loading screen
+          if (mounted) {
+            setState(() {
+              _pageFinished = true;
+            });
+            _checkAndDismissLoading();
+          }
         },
       ));
 

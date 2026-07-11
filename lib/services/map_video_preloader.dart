@@ -25,8 +25,8 @@ class MapVideoPreloader {
       _ctrl = VideoPlayerController.asset('assets/videos/map_startup.mp4');
       await _ctrl!.initialize();
       await _ctrl!.setVolume(0);           // muted — background visual only
-      await _ctrl!.setPlaybackSpeed(1.4);  // 1.4x speed as requested
-      await _ctrl!.setLooping(true);
+      await _ctrl!.setPlaybackSpeed(1.0);  // 1.0x speed as requested
+      await _ctrl!.setLooping(false);      // play once; loading screen ends when video ends
       _initialized = true;
     } catch (e) {
       debugPrint('[MapVideoPreloader] init error: $e');
