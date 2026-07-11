@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
@@ -36,6 +37,9 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   late AnimationController _pulseCtrl;      // outer pulse ring
   late AnimationController _fadeCtrl;       // final fade-to-map
   late Animation<double> _fadeAnim;
+
+  // Background video controller (plays at 2× speed, looped, muted)
+  VideoPlayerController? _bgVideoCtrl;
 
   // Particles
   late List<_Particle> _particles;
@@ -98,6 +102,21 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     // Fade-to-map
     _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
+
+    // ── Background video: asset, 2× speed, looped, muted ──────────────────────
+    _bgVideoCtrl = VideoPlayerController.asset('assets/videos/map_startup.mp4')
+      ..initialize().then((_) {
+        if (mounted) {
+          _bgVideoCtrl!
+            ..setVolume(0)           // muted — purely a background visual
+            ..setPlaybackSpeed(2.0)  // 2× speed as requested
+            ..setLooping(true)
+            ..play();
+          setState(() {});           // trigger rebuild so VideoPlayer renders
+        }
+      }).catchError((e) {
+        debugPrint('[MapView] BG video init error: $e');
+      });
   }
 
   void _startStatusCycler() {
@@ -122,6 +141,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     _pulseCtrl.dispose();
     _fadeCtrl.dispose();
     _statusTimer?.cancel();
+    _bgVideoCtrl?.dispose();
     super.dispose();
   }
 
@@ -518,11 +538,41 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Star-field background ──────────────────────────────────────
-          AnimatedBuilder(
-            animation: _particleCtrl,
-            builder: (_, __) => CustomPaint(
-              painter: _StarFieldPainter(_particles, _particleCtrl.value),
+          // ── 1. Background: video at 2× speed (star-field fallback while loading) ──
+          if (_bgVideoCtrl != null && _bgVideoCtrl!.value.isInitialized)
+            Positioned.fill(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                clipBehavior: Clip.hardEdge,
+                child: SizedBox(
+                  width:  _bgVideoCtrl!.value.size.width,
+                  height: _bgVideoCtrl!.value.size.height,
+                  child: VideoPlayer(_bgVideoCtrl!),
+                ),
+              ),
+            )
+          else
+            // Instant fallback: star-field while video is initializing
+            AnimatedBuilder(
+              animation: _particleCtrl,
+              builder: (_, __) => CustomPaint(
+                painter: _StarFieldPainter(_particles, _particleCtrl.value),
+              ),
+            ),
+
+          // Subtle vignette so the holographic UI pops against any video frame
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.3,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.42),
+                  ],
+                ),
+              ),
             ),
           ),
 

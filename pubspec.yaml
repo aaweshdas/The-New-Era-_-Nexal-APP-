@@ -89,6 +89,7 @@ flutter:
     - assets/map/assets/
     - assets/videos/Background.mp4
     - assets/videos/startup.mp4
+    - assets/videos/map_startup.mp4
     - assets/gallery/
     - assets/nexal_logo.png
     - assets/aria_background.png
