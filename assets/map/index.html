@@ -11,6 +11,61 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <!-- MapLibre GL CSS -->
     <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <!-- Geolocation Mock Bridge to prevent Chromium permission popups -->
+    <script>
+      (function() {
+        var _watchCallbacks = {};
+        var _watchId = 0;
+
+        window.__nexalGPSUpdate = function(lat, lng, accuracy, heading, speed, altitude) {
+          var pos = {
+            coords: {
+              latitude: lat, longitude: lng,
+              accuracy: accuracy, heading: heading,
+              speed: speed, altitude: altitude,
+              altitudeAccuracy: null
+            },
+            timestamp: Date.now()
+          };
+          window.__lastNexalPos = pos;
+          Object.values(_watchCallbacks).forEach(function(cb) {
+            try { cb(pos); } catch(e) {}
+          });
+        };
+
+        Object.defineProperty(navigator, 'geolocation', {
+          get: function() {
+            return {
+              getCurrentPosition: function(success, error, opts) {
+                if (window.__lastNexalPos) {
+                  success(window.__lastNexalPos);
+                } else {
+                  var id = ++_watchId;
+                  _watchCallbacks[id] = function(pos) {
+                    delete _watchCallbacks[id];
+                    success(pos);
+                  };
+                  setTimeout(function() {
+                    if (_watchCallbacks[id]) {
+                      delete _watchCallbacks[id];
+                      if (error) error({ code: 3, message: 'Timeout' });
+                    }
+                  }, 8000);
+                }
+              },
+              watchPosition: function(success, error, opts) {
+                var id = ++_watchId;
+                _watchCallbacks[id] = function(pos) { success(pos); };
+                if (window.__lastNexalPos) success(window.__lastNexalPos);
+                return id;
+              },
+              clearWatch: function(id) { delete _watchCallbacks[id]; }
+            };
+          },
+          configurable: true
+        });
+      })();
+    </script>
     <script type="module" crossorigin src="./assets/index-DfWpk1ma.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/motion-D0--fGAP.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-BbR95QXl.js">

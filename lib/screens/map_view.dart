@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
@@ -167,6 +168,17 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
 
   // ── 1. Ask for location permission ────────────────────────────────────────────
   Future<void> _requestLocationThenInit() async {
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyGranted = prefs.getBool('nexal_location_granted') ?? false;
+
+    if (alreadyGranted) {
+      if (mounted) {
+        setState(() => _locationDenied = false);
+        await _startLocalServer();
+      }
+      return;
+    }
+
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) _showServiceDisabledDialog();
@@ -180,6 +192,10 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     if (perm == LocationPermission.deniedForever) {
       if (mounted) setState(() => _locationDenied = true);
       return;
+    }
+
+    if (perm == LocationPermission.always || perm == LocationPermission.whileInUse) {
+      await prefs.setBool('nexal_location_granted', true);
     }
 
     if (mounted) {
