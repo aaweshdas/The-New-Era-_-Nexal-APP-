@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -531,17 +532,17 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                 child: const Icon(Icons.location_off_rounded, color: Color(0xFF8B5CF6), size: 36),
               ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
               const SizedBox(height: 28),
-              const Text('Location Access Needed',
-                style: TextStyle(
+              Text('Location Access Needed',
+                style: GoogleFonts.outfit(
                   color: Colors.white, fontSize: 22,
                   fontWeight: FontWeight.bold, letterSpacing: -0.3,
                 ),
                 textAlign: TextAlign.center,
               ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'NexalMaps needs your location to show where you are on the map and find nearby places.\n\nGo to Settings → Apps → Nexal → Permissions → Location.',
-                style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14, height: 1.7),
+                style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontSize: 14, height: 1.7),
                 textAlign: TextAlign.center,
               ).animate().fadeIn(delay: 200.ms),
               const SizedBox(height: 36),
@@ -559,13 +560,13 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: const Text('Open App Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text('Open App Settings', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.3),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Go Back', style: TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
+                child: Text('Go Back', style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 14)),
               ).animate().fadeIn(delay: 400.ms),
             ],
           ),
@@ -645,9 +646,9 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                         shaderCallback: (r) => const LinearGradient(
                           colors: [Color(0xFFD4BBFF), Color(0xFF8B5CF6), Color(0xFF67E8F9)],
                         ).createShader(r),
-                        child: const Text(
+                        child: Text(
                           'NEXAL',
-                          style: TextStyle(
+                          style: GoogleFonts.orbitron(
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
@@ -664,9 +665,9 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                             colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'MAPS',
-                          style: TextStyle(
+                          style: GoogleFonts.orbitron(
                             color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -730,8 +731,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                             const SizedBox(width: 8),
                             Text(
                               _statusSteps[_statusIdx].label,
-                              style: const TextStyle(
-                                color: Color(0xFFD4BBFF),
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFFD4BBFF),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -762,7 +763,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                       final lng = (82.0689 + math.cos(_signalCtrl.value * math.pi * 4) * 0.0003);
                       return Text(
                         '${lat.toStringAsFixed(4)}°N  ${lng.toStringAsFixed(4)}°E',
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                           color: const Color(0xFF67E8F9).withOpacity(0.5),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -790,10 +791,10 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                 ),
                 color: const Color(0xFF8B5CF6).withOpacity(0.08),
               ),
-              child: const Text(
+              child: Text(
                 'v2.0  LIVE',
-                style: TextStyle(
-                  color: Color(0xFF8B5CF6),
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF8B5CF6),
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
@@ -858,10 +859,10 @@ class _SignalBars extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
+            Text(
               'SIGNAL  ',
-              style: TextStyle(
-                color: Color(0xFF6B7280),
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF6B7280),
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 2,
@@ -959,8 +960,8 @@ class _AnimatedProgressTrack extends StatelessWidget {
               children: [
                 Text(
                   '${(progress * 100).round()}%',
-                  style: const TextStyle(
-                    color: Color(0xFF8B5CF6),
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF8B5CF6),
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1,
@@ -968,7 +969,7 @@ class _AnimatedProgressTrack extends StatelessWidget {
                 ),
                 Text(
                   'INITIALIZING',
-                  style: TextStyle(
+                  style: GoogleFonts.outfit(
                     color: const Color(0xFF4B5563).withOpacity(0.8),
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
