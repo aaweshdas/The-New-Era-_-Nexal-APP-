@@ -31,11 +31,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   final Map<String, Uint8List> _assetCache = {};
 
   // ── Loading animation controllers ─────────────────────────────────────────
-  late AnimationController _globeRotCtrl;   // globe slow rotation
-  late AnimationController _scanCtrl;       // horizontal scan beam
-  late AnimationController _particleCtrl;   // star particle drift
-  late AnimationController _signalCtrl;     // signal bar shimmer
-  late AnimationController _pulseCtrl;      // outer pulse ring
+  late AnimationController _signalCtrl;     // signal bar shimmer & coordinate oscillation
   late AnimationController _fadeCtrl;       // final fade-to-map
   late Animation<double> _fadeAnim;
 
@@ -47,10 +43,6 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
 
   // Background video — provided by the pre-warmed singleton (zero-delay)
   VideoPlayerController? get _bgVideoCtrl => MapVideoPreloader.instance.controller;
-
-  // Particles
-  late List<_Particle> _particles;
-  static const int _particleCount = 60;
 
   // Status text cycling
   final List<_StatusStep> _statusSteps = const [
@@ -68,7 +60,6 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _spawnParticles();
     _initLoadingAnimations();
     _startStatusCycler();
     _requestLocationThenInit();
@@ -77,36 +68,9 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     MapVideoPreloader.instance.play();
   }
 
-  void _spawnParticles() {
-    final rng = math.Random();
-    _particles = List.generate(_particleCount, (i) => _Particle(
-      x: rng.nextDouble(),
-      y: rng.nextDouble(),
-      size: rng.nextDouble() * 2.0 + 0.5,
-      speed: rng.nextDouble() * 0.0003 + 0.00008,
-      opacity: rng.nextDouble() * 0.6 + 0.1,
-    ));
-  }
-
   void _initLoadingAnimations() {
-    // Globe slow rotation  (8 s per revolution)
-    _globeRotCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 8))
-      ..repeat();
-
-    // Scan beam  (2.4 s sweep top → bottom → top)
-    _scanCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
-      ..repeat(reverse: true);
-
-    // Particle drift
-    _particleCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 20))
-      ..repeat();
-
-    // Signal shimmer (fast)
+    // Signal shimmer (fast, oscillates progress bar & simulated coordinates)
     _signalCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))
-      ..repeat();
-
-    // Outer pulse ring
-    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))
       ..repeat();
 
     // Fade-to-map
@@ -136,11 +100,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     _ctrl?.loadRequest(Uri.parse('about:blank'));
     _server?.close(force: true);
     _assetCache.clear();
-    _globeRotCtrl.dispose();
-    _scanCtrl.dispose();
-    _particleCtrl.dispose();
     _signalCtrl.dispose();
-    _pulseCtrl.dispose();
     _fadeCtrl.dispose();
     _statusTimer?.cancel();
     // Rewind the preloaded video (not dispose) so the next Maps open is instant
@@ -200,12 +160,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     Future.delayed(const Duration(milliseconds: 700), () {
       if (mounted) {
         setState(() => _isLoading = false);
-        // Stop animations
-        _globeRotCtrl.stop();
-        _scanCtrl.stop();
-        _particleCtrl.stop();
         _signalCtrl.stop();
-        _pulseCtrl.stop();
       }
     });
   }
@@ -593,7 +548,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Background: video at 2× speed (star-field fallback while loading) ──
+          // ── 1. Background: video (or space black fallback while initializing) ──
           if (_bgVideoCtrl != null && _bgVideoCtrl!.value.isInitialized)
             Positioned.fill(
               child: FittedBox(
@@ -607,12 +562,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
               ),
             )
           else
-            // Instant fallback: star-field while video is initializing
-            AnimatedBuilder(
-              animation: _particleCtrl,
-              builder: (_, __) => CustomPaint(
-                painter: _StarFieldPainter(_particles, _particleCtrl.value),
-              ),
+            const DecoratedBox(
+              decoration: BoxDecoration(color: Color(0xFF05050F)),
             ),
 
           // Subtle vignette so the holographic UI pops against any video frame
@@ -769,13 +720,13 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
 
                   const SizedBox(height: 14),
 
-                  // Coordinates placeholder
+                  // Coordinates placeholder (bound to active _signalCtrl)
                   AnimatedBuilder(
-                    animation: _globeRotCtrl,
+                    animation: _signalCtrl,
                     builder: (_, __) {
                       // Simulated scanning coordinates
-                      final lat = (17.0918 + math.sin(_globeRotCtrl.value * math.pi * 6) * 0.0003);
-                      final lng = (82.0689 + math.cos(_globeRotCtrl.value * math.pi * 4) * 0.0003);
+                      final lat = (17.0918 + math.sin(_signalCtrl.value * math.pi * 6) * 0.0003);
+                      final lng = (82.0689 + math.cos(_signalCtrl.value * math.pi * 4) * 0.0003);
                       return Text(
                         '${lat.toStringAsFixed(4)}°N  ${lng.toStringAsFixed(4)}°E',
                         style: TextStyle(
@@ -856,47 +807,6 @@ class _StatusStep {
   final String label;
   final int signalBars; // 0..5
   const _StatusStep(this.label, this.signalBars);
-}
-
-class _Particle {
-  double x, y;
-  final double size;
-  final double speed;
-  final double opacity;
-  _Particle({required this.x, required this.y, required this.size, required this.speed, required this.opacity});
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Star Field Painter
-// ──────────────────────────────────────────────────────────────────────────────
-class _StarFieldPainter extends CustomPainter {
-  final List<_Particle> particles;
-  final double t;
-  _StarFieldPainter(this.particles, this.t);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Dark background
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = const Color(0xFF05050F),
-    );
-    final paint = Paint()..style = PaintingStyle.fill;
-    for (final p in particles) {
-      // Drift upward slowly
-      final dy = (p.y - p.speed * t * 200) % 1.0;
-      final twinkle = 0.5 + 0.5 * math.sin(t * math.pi * 2 * 3 + p.x * 100);
-      paint.color = Colors.white.withOpacity(p.opacity * twinkle);
-      canvas.drawCircle(
-        Offset(p.x * size.width, dy * size.height),
-        p.size,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_StarFieldPainter old) => old.t != t;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
