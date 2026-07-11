@@ -19,6 +19,7 @@ import 'gallery_view.dart';
 import 'open_world_games_view.dart';
 import 'map_view.dart';
 import '../main.dart'; // Import to access routeObserver
+import '../services/map_video_preloader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +48,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
           _showIcons = true;
         });
       }
+      // Pre-warm the map loading video codec in the background
+      // so it plays with ZERO delay the moment the user opens Maps.
+      MapVideoPreloader.instance.preload();
     });
   }
 

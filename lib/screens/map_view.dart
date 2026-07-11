@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import '../services/map_video_preloader.dart';
 
 class MapView extends StatefulWidget {
   const MapView({super.key});
@@ -38,8 +39,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   late AnimationController _fadeCtrl;       // final fade-to-map
   late Animation<double> _fadeAnim;
 
-  // Background video controller (plays at 2× speed, looped, muted)
-  VideoPlayerController? _bgVideoCtrl;
+  // Background video — provided by the pre-warmed singleton (zero-delay)
+  VideoPlayerController? get _bgVideoCtrl => MapVideoPreloader.instance.controller;
 
   // Particles
   late List<_Particle> _particles;
@@ -65,6 +66,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     _initLoadingAnimations();
     _startStatusCycler();
     _requestLocationThenInit();
+    // Start the pre-warmed video immediately — zero codec init delay
+    MapVideoPreloader.instance.play();
   }
 
   void _spawnParticles() {
@@ -102,21 +105,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     // Fade-to-map
     _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
-
-    // ── Background video: asset, 2× speed, looped, muted ──────────────────────
-    _bgVideoCtrl = VideoPlayerController.asset('assets/videos/map_startup.mp4')
-      ..initialize().then((_) {
-        if (mounted) {
-          _bgVideoCtrl!
-            ..setVolume(0)           // muted — purely a background visual
-            ..setPlaybackSpeed(2.0)  // 2× speed as requested
-            ..setLooping(true)
-            ..play();
-          setState(() {});           // trigger rebuild so VideoPlayer renders
-        }
-      }).catchError((e) {
-        debugPrint('[MapView] BG video init error: $e');
-      });
+    // Note: video is handled by MapVideoPreloader singleton — no init needed here
   }
 
   void _startStatusCycler() {
@@ -141,7 +130,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     _pulseCtrl.dispose();
     _fadeCtrl.dispose();
     _statusTimer?.cancel();
-    _bgVideoCtrl?.dispose();
+    // Rewind the preloaded video (not dispose) so the next Maps open is instant
+    MapVideoPreloader.instance.reset();
     super.dispose();
   }
 
