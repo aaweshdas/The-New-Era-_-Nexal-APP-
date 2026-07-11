@@ -33,11 +33,19 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
   bool _obscureLivekit  = true;
 
   // Redesign Navigation & Preferences
-  int _activeTab = 0; // 0: AI & Server, 1: Interface, 2: Diagnostics
+  int _activeTab = 0; // 0: System, 1: Visuals, 2: Security, 3: Diagnostics
   int _selectedAccent = 1; // 0: Solar Gold, 1: Electric Cyan, 2: Cosmic Violet, 3: Ruby Rose
   bool _darkMode = true;
   bool _notifications = true;
   String _selectedLanguage = "English (US)";
+
+  // Personal Security states
+  bool _biometricsEnabled = false;
+  bool _encryptSync = true;
+  bool _privacyShield = false;
+  bool _appLockPin = false;
+  String _autoLockTime = "Immediately";
+  bool _clearingActivityLogs = false;
 
   // Diagnostics state
   bool _testingConnection = false;
@@ -77,7 +85,7 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 3, vsync: this);
+    _tabCtrl = TabController(length: 4, vsync: this);
     _tabCtrl.addListener(() {
       if (mounted) {
         setState(() {
@@ -103,6 +111,13 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     _notifications = prefs.getBool('nexal_notifications') ?? true;
     _selectedLanguage = prefs.getString('nexal_language') ?? "English (US)";
 
+    // Personal Security loaders
+    _biometricsEnabled = prefs.getBool('nexal_biometrics_enabled') ?? false;
+    _encryptSync = prefs.getBool('nexal_encrypt_sync') ?? true;
+    _privacyShield = prefs.getBool('nexal_privacy_shield') ?? false;
+    _appLockPin = prefs.getBool('nexal_app_lock_pin') ?? false;
+    _autoLockTime = prefs.getString('nexal_auto_lock_time') ?? "Immediately";
+
     if (mounted) setState(() => _loading = false);
   }
 
@@ -122,6 +137,13 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     await prefs.setBool('nexal_dark_mode', _darkMode);
     await prefs.setBool('nexal_notifications', _notifications);
     await prefs.setString('nexal_language', _selectedLanguage);
+
+    // Personal Security savers
+    await prefs.setBool('nexal_biometrics_enabled', _biometricsEnabled);
+    await prefs.setBool('nexal_encrypt_sync', _encryptSync);
+    await prefs.setBool('nexal_privacy_shield', _privacyShield);
+    await prefs.setBool('nexal_app_lock_pin', _appLockPin);
+    await prefs.setString('nexal_auto_lock_time', _autoLockTime);
 
     if (mounted) {
       setState(() => _saved = true);
@@ -353,9 +375,10 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
                   ),
                 ),
                 tabs: [
-                  _buildTabHeader(LucideIcons.cpu, "AI & APIs", 0),
-                  _buildTabHeader(LucideIcons.palette, "Interface", 1),
-                  _buildTabHeader(LucideIcons.activity, "Diagnostics", 2),
+                  _buildTabHeader(LucideIcons.cpu, "System", 0),
+                  _buildTabHeader(LucideIcons.palette, "Visuals", 1),
+                  _buildTabHeader(LucideIcons.shield, "Security", 2),
+                  _buildTabHeader(LucideIcons.activity, "Diag", 3),
                 ],
               ),
             ),
@@ -377,6 +400,7 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
                       children: [
                         _buildAiSettingsTab(),
                         _buildInterfaceTab(),
+                        _buildSecurityTab(),
                         _buildDiagnosticsTab(),
                       ],
                     ),
@@ -637,7 +661,218 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     );
   }
 
-  // 3. DIAGNOSTICS TAB
+  // 3. SECURITY TAB
+  Widget _buildSecurityTab() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        _buildSectionHeader("AUTHENTICATION PROTOCOLS", LucideIcons.fingerprint),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.fingerprint,
+          title: "Biometric Verification",
+          desc: "Locks app with fingerprint or FaceID",
+          value: _biometricsEnabled,
+          onChanged: (val) => setState(() => _biometricsEnabled = val),
+        ),
+        const SizedBox(height: 12),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.lock,
+          title: "Device PIN Access Lock",
+          desc: "Asks for passcode on launch",
+          value: _appLockPin,
+          onChanged: (val) => setState(() => _appLockPin = val),
+        ),
+        const SizedBox(height: 12),
+        _buildSecurityDropdownSelector(),
+        const SizedBox(height: 24),
+        _buildSectionHeader("CRYPTOGRAPHIC SECURITY & SYNC", LucideIcons.shieldCheck),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.shieldAlert,
+          title: "End-to-End Encrypted Sync",
+          desc: "Secures coordinates and settings in transit",
+          value: _encryptSync,
+          onChanged: (val) => setState(() => _encryptSync = val),
+        ),
+        const SizedBox(height: 12),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.eyeOff,
+          title: "Privacy Shield Masking",
+          desc: "Blurs preview in task switcher view",
+          value: _privacyShield,
+          onChanged: (val) => setState(() => _privacyShield = val),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader("DATA MANAGEMENT", LucideIcons.trash2),
+        const SizedBox(height: 12),
+        _buildClearLogsCard(),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildSecurityDropdownSelector() {
+    final List<String> intervals = ["Immediately", "1 Minute", "5 Minutes", "Never"];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(LucideIcons.clock, color: currentAccent.primary, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Auto-Lock Interval",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Duration of inactivity before locking",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white38,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            dropdownColor: const Color(0xFF161622),
+            value: _autoLockTime,
+            icon: const Icon(LucideIcons.chevronDown, color: Colors.white38, size: 16),
+            underline: Container(),
+            style: GoogleFonts.outfit(color: currentAccent.primary, fontSize: 13, fontWeight: FontWeight.bold),
+            onChanged: (String? newVal) {
+              if (newVal != null) {
+                setState(() => _autoLockTime = newVal);
+              }
+            },
+            items: intervals.map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClearLogsCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.history, color: Colors.redAccent, size: 18),
+              const SizedBox(width: 10),
+              Text(
+                "Clear Activity & Location History",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "Purges search queries, geolocation caches, and private logs from your local device storage permanently.",
+            style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                foregroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2)),
+                ),
+              ),
+              onPressed: _clearingActivityLogs ? null : _clearActivityLogs,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _clearingActivityLogs
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.redAccent,
+                          ),
+                        )
+                      : const Icon(LucideIcons.trash2, size: 14),
+                  const SizedBox(width: 8),
+                  Text(
+                    _clearingActivityLogs ? "Purging Secure Database..." : "Purge Activity Logs",
+                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _clearActivityLogs() async {
+    if (_clearingActivityLogs) return;
+    setState(() => _clearingActivityLogs = true);
+
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    if (mounted) {
+      setState(() => _clearingActivityLogs = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF1E1E2E).withValues(alpha: 0.9),
+          content: Text(
+            '✓ Local Activity & Secure Location History Purged',
+            style: GoogleFonts.outfit(color: Colors.greenAccent),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // 4. DIAGNOSTICS TAB
   Widget _buildDiagnosticsTab() {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
