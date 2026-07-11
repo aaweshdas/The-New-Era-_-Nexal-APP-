@@ -128,9 +128,27 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => destination,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
+          // Map gets a premium slide-up + fade. All other screens get a plain fade.
+          if (tab == 'maps') {
+            final slide = Tween<Offset>(
+              begin: const Offset(0.0, 0.06),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: const Cubic(0.16, 1.0, 0.3, 1.0), // iOS spring-like
+            ));
+            return FadeTransition(
+              opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+              child: SlideTransition(position: slide, child: child),
+            );
+          }
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            child: child,
+          );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 380),
+        reverseTransitionDuration: const Duration(milliseconds: 280),
       ),
     );
   }
