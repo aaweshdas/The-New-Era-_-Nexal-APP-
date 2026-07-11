@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -119,6 +120,58 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     _autoLockTime = prefs.getString('nexal_auto_lock_time') ?? "Immediately";
 
     if (mounted) setState(() => _loading = false);
+
+    // Try synchronizing with Settings Backend Database
+    try {
+      final syncUri = Uri.parse("${config.backendUrl}/settings");
+      final response = await http.get(syncUri).timeout(const Duration(seconds: 2));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        
+        // Populate text controllers
+        _backendUrlCtrl.text = data['backendUrl'] ?? config.backendUrl;
+        _groqKeyCtrl.text = data['groqApiKey'] ?? config.groqApiKey;
+        _deepgramKeyCtrl.text = data['deepgramApiKey'] ?? config.deepgramApiKey;
+        _livekitUrlCtrl.text = data['livekitUrl'] ?? config.livekitUrl;
+        _livekitKeyCtrl.text = data['livekitApiKey'] ?? config.livekitApiKey;
+        _livekitSecCtrl.text = data['livekitApiSecret'] ?? config.livekitApiSecret;
+
+        // Parse visual/security variables
+        _selectedAccent = data['selectedAccent'] ?? _selectedAccent;
+        _darkMode = data['darkMode'] ?? _darkMode;
+        _notifications = data['notifications'] ?? _notifications;
+        _selectedLanguage = data['selectedLanguage'] ?? _selectedLanguage;
+        _biometricsEnabled = data['biometricsEnabled'] ?? _biometricsEnabled;
+        _encryptSync = data['encryptSync'] ?? _encryptSync;
+        _privacyShield = data['privacyShield'] ?? _privacyShield;
+        _appLockPin = data['appLockPin'] ?? _appLockPin;
+        _autoLockTime = data['autoLockTime'] ?? _autoLockTime;
+
+        // Save back locally to SharedPreferences to keep them in sync
+        config.backendUrl = _backendUrlCtrl.text.trim();
+        config.groqApiKey = _groqKeyCtrl.text.trim();
+        config.deepgramApiKey = _deepgramKeyCtrl.text.trim();
+        config.livekitUrl = _livekitUrlCtrl.text.trim();
+        config.livekitApiKey = _livekitKeyCtrl.text.trim();
+        config.livekitApiSecret = _livekitSecCtrl.text.trim();
+        await config.save();
+
+        await prefs.setInt('nexal_selected_accent', _selectedAccent);
+        await prefs.setBool('nexal_dark_mode', _darkMode);
+        await prefs.setBool('nexal_notifications', _notifications);
+        await prefs.setString('nexal_language', _selectedLanguage);
+        await prefs.setBool('nexal_biometrics_enabled', _biometricsEnabled);
+        await prefs.setBool('nexal_encrypt_sync', _encryptSync);
+        await prefs.setBool('nexal_privacy_shield', _privacyShield);
+        await prefs.setBool('nexal_app_lock_pin', _appLockPin);
+        await prefs.setString('nexal_auto_lock_time', _autoLockTime);
+
+        if (mounted) setState(() {});
+      }
+    } catch (_) {
+      // Offline fallback: keep local SharedPreferences loaded config
+      debugPrint("[Settings Sync] Offline or server unreachable, fallback to local database configuration");
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -144,6 +197,36 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     await prefs.setBool('nexal_privacy_shield', _privacyShield);
     await prefs.setBool('nexal_app_lock_pin', _appLockPin);
     await prefs.setString('nexal_auto_lock_time', _autoLockTime);
+
+    // Sync to remote settings backend database
+    try {
+      final syncUri = Uri.parse("${config.backendUrl}/settings");
+      final payload = {
+        "backendUrl": config.backendUrl,
+        "groqApiKey": config.groqApiKey,
+        "deepgramApiKey": config.deepgramApiKey,
+        "livekitUrl": config.livekitUrl,
+        "livekitApiKey": config.livekitApiKey,
+        "livekitApiSecret": config.livekitApiSecret,
+        "selectedAccent": _selectedAccent,
+        "darkMode": _darkMode,
+        "notifications": _notifications,
+        "selectedLanguage": _selectedLanguage,
+        "biometricsEnabled": _biometricsEnabled,
+        "encryptSync": _encryptSync,
+        "privacyShield": _privacyShield,
+        "appLockPin": _appLockPin,
+        "autoLockTime": _autoLockTime
+      };
+
+      await http.post(
+        syncUri,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(payload),
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {
+      debugPrint("[Settings Sync] Remote database push failed (offline), local copy saved successfully.");
+    }
 
     if (mounted) {
       setState(() => _saved = true);
@@ -855,7 +938,17 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     if (_clearingActivityLogs) return;
     setState(() => _clearingActivityLogs = true);
 
-    await Future.delayed(const Duration(milliseconds: 1200));
+    final config = await AriaConfig.load();
+
+    // Call settings backend database log purge endpoint
+    try {
+      final clearUri = Uri.parse("${config.backendUrl}/settings/clear-logs");
+      await http.post(clearUri).timeout(const Duration(seconds: 3));
+    } catch (_) {
+      debugPrint("[Settings Sync] Remote database purge failed (offline), clearing local logs.");
+    }
+
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     if (mounted) {
       setState(() => _clearingActivityLogs = false);

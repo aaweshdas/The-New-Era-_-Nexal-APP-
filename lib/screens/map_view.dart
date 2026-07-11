@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -29,6 +28,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   WebViewController? _ctrl;
   StreamSubscription<Position>? _gpsSub;
   final Map<String, Uint8List> _assetCache = {};
+  int _currentDistanceFilter = 3; // 3 meters default when browsing
 
   // ── Loading animation controllers ─────────────────────────────────────────
   late AnimationController _signalCtrl;     // signal bar shimmer & coordinate oscillation
@@ -306,6 +306,10 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
         onMessageReceived: (JavaScriptMessage msg) {
           if (msg.message == 'exit_map' && mounted) {
             Navigator.of(context).pop();
+          } else if (msg.message == 'nav_start') {
+            _updateGPSStream(0); // Switch to continuous turn-by-turn tracking
+          } else if (msg.message == 'nav_stop') {
+            _updateGPSStream(3); // Throttle tracking rate when stationary/browsing map
           }
         },
       )
@@ -318,6 +322,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
             (function() {
               window.addEventListener('message', function(e) {
                 if (e.data === 'exit_map') FlutterBridge.postMessage('exit_map');
+                if (e.data === 'nav_start') FlutterBridge.postMessage('nav_start');
+                if (e.data === 'nav_stop') FlutterBridge.postMessage('nav_stop');
               });
             })();
           """);
@@ -421,12 +427,21 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   }
 
   // ── 4. High-accuracy GPS stream ───────────────────────────────────────────────
+  void _updateGPSStream(int distanceFilter) {
+    if (_currentDistanceFilter == distanceFilter && _gpsSub != null) return;
+    _currentDistanceFilter = distanceFilter;
+    debugPrint('[GPS] Switching distance filter threshold to: ${distanceFilter}m');
+    if (_ctrl != null) {
+      _startGPSStream(_ctrl!);
+    }
+  }
+
   void _startGPSStream(WebViewController controller) {
     _gpsSub?.cancel();
 
-    const settings = LocationSettings(
+    final settings = LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 0, // fire every update for maximum accuracy
+      distanceFilter: _currentDistanceFilter,
     );
 
     // Immediate first fix
@@ -435,7 +450,9 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
         .then((pos) {
       _injectPosition(controller, pos);
       if (mounted) setState(() => _firstGPSInjected = true);
-    }).catchError((e) => debugPrint('[GPS] Initial fix error: $e'));
+    }).catchError((e) {
+      debugPrint('[GPS] Initial fix error: $e');
+    });
 
     // Continuous stream
     _gpsSub = Geolocator.getPositionStream(locationSettings: settings).listen(
@@ -454,7 +471,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
       return true;
     }());
     controller.runJavaScript(
-      'if(window.__nexalGPSUpdate) window.__nexalGPSUpdate(${pos.latitude},${pos.longitude},${pos.accuracy},${pos.heading ?? 0},${pos.speed ?? 0},${pos.altitude ?? 0});',
+      'if(window.__nexalGPSUpdate) window.__nexalGPSUpdate(${pos.latitude},${pos.longitude},${pos.accuracy},${pos.heading},${pos.speed},${pos.altitude});',
     );
   }
 
