@@ -566,35 +566,36 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
             ),
           ),
 
-          // ── 2. Deep purple nebula glow behind globe ───────────────────────
+          // ── 2. Deep chromatic nebula glow behind orb ──────────────────
           Center(
             child: Container(
-              width: 320,
-              height: 320,
+              width: 380,
+              height: 380,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF8B5CF6).withOpacity(0.18),
-                    const Color(0xFF6D28D9).withOpacity(0.07),
+                    const Color(0xFF4F46E5).withOpacity(0.28),
+                    const Color(0xFF7C3AED).withOpacity(0.18),
+                    const Color(0xFF06B6D4).withOpacity(0.07),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.5, 1.0],
+                  stops: const [0.0, 0.35, 0.65, 1.0],
                 ),
               ),
             ),
           ),
 
-          // ── 3. Holographic globe + scan beam ─────────────────────────────
+          // ── 3. Quantum energy orb ─────────────────────────────────────
           Center(
             child: AnimatedBuilder(
               animation: Listenable.merge([_globeRotCtrl, _scanCtrl, _pulseCtrl]),
               builder: (_, __) => CustomPaint(
                 size: const Size(220, 220),
-                painter: _HolographicGlobePainter(
+                painter: _QuantumOrbPainter(
                   rotation: _globeRotCtrl.value,
-                  scanProgress: _scanCtrl.value,
                   pulseProgress: _pulseCtrl.value,
+                  energyProgress: _scanCtrl.value,
                 ),
               ),
             ),
@@ -834,121 +835,73 @@ class _Particle {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Holographic Globe Painter
+// Quantum Energy Orb Painter (redesigned to match cinematic space-video backdrop)
 // ──────────────────────────────────────────────────────────────────────────────
-class _HolographicGlobePainter extends CustomPainter {
-  final double rotation;    // 0..1
-  final double scanProgress; // 0..1
-  final double pulseProgress; // 0..1
+class _QuantumOrbPainter extends CustomPainter {
+  final double rotation;      // 0..1  globe-rotation driver
+  final double pulseProgress; // 0..1  outer pulse ring
+  final double energyProgress; // 0..1  inner arc energy level
 
-  _HolographicGlobePainter({
+  _QuantumOrbPainter({
     required this.rotation,
-    required this.scanProgress,
     required this.pulseProgress,
+    required this.energyProgress,
   });
 
-  static const _purple = Color(0xFF8B5CF6);
-  static const _cyan   = Color(0xFF67E8F9);
-  static const _violet = Color(0xFFD4BBFF);
+  // ── Palette — deep space + electric accent ──────────────────────────
+  static const _indigo  = Color(0xFF6366F1);
+  static const _violet  = Color(0xFF8B5CF6);
+  static const _cyan    = Color(0xFF22D3EE);
+  static const _blue    = Color(0xFF3B82F6);
+  static const _white   = Color(0xFFE0E7FF);
+  static const _magenta = Color(0xFFA855F7);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
+    final cx = size.width  / 2;
     final cy = size.height / 2;
-    final r  = size.width / 2;
+    final r  = size.width  / 2 * 0.82; // slightly inset so glow overflows canvas
 
-    // ── Outer pulse ring ──────────────────────────────────────────────────────
-    final pulseOpacity = (1.0 - pulseProgress).clamp(0.0, 1.0);
-    final pulseScale   = 1.0 + pulseProgress * 0.45;
-    canvas.drawCircle(
-      Offset(cx, cy),
-      r * pulseScale,
-      Paint()
-        ..color = _purple.withOpacity(pulseOpacity * 0.18)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-    );
+    // ================================================================
+    // LAYER 1 — Expanding pulse rings (two, offset by half phase)
+    // ================================================================
+    for (int ring = 0; ring < 2; ring++) {
+      final t = (pulseProgress + ring * 0.5) % 1.0;
+      final ringR = r * (1.0 + t * 0.65);
+      final opacity = (1.0 - t) * (ring == 0 ? 0.22 : 0.13);
+      canvas.drawCircle(
+        Offset(cx, cy), ringR,
+        Paint()
+          ..color = _violet.withOpacity(opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5 - t * 1.0
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
+    }
 
-    // ── Clip to globe circle ──────────────────────────────────────────────────
+    // ================================================================
+    // LAYER 2 — Orb base: deep multi-stop radial gradient (molten core)
+    // ================================================================
     canvas.save();
     canvas.clipPath(Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r)));
 
-    // Globe base fill
+    // Core fill
     canvas.drawCircle(
       Offset(cx, cy), r,
       Paint()
         ..shader = RadialGradient(
-          center: const Alignment(-0.3, -0.3),
+          center: const Alignment(-0.25, -0.35),
+          radius: 1.05,
           colors: [
-            const Color(0xFF1E1040),
-            const Color(0xFF0D0820),
-            const Color(0xFF060412),
+            const Color(0xFF312E81), // indigo-900
+            const Color(0xFF1E1B4B), // indigo-950
+            const Color(0xFF0F0A2A), // near-black purple
+            const Color(0xFF050212), // deepest core
           ],
-          stops: const [0.0, 0.6, 1.0],
+          stops: const [0.0, 0.35, 0.68, 1.0],
         ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r)),
     );
 
-    // ── Latitude lines ────────────────────────────────────────────────────────
-    final latPaint = Paint()
-      ..color = _purple.withOpacity(0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.7;
-
-    for (int i = -4; i <= 4; i++) {
-      final lat = i / 4.0; // -1..1
-      final ry  = lat * r;
-      final rx  = math.sqrt(math.max(0, r * r - ry * ry));
-      if (rx < 2) continue;
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset(cx, cy + ry), width: rx * 2, height: rx * 0.32),
-        i == 0 ? (Paint()
-          ..color = _cyan.withOpacity(0.35)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0) : latPaint,
-      );
-    }
-
-    // ── Longitude lines (rotated) ──────────────────────────────────────────────
-    final lngPaint = Paint()
-      ..color = _purple.withOpacity(0.2)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.7;
-
-    for (int i = 0; i < 8; i++) {
-      final angle = (i / 8.0 + rotation) * math.pi;
-      canvas.save();
-      canvas.translate(cx, cy);
-      canvas.rotate(angle);
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset.zero, width: r * 2, height: r * 0.28),
-        lngPaint,
-      );
-      canvas.restore();
-    }
-
-    // ── Scan beam ─────────────────────────────────────────────────────────────
-    final scanY = -r + scanProgress * r * 2;
-    final scanHalfW = math.sqrt(math.max(0, r * r - scanY * scanY));
-    if (scanHalfW > 1) {
-      // Glow trail above
-      final trailRect = Rect.fromLTRB(
-        cx - scanHalfW, cy + scanY - 22,
-        cx + scanHalfW, cy + scanY,
-      );
-      canvas.drawRect(
-        trailRect,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              _cyan.withOpacity(0.08),
-            ],
-          ).createShader(trailRect),
-      );
-      // Scan line itself
       canvas.drawLine(
         Offset(cx - scanHalfW, cy + scanY),
         Offset(cx + scanHalfW, cy + scanY),
