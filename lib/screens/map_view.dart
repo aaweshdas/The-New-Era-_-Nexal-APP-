@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -27,25 +28,28 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   StreamSubscription<Position>? _gpsSub;
   final Map<String, Uint8List> _assetCache = {};
 
-  // Loading animation controllers
-  late AnimationController _pulseCtrl1;
-  late AnimationController _pulseCtrl2;
-  late AnimationController _pulseCtrl3;
-  late AnimationController _orbitCtrl;
-  late AnimationController _fadeCtrl;
-  late Animation<double> _pulse1;
-  late Animation<double> _pulse2;
-  late Animation<double> _pulse3;
-  late Animation<double> _orbit;
+  // ── Loading animation controllers ─────────────────────────────────────────
+  late AnimationController _globeRotCtrl;   // globe slow rotation
+  late AnimationController _scanCtrl;       // horizontal scan beam
+  late AnimationController _particleCtrl;   // star particle drift
+  late AnimationController _signalCtrl;     // signal bar shimmer
+  late AnimationController _pulseCtrl;      // outer pulse ring
+  late AnimationController _fadeCtrl;       // final fade-to-map
   late Animation<double> _fadeAnim;
 
+  // Particles
+  late List<_Particle> _particles;
+  static const int _particleCount = 60;
+
   // Status text cycling
-  final List<String> _statusMessages = [
-    'Connecting to satellites...',
-    'Acquiring GPS signal...',
-    'Calculating position...',
-    'Rendering map tiles...',
-    'Almost ready...',
+  final List<_StatusStep> _statusSteps = const [
+    _StatusStep('Initializing NEXAL Maps', 0),
+    _StatusStep('Requesting location access', 1),
+    _StatusStep('Scanning for GPS satellites', 2),
+    _StatusStep('Locking signal...', 3),
+    _StatusStep('Loading map tiles', 3),
+    _StatusStep('Calibrating position', 4),
+    _StatusStep('Ready to navigate', 5),
   ];
   int _statusIdx = 0;
   Timer? _statusTimer;
@@ -53,49 +57,55 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _spawnParticles();
     _initLoadingAnimations();
     _startStatusCycler();
     _requestLocationThenInit();
   }
 
+  void _spawnParticles() {
+    final rng = math.Random();
+    _particles = List.generate(_particleCount, (i) => _Particle(
+      x: rng.nextDouble(),
+      y: rng.nextDouble(),
+      size: rng.nextDouble() * 2.0 + 0.5,
+      speed: rng.nextDouble() * 0.0003 + 0.00008,
+      opacity: rng.nextDouble() * 0.6 + 0.1,
+    ));
+  }
+
   void _initLoadingAnimations() {
-    // Pulse ring 1 (innermost, fastest)
-    _pulseCtrl1 = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
+    // Globe slow rotation  (8 s per revolution)
+    _globeRotCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 8))
       ..repeat();
-    _pulse1 = CurvedAnimation(parent: _pulseCtrl1, curve: Curves.easeOut);
 
-    // Pulse ring 2 (middle, 300ms delay)
-    _pulseCtrl2 = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
+    // Scan beam  (2.4 s sweep top → bottom → top)
+    _scanCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
+      ..repeat(reverse: true);
+
+    // Particle drift
+    _particleCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 20))
       ..repeat();
-    _pulse2 = CurvedAnimation(parent: _pulseCtrl2, curve: Curves.easeOut);
 
-    // Pulse ring 3 (outermost, 600ms delay)
-    _pulseCtrl3 = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
+    // Signal shimmer (fast)
+    _signalCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))
       ..repeat();
-    _pulse3 = CurvedAnimation(parent: _pulseCtrl3, curve: Curves.easeOut);
 
-    // Orbit animation for the GPS dot
-    _orbitCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
+    // Outer pulse ring
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))
       ..repeat();
-    _orbit = CurvedAnimation(parent: _orbitCtrl, curve: Curves.linear);
 
-    // Fade controller for loading → map transition
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
-
-    // Stagger the pulse rings
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _pulseCtrl2.forward(from: 0.33);
-    });
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) _pulseCtrl3.forward(from: 0.66);
-    });
+    // Fade-to-map
+    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
   }
 
   void _startStatusCycler() {
-    _statusTimer = Timer.periodic(const Duration(milliseconds: 1400), (_) {
+    _statusTimer = Timer.periodic(const Duration(milliseconds: 1100), (_) {
       if (mounted && _isLoading) {
-        setState(() => _statusIdx = (_statusIdx + 1) % _statusMessages.length);
+        setState(() {
+          _statusIdx = math.min(_statusIdx + 1, _statusSteps.length - 1);
+        });
       }
     });
   }
@@ -105,10 +115,11 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     _gpsSub?.cancel();
     _server?.close(force: true);
     _assetCache.clear();
-    _pulseCtrl1.dispose();
-    _pulseCtrl2.dispose();
-    _pulseCtrl3.dispose();
-    _orbitCtrl.dispose();
+    _globeRotCtrl.dispose();
+    _scanCtrl.dispose();
+    _particleCtrl.dispose();
+    _signalCtrl.dispose();
+    _pulseCtrl.dispose();
     _fadeCtrl.dispose();
     _statusTimer?.cancel();
     super.dispose();
@@ -179,9 +190,18 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
       debugPrint('[NexalMap] Asset server → http://127.0.0.1:$_port');
 
       _server!.listen((HttpRequest req) async {
+        // ── Performance: long-lived cache headers for immutable JS/CSS assets ──
         req.response.headers.add('Access-Control-Allow-Origin', '*');
         req.response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS');
         req.response.headers.add('Access-Control-Allow-Headers', '*');
+
+        // Vary cache TTL: JS/CSS bundle hashes never change → 1 year; HTML → no-cache
+        final ext = req.uri.path.split('.').last.toLowerCase();
+        if (ext == 'html') {
+          req.response.headers.add('Cache-Control', 'no-cache');
+        } else {
+          req.response.headers.add('Cache-Control', 'public, max-age=31536000, immutable');
+        }
 
         if (req.method == 'OPTIONS') {
           req.response.statusCode = HttpStatus.ok;
@@ -231,12 +251,16 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     if (controller.platform is AndroidWebViewController) {
       final ac = controller.platform as AndroidWebViewController;
       await ac.setGeolocationEnabled(true);
+      // Enable hardware-accelerated rendering and smooth scrolling
+      await ac.setMediaPlaybackRequiresUserGesture(false);
     }
 
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFF0A0A0F))
-      ..clearCache()
+      // NOTE: Do NOT call clearCache() — it forces re-download of all JS/CSS on
+      // every map open. Assets are served from the local HTTP server which already
+      // sends long-lived Cache-Control headers, so the WebView cache is beneficial.
       ..addJavaScriptChannel(
         'FlutterBridge',
         onMessageReceived: (JavaScriptMessage msg) {
@@ -340,8 +364,16 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
           Future.delayed(const Duration(milliseconds: 1200), () {
             if (mounted) {
               _fadeCtrl.forward();
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (mounted) setState(() => _isLoading = false);
+              Future.delayed(const Duration(milliseconds: 700), () {
+                if (mounted) {
+                  setState(() => _isLoading = false);
+                  // Stop heavy loading animations to free GPU/CPU now that map is visible
+                  _globeRotCtrl.stop();
+                  _scanCtrl.stop();
+                  _particleCtrl.stop();
+                  _signalCtrl.stop();
+                  _pulseCtrl.stop();
+                }
               });
             }
           });
@@ -386,9 +418,13 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   }
 
   void _injectPosition(WebViewController controller, Position pos) {
-    debugPrint('[GPS] Fix → ${pos.latitude}, ${pos.longitude}  acc=${pos.accuracy.toStringAsFixed(1)}m');
+    // Only log in debug mode to avoid string allocation overhead in production
+    assert(() {
+      debugPrint('[GPS] Fix → ${pos.latitude}, ${pos.longitude}  acc=${pos.accuracy.toStringAsFixed(1)}m');
+      return true;
+    }());
     controller.runJavaScript(
-      'if(window.__nexalGPSUpdate) window.__nexalGPSUpdate(${pos.latitude}, ${pos.longitude}, ${pos.accuracy}, ${pos.heading}, ${pos.speed}, ${pos.altitude});',
+      'if(window.__nexalGPSUpdate) window.__nexalGPSUpdate(${pos.latitude},${pos.longitude},${pos.accuracy},${pos.heading ?? 0},${pos.speed ?? 0},${pos.altitude ?? 0});',
     );
   }
 
@@ -475,206 +511,238 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
     );
   }
 
-  // ── Cinematic loading screen ──────────────────────────────────────────────────
+  // ── Innovative Holographic Loading Screen ────────────────────────────────────
   Widget _buildLoadingScreen() {
-    return Container(
-      color: const Color(0xFF0A0A0F),
-      child: Stack(
+    return Scaffold(
+      backgroundColor: const Color(0xFF05050F),
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Animated radial background
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _orbitCtrl,
-              builder: (_, __) => CustomPaint(
-                painter: _RadialGradientPainter(_orbitCtrl.value),
+          // ── 1. Star-field background ──────────────────────────────────────
+          AnimatedBuilder(
+            animation: _particleCtrl,
+            builder: (_, __) => CustomPaint(
+              painter: _StarFieldPainter(_particles, _particleCtrl.value),
+            ),
+          ),
+
+          // ── 2. Deep purple nebula glow behind globe ───────────────────────
+          Center(
+            child: Container(
+              width: 320,
+              height: 320,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF8B5CF6).withOpacity(0.18),
+                    const Color(0xFF6D28D9).withOpacity(0.07),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
               ),
             ),
           ),
 
+          // ── 3. Holographic globe + scan beam ─────────────────────────────
           Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Orbit + Pulse rings
-                SizedBox(
-                  width: 200, height: 200,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Pulse ring 3 (outermost)
-                      AnimatedBuilder(
-                        animation: _pulse3,
-                        builder: (_, __) => Opacity(
-                          opacity: (1.0 - _pulse3.value).clamp(0.0, 1.0),
-                          child: Transform.scale(
-                            scale: 0.4 + _pulse3.value * 1.6,
-                            child: Container(
-                              width: 200, height: 200,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.15),
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Pulse ring 2 (middle)
-                      AnimatedBuilder(
-                        animation: _pulse2,
-                        builder: (_, __) => Opacity(
-                          opacity: (1.0 - _pulse2.value).clamp(0.0, 1.0),
-                          child: Transform.scale(
-                            scale: 0.4 + _pulse2.value * 1.3,
-                            child: Container(
-                              width: 160, height: 160,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.25),
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Pulse ring 1 (innermost)
-                      AnimatedBuilder(
-                        animation: _pulse1,
-                        builder: (_, __) => Opacity(
-                          opacity: (1.0 - _pulse1.value).clamp(0.0, 1.0),
-                          child: Transform.scale(
-                            scale: 0.4 + _pulse1.value * 1.0,
-                            child: Container(
-                              width: 120, height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.4),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_globeRotCtrl, _scanCtrl, _pulseCtrl]),
+              builder: (_, __) => CustomPaint(
+                size: const Size(220, 220),
+                painter: _HolographicGlobePainter(
+                  rotation: _globeRotCtrl.value,
+                  scanProgress: _scanCtrl.value,
+                  pulseProgress: _pulseCtrl.value,
+                ),
+              ),
+            ),
+          ),
 
-                      // Center compass icon
+          // ── 4. UI Panel — bottom half ─────────────────────────────────────
+          Positioned(
+            left: 0, right: 0, bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(28, 36, 28, 48),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    const Color(0xFF05050F).withOpacity(0.95),
+                    const Color(0xFF05050F),
+                  ],
+                  stops: const [0.0, 0.3, 1.0],
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Brand title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ShaderMask(
+                        shaderCallback: (r) => const LinearGradient(
+                          colors: [Color(0xFFD4BBFF), Color(0xFF8B5CF6), Color(0xFF67E8F9)],
+                        ).createShader(r),
+                        child: const Text(
+                          'NEXAL',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 7,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                       Container(
-                        width: 72, height: 72,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const RadialGradient(
-                            colors: [Color(0xFF2D1B69), Color(0xFF141420)],
+                          borderRadius: BorderRadius.circular(6),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
                           ),
-                          border: Border.all(
-                            color: const Color(0xFF8B5CF6).withOpacity(0.5),
-                            width: 1.5,
+                        ),
+                        child: const Text(
+                          'MAPS',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 3,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                              blurRadius: 24, spreadRadius: 4,
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.15),
+
+                  const SizedBox(height: 28),
+
+                  // ── Signal lock bars ──────────────────────────────────────
+                  _SignalBars(
+                    signalCtrl: _signalCtrl,
+                    lockedBars: _statusSteps[_statusIdx].signalBars,
+                  ).animate().fadeIn(delay: 200.ms),
+
+                  const SizedBox(height: 20),
+
+                  // ── Status text ───────────────────────────────────────────
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 380),
+                    transitionBuilder: (child, anim) {
+                      return FadeTransition(
+                        opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.4),
+                            end: Offset.zero,
+                          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Column(
+                      key: ValueKey(_statusIdx),
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Blinking dot indicator
+                            AnimatedBuilder(
+                              animation: _signalCtrl,
+                              builder: (_, __) => Container(
+                                width: 6, height: 6,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: const Color(0xFF67E8F9).withOpacity(
+                                    0.4 + 0.6 * math.sin(_signalCtrl.value * math.pi * 2).abs(),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF67E8F9).withOpacity(0.5),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _statusSteps[_statusIdx].label,
+                              style: const TextStyle(
+                                color: Color(0xFFD4BBFF),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.explore_rounded,
-                          color: Color(0xFFB07CFF),
-                          size: 32,
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Progress track ────────────────────────────────────────
+                  _AnimatedProgressTrack(
+                    progress: (_statusIdx + 1) / _statusSteps.length,
+                    signalCtrl: _signalCtrl,
+                  ).animate().fadeIn(delay: 300.ms),
+
+                  const SizedBox(height: 14),
+
+                  // Coordinates placeholder
+                  AnimatedBuilder(
+                    animation: _globeRotCtrl,
+                    builder: (_, __) {
+                      // Simulated scanning coordinates
+                      final lat = (17.0918 + math.sin(_globeRotCtrl.value * math.pi * 6) * 0.0003);
+                      final lng = (82.0689 + math.cos(_globeRotCtrl.value * math.pi * 4) * 0.0003);
+                      return Text(
+                        '${lat.toStringAsFixed(4)}°N  ${lng.toStringAsFixed(4)}°E',
+                        style: TextStyle(
+                          color: const Color(0xFF67E8F9).withOpacity(0.5),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 2,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
-                      ),
-
-                      // Orbiting GPS dot
-                      AnimatedBuilder(
-                        animation: _orbit,
-                        builder: (_, __) {
-                          const orbitRadius = 54.0;
-                          final angle = _orbit.value * 2 * math.pi;
-                          final x = math.cos(angle) * orbitRadius;
-                          final y = math.sin(angle) * orbitRadius;
-                          return Transform.translate(
-                            offset: Offset(x, y),
-                            child: Container(
-                              width: 14, height: 14,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF67E8F9),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF67E8F9).withOpacity(0.7),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // App name
-                const Text(
-                  'NEXAL MAPS',
-                  style: TextStyle(
-                    color: Color(0xFFF1F0F5),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 4,
-                  ),
-                ).animate().fadeIn(duration: 600.ms),
-
-                const SizedBox(height: 12),
-
-                // Animated status message
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.3),
-                        end: Offset.zero,
-                      ).animate(anim),
-                      child: child,
-                    ),
-                  ),
-                  child: Text(
-                    _statusMessages[_statusIdx],
-                    key: ValueKey(_statusIdx),
-                    style: const TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Loading bar
-                SizedBox(
-                  width: 140,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      backgroundColor: const Color(0xFF2A2A3E),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-                      minHeight: 3,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
+          ),
+
+          // ── 5. Top corner — version tag ───────────────────────────────────
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                ),
+                color: const Color(0xFF8B5CF6).withOpacity(0.08),
+              ),
+              child: const Text(
+                'v2.0  LIVE',
+                style: TextStyle(
+                  color: Color(0xFF8B5CF6),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2,
+                ),
+              ),
+            ).animate().fadeIn(delay: 600.ms),
           ),
         ],
       ),
@@ -707,47 +775,381 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   }
 }
 
-// ── Custom painter for the animated radial background ─────────────────────────
-class _RadialGradientPainter extends CustomPainter {
-  final double t;
-  _RadialGradientPainter(this.t);
+// ──────────────────────────────────────────────────────────────────────────────
+// Helper data types
+// ──────────────────────────────────────────────────────────────────────────────
+
+class _StatusStep {
+  final String label;
+  final int signalBars; // 0..5
+  const _StatusStep(this.label, this.signalBars);
+}
+
+class _Particle {
+  double x, y;
+  final double size;
+  final double speed;
+  final double opacity;
+  _Particle({required this.x, required this.y, required this.size, required this.speed, required this.opacity});
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Holographic Globe Painter
+// ──────────────────────────────────────────────────────────────────────────────
+class _HolographicGlobePainter extends CustomPainter {
+  final double rotation;    // 0..1
+  final double scanProgress; // 0..1
+  final double pulseProgress; // 0..1
+
+  _HolographicGlobePainter({
+    required this.rotation,
+    required this.scanProgress,
+    required this.pulseProgress,
+  });
+
+  static const _purple = Color(0xFF8B5CF6);
+  static const _cyan   = Color(0xFF67E8F9);
+  static const _violet = Color(0xFFD4BBFF);
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height / 2;
+    final r  = size.width / 2;
 
-    // Slowly breathing gradient
-    final radius = size.longestSide * (0.5 + math.sin(t * 2 * math.pi) * 0.05);
+    // ── Outer pulse ring ──────────────────────────────────────────────────────
+    final pulseOpacity = (1.0 - pulseProgress).clamp(0.0, 1.0);
+    final pulseScale   = 1.0 + pulseProgress * 0.45;
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r * pulseScale,
+      Paint()
+        ..color = _purple.withOpacity(pulseOpacity * 0.18)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
 
-    final paint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF0D0D1F),
-          const Color(0xFF0A0A0F),
-        ],
-        stops: const [0.0, 1.0],
-        radius: 1.0,
-      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius));
+    // ── Clip to globe circle ──────────────────────────────────────────────────
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r)));
 
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+    // Globe base fill
+    canvas.drawCircle(
+      Offset(cx, cy), r,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.3, -0.3),
+          colors: [
+            const Color(0xFF1E1040),
+            const Color(0xFF0D0820),
+            const Color(0xFF060412),
+          ],
+          stops: const [0.0, 0.6, 1.0],
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r)),
+    );
 
-    // Subtle purple glow in center
-    final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF8B5CF6).withOpacity(0.06),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 1.0],
-      ).createShader(Rect.fromCircle(
-        center: Offset(cx, cy * 0.85),
-        radius: size.width * 0.5,
-      ));
+    // ── Latitude lines ────────────────────────────────────────────────────────
+    final latPaint = Paint()
+      ..color = _purple.withOpacity(0.22)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7;
 
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), glowPaint);
+    for (int i = -4; i <= 4; i++) {
+      final lat = i / 4.0; // -1..1
+      final ry  = lat * r;
+      final rx  = math.sqrt(math.max(0, r * r - ry * ry));
+      if (rx < 2) continue;
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, cy + ry), width: rx * 2, height: rx * 0.32),
+        i == 0 ? (Paint()
+          ..color = _cyan.withOpacity(0.35)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0) : latPaint,
+      );
+    }
+
+    // ── Longitude lines (rotated) ──────────────────────────────────────────────
+    final lngPaint = Paint()
+      ..color = _purple.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7;
+
+    for (int i = 0; i < 8; i++) {
+      final angle = (i / 8.0 + rotation) * math.pi;
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(angle);
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: r * 2, height: r * 0.28),
+        lngPaint,
+      );
+      canvas.restore();
+    }
+
+    // ── Scan beam ─────────────────────────────────────────────────────────────
+    final scanY = -r + scanProgress * r * 2;
+    final scanHalfW = math.sqrt(math.max(0, r * r - scanY * scanY));
+    if (scanHalfW > 1) {
+      // Glow trail above
+      final trailRect = Rect.fromLTRB(
+        cx - scanHalfW, cy + scanY - 22,
+        cx + scanHalfW, cy + scanY,
+      );
+      canvas.drawRect(
+        trailRect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              _cyan.withOpacity(0.08),
+            ],
+          ).createShader(trailRect),
+      );
+      // Scan line itself
+      canvas.drawLine(
+        Offset(cx - scanHalfW, cy + scanY),
+        Offset(cx + scanHalfW, cy + scanY),
+        Paint()
+          ..color = _cyan.withOpacity(0.7)
+          ..strokeWidth = 1.2
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+    }
+
+    // ── Location pin at center ────────────────────────────────────────────────
+    final pinPaint = Paint()
+      ..color = _violet.withOpacity(0.9)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    canvas.drawCircle(Offset(cx, cy), 5, pinPaint);
+    canvas.drawCircle(Offset(cx, cy), 3, Paint()..color = Colors.white);
+
+    canvas.restore(); // unclip
+
+    // ── Globe border ring ─────────────────────────────────────────────────────
+    canvas.drawCircle(
+      Offset(cx, cy), r,
+      Paint()
+        ..color = _purple.withOpacity(0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+
+    // ── Outer tick marks ─────────────────────────────────────────────────────
+    final tickPaint = Paint()
+      ..color = _purple.withOpacity(0.35)
+      ..strokeWidth = 1.2;
+    for (int i = 0; i < 32; i++) {
+      final a = (i / 32.0) * 2 * math.pi;
+      final inner = r + 4;
+      final outer = r + (i % 4 == 0 ? 12 : 7);
+      canvas.drawLine(
+        Offset(cx + math.cos(a) * inner, cy + math.sin(a) * inner),
+        Offset(cx + math.cos(a) * outer, cy + math.sin(a) * outer),
+        tickPaint,
+      );
+    }
+
+    // ── Corner brackets ───────────────────────────────────────────────────────
+    final bracketPaint = Paint()
+      ..color = _cyan.withOpacity(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8;
+    const bL = 14.0;
+    const bO = 6.0;
+    final pts = [
+      [Offset(cx - r - bO - bL, cy - r - bO), Offset(cx - r - bO, cy - r - bO), Offset(cx - r - bO, cy - r - bO + bL)],
+      [Offset(cx + r + bO + bL, cy - r - bO), Offset(cx + r + bO, cy - r - bO), Offset(cx + r + bO, cy - r - bO + bL)],
+      [Offset(cx - r - bO - bL, cy + r + bO), Offset(cx - r - bO, cy + r + bO), Offset(cx - r - bO, cy + r + bO - bL)],
+      [Offset(cx + r + bO + bL, cy + r + bO), Offset(cx + r + bO, cy + r + bO), Offset(cx + r + bO, cy + r + bO - bL)],
+    ];
+    for (final seg in pts) {
+      canvas.drawLine(seg[0], seg[1], bracketPaint);
+      canvas.drawLine(seg[1], seg[2], bracketPaint);
+    }
   }
 
   @override
-  bool shouldRepaint(_RadialGradientPainter old) => old.t != t;
+  bool shouldRepaint(_HolographicGlobePainter old) =>
+    old.rotation != rotation ||
+    old.scanProgress != scanProgress ||
+    old.pulseProgress != pulseProgress;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Star Field Painter
+// ──────────────────────────────────────────────────────────────────────────────
+class _StarFieldPainter extends CustomPainter {
+  final List<_Particle> particles;
+  final double t;
+  _StarFieldPainter(this.particles, this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Dark background
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = const Color(0xFF05050F),
+    );
+    final paint = Paint()..style = PaintingStyle.fill;
+    for (final p in particles) {
+      // Drift upward slowly
+      final dy = (p.y - p.speed * t * 200) % 1.0;
+      final twinkle = 0.5 + 0.5 * math.sin(t * math.pi * 2 * 3 + p.x * 100);
+      paint.color = Colors.white.withOpacity(p.opacity * twinkle);
+      canvas.drawCircle(
+        Offset(p.x * size.width, dy * size.height),
+        p.size,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StarFieldPainter old) => old.t != t;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Signal Bars Widget
+// ──────────────────────────────────────────────────────────────────────────────
+class _SignalBars extends StatelessWidget {
+  final AnimationController signalCtrl;
+  final int lockedBars;
+  const _SignalBars({required this.signalCtrl, required this.lockedBars});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: signalCtrl,
+      builder: (_, __) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'SIGNAL  ',
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+            ...List.generate(5, (i) {
+              final locked = i < lockedBars;
+              final shimmer = locked
+                ? 1.0
+                : (0.15 + 0.12 * math.sin(signalCtrl.value * math.pi * 2 + i));
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 6,
+                height: 10.0 + i * 3.5,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2),
+                  color: locked
+                    ? const Color(0xFF8B5CF6).withOpacity(shimmer)
+                    : const Color(0xFF2A2A3E),
+                  boxShadow: locked ? [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.4 * shimmer),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                    ),
+                  ] : null,
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Animated Progress Track
+// ──────────────────────────────────────────────────────────────────────────────
+class _AnimatedProgressTrack extends StatelessWidget {
+  final double progress;
+  final AnimationController signalCtrl;
+  const _AnimatedProgressTrack({required this.progress, required this.signalCtrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: signalCtrl,
+      builder: (_, __) {
+        final shimmer = 0.7 + 0.3 * math.sin(signalCtrl.value * math.pi * 4);
+        return Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: progress),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOut,
+                builder: (_, v, __) {
+                  return Stack(
+                    children: [
+                      // Track
+                      Container(
+                        width: double.infinity,
+                        height: 3,
+                        color: const Color(0xFF1E1B30),
+                      ),
+                      // Fill
+                      FractionallySizedBox(
+                        widthFactor: v,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF6D28D9),
+                                Color.lerp(
+                                  const Color(0xFF8B5CF6),
+                                  const Color(0xFF67E8F9),
+                                  v,
+                                )!.withOpacity(shimmer),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${(progress * 100).round()}%',
+                  style: const TextStyle(
+                    color: Color(0xFF8B5CF6),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+                Text(
+                  'INITIALIZING',
+                  style: TextStyle(
+                    color: const Color(0xFF4B5563).withOpacity(0.8),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
