@@ -34,7 +34,7 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
   bool _obscureLivekit  = true;
 
   // Redesign Navigation & Preferences
-  int _activeTab = 0; // 0: System, 1: Visuals, 2: Security, 3: Diagnostics
+  int _activeTab = 0; // 0: System, 1: Visuals, 2: Security, 3: Diagnostics, 4: Notifications, 5: About
   int _selectedAccent = 1; // 0: Solar Gold, 1: Electric Cyan, 2: Cosmic Violet, 3: Ruby Rose
   bool _darkMode = true;
   bool _notifications = true;
@@ -54,6 +54,23 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
   int? _connectionPing; // in ms
   double _cacheFootprint = 18.4; // simulated tile cache footprint in MB
   bool _purgingCache = false;
+
+  // Notifications tab state
+  bool _notifAria = true;         // ARIA voice assistant notifications
+  bool _notifMap = true;          // Map navigation alerts
+  bool _notifFriend = true;       // Friend location pings
+  bool _notifSystem = true;       // System / health alerts
+  bool _notifSound = true;        // Acoustic feedback
+  bool _notifVibration = true;    // Haptic feedback
+  bool _notifBadge = true;        // App badge counter
+  bool _notifDoNotDisturb = false; // DND schedule toggle
+  String _notifStyle = "Banner";  // Banner / Heads-Up / Silent
+  String _notifFrequency = "Real-time"; // Real-time / Batched / Digest
+
+  // About tab state
+  static const String _appVersion = "2.4.1";
+  static const String _buildNumber = "20260711";
+  static const String _releaseChannel = "Beta";
 
   late TabController _tabCtrl;
 
@@ -86,7 +103,7 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 4, vsync: this);
+    _tabCtrl = TabController(length: 6, vsync: this);
     _tabCtrl.addListener(() {
       if (mounted) {
         setState(() {
@@ -119,6 +136,18 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     _appLockPin = prefs.getBool('nexal_app_lock_pin') ?? false;
     _autoLockTime = prefs.getString('nexal_auto_lock_time') ?? "Immediately";
 
+    // Notifications loaders
+    _notifAria = prefs.getBool('nexal_notif_aria') ?? true;
+    _notifMap = prefs.getBool('nexal_notif_map') ?? true;
+    _notifFriend = prefs.getBool('nexal_notif_friend') ?? true;
+    _notifSystem = prefs.getBool('nexal_notif_system') ?? true;
+    _notifSound = prefs.getBool('nexal_notif_sound') ?? true;
+    _notifVibration = prefs.getBool('nexal_notif_vibration') ?? true;
+    _notifBadge = prefs.getBool('nexal_notif_badge') ?? true;
+    _notifDoNotDisturb = prefs.getBool('nexal_notif_dnd') ?? false;
+    _notifStyle = prefs.getString('nexal_notif_style') ?? "Banner";
+    _notifFrequency = prefs.getString('nexal_notif_frequency') ?? "Real-time";
+
     if (mounted) setState(() => _loading = false);
 
     // Try synchronizing with Settings Backend Database
@@ -146,6 +175,16 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
         _privacyShield = data['privacyShield'] ?? _privacyShield;
         _appLockPin = data['appLockPin'] ?? _appLockPin;
         _autoLockTime = data['autoLockTime'] ?? _autoLockTime;
+        _notifAria = data['notifAria'] ?? _notifAria;
+        _notifMap = data['notifMap'] ?? _notifMap;
+        _notifFriend = data['notifFriend'] ?? _notifFriend;
+        _notifSystem = data['notifSystem'] ?? _notifSystem;
+        _notifSound = data['notifSound'] ?? _notifSound;
+        _notifVibration = data['notifVibration'] ?? _notifVibration;
+        _notifBadge = data['notifBadge'] ?? _notifBadge;
+        _notifDoNotDisturb = data['notifDoNotDisturb'] ?? _notifDoNotDisturb;
+        _notifStyle = data['notifStyle'] ?? _notifStyle;
+        _notifFrequency = data['notifFrequency'] ?? _notifFrequency;
 
         // Save back locally to SharedPreferences to keep them in sync
         config.backendUrl = _backendUrlCtrl.text.trim();
@@ -165,6 +204,16 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
         await prefs.setBool('nexal_privacy_shield', _privacyShield);
         await prefs.setBool('nexal_app_lock_pin', _appLockPin);
         await prefs.setString('nexal_auto_lock_time', _autoLockTime);
+        await prefs.setBool('nexal_notif_aria', _notifAria);
+        await prefs.setBool('nexal_notif_map', _notifMap);
+        await prefs.setBool('nexal_notif_friend', _notifFriend);
+        await prefs.setBool('nexal_notif_system', _notifSystem);
+        await prefs.setBool('nexal_notif_sound', _notifSound);
+        await prefs.setBool('nexal_notif_vibration', _notifVibration);
+        await prefs.setBool('nexal_notif_badge', _notifBadge);
+        await prefs.setBool('nexal_notif_dnd', _notifDoNotDisturb);
+        await prefs.setString('nexal_notif_style', _notifStyle);
+        await prefs.setString('nexal_notif_frequency', _notifFrequency);
 
         if (mounted) setState(() {});
       }
@@ -198,6 +247,18 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     await prefs.setBool('nexal_app_lock_pin', _appLockPin);
     await prefs.setString('nexal_auto_lock_time', _autoLockTime);
 
+    // Notifications savers
+    await prefs.setBool('nexal_notif_aria', _notifAria);
+    await prefs.setBool('nexal_notif_map', _notifMap);
+    await prefs.setBool('nexal_notif_friend', _notifFriend);
+    await prefs.setBool('nexal_notif_system', _notifSystem);
+    await prefs.setBool('nexal_notif_sound', _notifSound);
+    await prefs.setBool('nexal_notif_vibration', _notifVibration);
+    await prefs.setBool('nexal_notif_badge', _notifBadge);
+    await prefs.setBool('nexal_notif_dnd', _notifDoNotDisturb);
+    await prefs.setString('nexal_notif_style', _notifStyle);
+    await prefs.setString('nexal_notif_frequency', _notifFrequency);
+
     // Sync to remote settings backend database
     try {
       final syncUri = Uri.parse("${config.backendUrl}/settings");
@@ -216,7 +277,17 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
         "encryptSync": _encryptSync,
         "privacyShield": _privacyShield,
         "appLockPin": _appLockPin,
-        "autoLockTime": _autoLockTime
+        "autoLockTime": _autoLockTime,
+        "notifAria": _notifAria,
+        "notifMap": _notifMap,
+        "notifFriend": _notifFriend,
+        "notifSystem": _notifSystem,
+        "notifSound": _notifSound,
+        "notifVibration": _notifVibration,
+        "notifBadge": _notifBadge,
+        "notifDoNotDisturb": _notifDoNotDisturb,
+        "notifStyle": _notifStyle,
+        "notifFrequency": _notifFrequency,
       };
 
       await http.post(
@@ -462,6 +533,8 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
                   _buildTabHeader(LucideIcons.palette, "Visuals", 1),
                   _buildTabHeader(LucideIcons.shield, "Security", 2),
                   _buildTabHeader(LucideIcons.activity, "Diag", 3),
+                  _buildTabHeader(LucideIcons.bell, "Notifs", 4),
+                  _buildTabHeader(LucideIcons.info, "About", 5),
                 ],
               ),
             ),
@@ -485,6 +558,8 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
                         _buildInterfaceTab(),
                         _buildSecurityTab(),
                         _buildDiagnosticsTab(),
+                        _buildNotificationsTab(),
+                        _buildAboutTab(),
                       ],
                     ),
             ),
@@ -984,6 +1059,662 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
         _buildHardwareCard(),
         const SizedBox(height: 32),
       ],
+    );
+  }
+
+  // 5. NOTIFICATIONS TAB
+  Widget _buildNotificationsTab() {
+    final List<String> styles = ["Banner", "Heads-Up", "Silent"];
+    final List<String> frequencies = ["Real-time", "Batched (15 min)", "Digest (Daily)"];
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // Master Notifications Toggle Card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                currentAccent.primary.withValues(alpha: 0.12),
+                currentAccent.secondary.withValues(alpha: 0.06),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: currentAccent.primary.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: currentAccent.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(LucideIcons.bell, color: currentAccent.primary, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "All Notifications",
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _notifications ? "System notifications active" : "All notifications silenced",
+                      style: GoogleFonts.outfit(fontSize: 11, color: Colors.white54),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: _notifications,
+                activeThumbColor: currentAccent.primary,
+                activeTrackColor: currentAccent.primary.withValues(alpha: 0.25),
+                onChanged: (val) => setState(() => _notifications = val),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader("CHANNEL CONTROLS", LucideIcons.layers),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.bot,
+          title: "ARIA Voice Assistant",
+          desc: "Push alerts from conversation AI engine",
+          value: _notifAria && _notifications,
+          onChanged: (val) => setState(() => _notifAria = val),
+        ),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.mapPin,
+          title: "Navigation & Map Alerts",
+          desc: "Route updates, detours, geofence entries",
+          value: _notifMap && _notifications,
+          onChanged: (val) => setState(() => _notifMap = val),
+        ),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.users,
+          title: "Friend Activity Pings",
+          desc: "Location sharing and check-in alerts",
+          value: _notifFriend && _notifications,
+          onChanged: (val) => setState(() => _notifFriend = val),
+        ),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.cpu,
+          title: "System Health & Security",
+          desc: "Backend health, firmware, security events",
+          value: _notifSystem && _notifications,
+          onChanged: (val) => setState(() => _notifSystem = val),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader("SENSORY FEEDBACK", LucideIcons.volume2),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.volume2,
+          title: "Acoustic Sound Alerts",
+          desc: "Play system notification chimes",
+          value: _notifSound,
+          onChanged: (val) => setState(() => _notifSound = val),
+        ),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.waves,
+          title: "Haptic Vibration",
+          desc: "Tactile motor feedback on alerts",
+          value: _notifVibration,
+          onChanged: (val) => setState(() => _notifVibration = val),
+        ),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.badge,
+          title: "App Badge Counter",
+          desc: "Unread count shown on app icon",
+          value: _notifBadge,
+          onChanged: (val) => setState(() => _notifBadge = val),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader("DELIVERY SCHEDULE", LucideIcons.clock),
+        const SizedBox(height: 10),
+        _buildSettingsSwitchTile(
+          icon: LucideIcons.moonStar,
+          title: "Do Not Disturb Mode",
+          desc: "Suppresses all alerts on schedule",
+          value: _notifDoNotDisturb,
+          onChanged: (val) => setState(() => _notifDoNotDisturb = val),
+        ),
+        const SizedBox(height: 12),
+        // Notification Style Selector
+        _buildNotifDropdown(
+          icon: LucideIcons.layout,
+          title: "Notification Style",
+          desc: "How alerts appear on-screen",
+          value: _notifStyle,
+          items: styles,
+          onChanged: (v) => setState(() => _notifStyle = v!),
+        ),
+        const SizedBox(height: 10),
+        _buildNotifDropdown(
+          icon: LucideIcons.refreshCw,
+          title: "Delivery Frequency",
+          desc: "Alert batching strategy",
+          value: _notifFrequency,
+          items: frequencies,
+          onChanged: (v) => setState(() => _notifFrequency = v!),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildNotifDropdown({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: currentAccent.primary, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(desc, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            dropdownColor: const Color(0xFF161622),
+            value: value,
+            icon: const Icon(LucideIcons.chevronDown, color: Colors.white38, size: 16),
+            underline: Container(),
+            style: GoogleFonts.outfit(color: currentAccent.primary, fontSize: 13, fontWeight: FontWeight.bold),
+            onChanged: onChanged,
+            items: items.map<DropdownMenuItem<String>>((String v) {
+              return DropdownMenuItem<String>(value: v, child: Text(v));
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 6. ABOUT TAB
+  Widget _buildAboutTab() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // App version hero card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                currentAccent.primary.withValues(alpha: 0.12),
+                const Color(0xFF0A0A14),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: currentAccent.primary.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [currentAccent.primary, currentAccent.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentAccent.primary.withValues(alpha: 0.4),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        "N",
+                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "NEXAL",
+                          style: GoogleFonts.orbitron(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: currentAccent.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: currentAccent.primary.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                _releaseChannel,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: currentAccent.primary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "v$_appVersion",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white10),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildAboutStat("Build", _buildNumber),
+                  _buildAboutStatDivider(),
+                  _buildAboutStat("Engine", "Flutter 3.x"),
+                  _buildAboutStatDivider(),
+                  _buildAboutStat("Platform", "Android/iOS"),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader("STORAGE & MEMORY", LucideIcons.database),
+        const SizedBox(height: 12),
+        _buildStorageCard(),
+        const SizedBox(height: 24),
+        _buildSectionHeader("CHANGELOG", LucideIcons.gitBranch),
+        const SizedBox(height: 12),
+        _buildChangelogCard(),
+        const SizedBox(height: 24),
+        _buildSectionHeader("SUPPORT & LEGAL", LucideIcons.bookOpen),
+        const SizedBox(height: 10),
+        _buildAboutLinkTile(
+          icon: LucideIcons.helpCircle,
+          title: "Help Center",
+          desc: "Documentation, FAQs, tutorials",
+          badge: null,
+        ),
+        const SizedBox(height: 10),
+        _buildAboutLinkTile(
+          icon: LucideIcons.github,
+          title: "Source Repository",
+          desc: "View source code and contribute",
+          badge: null,
+        ),
+        const SizedBox(height: 10),
+        _buildAboutLinkTile(
+          icon: LucideIcons.mail,
+          title: "Send Feedback",
+          desc: "Report bugs, suggest features",
+          badge: "New",
+        ),
+        const SizedBox(height: 10),
+        _buildAboutLinkTile(
+          icon: LucideIcons.fileText,
+          title: "Privacy Policy",
+          desc: "How your data is processed and stored",
+          badge: null,
+        ),
+        const SizedBox(height: 10),
+        _buildAboutLinkTile(
+          icon: LucideIcons.scale,
+          title: "Terms of Service",
+          desc: "End-user license agreement",
+          badge: null,
+        ),
+        const SizedBox(height: 24),
+        // Credits footer
+        Center(
+          child: Column(
+            children: [
+              Text(
+                "Built with ❤️ by the Nexal Team",
+                style: GoogleFonts.outfit(fontSize: 12, color: Colors.white38),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "© 2026 Nexal Labs. All rights reserved.",
+                style: GoogleFonts.outfit(fontSize: 10, color: Colors.white24),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildAboutStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.orbitron(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: currentAccent.primary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.outfit(fontSize: 10, color: Colors.white38),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAboutStatDivider() {
+    return Container(
+      width: 1,
+      height: 28,
+      color: Colors.white10,
+    );
+  }
+
+  Widget _buildStorageCard() {
+    final items = [
+      ("App Core", 42.5, currentAccent.primary),
+      ("Map Tile Cache", _cacheFootprint, const Color(0xFF22D3EE)),
+      ("ARIA Model Cache", 28.0, const Color(0xFFC084FC)),
+      ("User Data", 5.2, const Color(0xFF4ADE80)),
+    ];
+    final total = items.fold(0.0, (sum, e) => sum + e.$2);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Total Used",
+                style: GoogleFonts.outfit(fontSize: 13, color: Colors.white70),
+              ),
+              Text(
+                "${total.toStringAsFixed(1)} MB",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Segmented bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              height: 8,
+              child: Row(
+                children: items.map((e) {
+                  return Flexible(
+                    flex: (e.$2 * 10).toInt(),
+                    child: Container(color: e.$3),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          ...items.map((e) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(width: 10, height: 10, decoration: BoxDecoration(color: e.$3, shape: BoxShape.circle)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(e.$1, style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70)),
+                ),
+                Text(
+                  "${e.$2.toStringAsFixed(1)} MB",
+                  style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChangelogCard() {
+    final entries = [
+      ("v2.4.1", "Current", [
+        "Added Notifications & About tabs in Settings",
+        "Map speed HUD + weather overlay",
+        "3D buildings toggle added",
+      ]),
+      ("v2.3.0", "Jul 2026", [
+        "Settings backend database sync",
+        "Map tile category caching (150m radius)",
+        "Geolocation mock to prevent browser prompts",
+      ]),
+      ("v2.2.0", "Jun 2026", [
+        "Security tab with biometrics & auto-lock",
+        "Full settings 4-tab redesign",
+        "Diagnostics cache gauge",
+      ]),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: entries.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final e = entry.value;
+          final isFirst = idx == 0;
+          return Padding(
+            padding: EdgeInsets.only(bottom: idx < entries.length - 1 ? 16 : 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isFirst ? currentAccent.primary : Colors.white24,
+                        boxShadow: isFirst ? [
+                          BoxShadow(color: currentAccent.primary.withValues(alpha: 0.5), blurRadius: 6)
+                        ] : null,
+                      ),
+                    ),
+                    if (idx < entries.length - 1)
+                      Container(width: 1, height: 60, color: Colors.white10),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            e.$1,
+                            style: GoogleFonts.orbitron(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isFirst ? currentAccent.primary : Colors.white54,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            e.$2,
+                            style: GoogleFonts.outfit(fontSize: 10, color: Colors.white30),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ...e.$3.map((note) => Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("•  ", style: GoogleFonts.outfit(fontSize: 11, color: Colors.white38)),
+                            Expanded(
+                              child: Text(note, style: GoogleFonts.outfit(fontSize: 11, color: Colors.white54)),
+                            ),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildAboutLinkTile({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required String? badge,
+  }) {
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: currentAccent.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                      if (badge != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: currentAccent.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            badge,
+                            style: GoogleFonts.outfit(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: currentAccent.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(desc, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
+                ],
+              ),
+            ),
+            Icon(LucideIcons.chevronRight, color: Colors.white24, size: 16),
+          ],
+        ),
+      ),
     );
   }
 

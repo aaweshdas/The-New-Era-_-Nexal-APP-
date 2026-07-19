@@ -95,7 +95,11 @@ flutter:
     - assets/aria_background.png
     - assets/starting_screen.png
     - assets/search_background.png
+    - assets/normal_bg.png
+    - assets/saved_icon.png
+    - assets/3d_map.png
     - assets/wordl/
+
     - assets/wordl/assets/
     - assets/wordl/assets/audio/ambiances/
     - assets/wordl/assets/audio/camera/
