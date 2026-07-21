@@ -65,13 +65,6 @@ class _ParticleBackgroundState extends State<ParticleBackground>
         ),
       );
     }
-
-    // Pre-calculate connections (static graph structure, dynamic distances)
-    // To match React logic, we just check distances in Paint,
-    // but React code had a 'connections' array.
-    // We'll stick to dynamic distance check for performance in Flutter
-    // or implement a spatial grid if needed.
-    // For 150 nodes, N^2 is 22500 checks, which is fine for 60fps in Dart usually.
   }
 
   @override
@@ -83,32 +76,34 @@ class _ParticleBackgroundState extends State<ParticleBackground>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _boostController]),
-      builder: (context, child) {
-        // Randomly add energy pulse
-        if (_random.nextDouble() > 0.98) {
-          final size = MediaQuery.of(context).size;
-          _pulses.add(
-            EnergyPulse(
-              x: size.width / 2,
-              y: size.height / 2,
-              maxRadius: 300 + _random.nextDouble() * 200,
-            ),
-          );
-        }
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_controller, _boostController]),
+        builder: (context, child) {
+          // Randomly add energy pulse
+          if (_random.nextDouble() > 0.98) {
+            final size = MediaQuery.of(context).size;
+            _pulses.add(
+              EnergyPulse(
+                x: size.width / 2,
+                y: size.height / 2,
+                maxRadius: 300 + _random.nextDouble() * 200,
+              ),
+            );
+          }
 
-        return CustomPaint(
-          painter: ParticlePainter(
-            nodes: _nodes,
-            pulses: _pulses,
-            animValue: _controller.value,
-            boostValue: _boostController.value,
-            random: _random, // Pass random for flicker effects
-          ),
-          size: Size.infinite,
-        );
-      },
+          return CustomPaint(
+            painter: ParticlePainter(
+              nodes: _nodes,
+              pulses: _pulses,
+              animValue: _controller.value,
+              boostValue: _boostController.value,
+              random: _random,
+            ),
+            size: Size.infinite,
+          );
+        },
+      ),
     );
   }
 }
@@ -145,6 +140,21 @@ class ParticlePainter extends CustomPainter {
   final double boostValue;
   final math.Random random;
 
+  // Pre-allocated paint objects to avoid GC churn
+  static final Paint _pulsePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2.0;
+  static final Paint _linePaint = Paint()..strokeWidth = 1.0;
+  static final Paint _particlePaint = Paint()
+    ..color = Colors.white.withValues(alpha: 0.8)
+    ..style = PaintingStyle.fill;
+  static final Paint _nodePaint = Paint()..style = PaintingStyle.fill;
+
+  // Pre-computed layer colors
+  static final Color _layerColor0 = Color.lerp(AppTheme.purple500, AppTheme.pink500, 0.5)!;
+  static final Color _layerColor1 = Color.lerp(AppTheme.blue500, AppTheme.cyan500, 0.5)!;
+  static final Color _layerColor2 = Color.lerp(AppTheme.pink500, AppTheme.purple500, 0.5)!;
+
   ParticlePainter({
     required this.nodes,
     required this.pulses,
@@ -165,22 +175,25 @@ class ParticlePainter extends CustomPainter {
       }
 
       final opacity = 1.0 - (pulse.radius / pulse.maxRadius);
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0
-        ..color = AppTheme.purple500.withValues(alpha: opacity * 0.3);
-
-      canvas.drawCircle(Offset(pulse.x, pulse.y), pulse.radius, paint);
+      _pulsePaint.color = AppTheme.purple500.withValues(alpha: opacity * 0.3);
+      canvas.drawCircle(Offset(pulse.x, pulse.y), pulse.radius, _pulsePaint);
     }
     pulses.removeWhere((p) => p.isDead);
 
-    // 2. Update and Draw Nodes
+    // 2. Build spatial grid for O(N) neighbour lookups instead of O(N²)
+    const double cellSize = 100.0;
+    final int gridCols = (size.width / cellSize).ceil() + 1;
+    final int gridRows = (size.height / cellSize).ceil() + 1;
+    final List<List<int>> grid = List.generate(gridCols * gridRows, (_) => <int>[]);
+
+    // Speed multiplier: 1.0 (normal) to 5.0 (boosted)
+    double speedMultiplier = 1.0 + (boostValue * 4.0);
+
+    // Update positions and insert into grid
     for (int i = 0; i < nodes.length; i++) {
       final node = nodes[i];
 
       // Move
-      // Speed multiplier: 1.0 (normal) to 5.0 (boosted)
-      double speedMultiplier = 1.0 + (boostValue * 4.0);
       node.x += node.vx * speedMultiplier;
       node.y += node.vy * speedMultiplier;
 
@@ -194,85 +207,91 @@ class ParticlePainter extends CustomPainter {
         node.y = node.y.clamp(0.0, size.height);
       }
 
-      // Draw Connections
-      // Optimization: Only check nodes with higher index to avoid double drawing
-      // Limit connections to avoid clutter? React code had explicit connection list.
-      // Let's use distance check for "dynamic" connections like the visual.
-      for (int j = i + 1; j < nodes.length; j++) {
-        final target = nodes[j];
-        final dx = node.x - target.x;
-        final dy = node.y - target.y;
-        final dist = math.sqrt(dx * dx + dy * dy);
+      // Insert into grid
+      final col = (node.x / cellSize).floor().clamp(0, gridCols - 1);
+      final row = (node.y / cellSize).floor().clamp(0, gridRows - 1);
+      grid[row * gridCols + col].add(i);
+    }
 
-        if (dist < 100) {
-          // Threshold
-          final opacity = (1.0 - (dist / 100)) * 0.5;
+    // 3. Draw connections using spatial grid (check only neighbouring cells)
+    for (int i = 0; i < nodes.length; i++) {
+      final node = nodes[i];
+      final col = (node.x / cellSize).floor().clamp(0, gridCols - 1);
+      final row = (node.y / cellSize).floor().clamp(0, gridRows - 1);
 
-          Color color;
-          if (node.layer == 0) {
-            // Purple/Pink
-            color = Color.lerp(AppTheme.purple500, AppTheme.pink500, 0.5)!;
-          } else if (node.layer == 1) {
-            // Blue/Green (Cyan)
-            color = Color.lerp(AppTheme.blue500, AppTheme.cyan500, 0.5)!;
-          } else {
-            // Pink/Purple
-            color = Color.lerp(AppTheme.pink500, AppTheme.purple500, 0.5)!;
-          }
+      // Check the 3x3 neighbourhood of cells
+      for (int dr = -1; dr <= 1; dr++) {
+        for (int dc = -1; dc <= 1; dc++) {
+          final nr = row + dr;
+          final nc = col + dc;
+          if (nr < 0 || nr >= gridRows || nc < 0 || nc >= gridCols) continue;
+          final cell = grid[nr * gridCols + nc];
+          for (final j in cell) {
+            if (j <= i) continue; // Avoid double-drawing and self
+            final target = nodes[j];
+            final dx = node.x - target.x;
+            final dy = node.y - target.y;
+            final distSq = dx * dx + dy * dy;
 
-          final linePaint = Paint()
-            ..color = color.withValues(alpha: opacity)
-            ..strokeWidth = 1.0;
+            if (distSq < 10000) { // 100*100 threshold
+              final dist = math.sqrt(distSq);
+              final opacity = (1.0 - (dist / 100)) * 0.5;
 
-          canvas.drawLine(
-            Offset(node.x, node.y),
-            Offset(target.x, target.y),
-            linePaint,
-          );
+              Color color;
+              if (node.layer == 0) {
+                color = _layerColor0;
+              } else if (node.layer == 1) {
+                color = _layerColor1;
+              } else {
+                color = _layerColor2;
+              }
 
-          // 3. Data Flow Particle on line (randomly)
-          if (random.nextDouble() > 0.99) {
-            final t = random.nextDouble();
-            // Correct logic: Lerp
-            final lx = node.x + (target.x - node.x) * t;
-            final ly = node.y + (target.y - node.y) * t;
+              _linePaint.color = color.withValues(alpha: opacity);
+              canvas.drawLine(
+                Offset(node.x, node.y),
+                Offset(target.x, target.y),
+                _linePaint,
+              );
 
-            final particlePaint = Paint()
-              ..color = Colors.white.withValues(alpha: 0.8)
-              ..style = PaintingStyle.fill;
-            canvas.drawCircle(Offset(lx, ly), 1.5, particlePaint);
+              // Data Flow Particle on line (randomly)
+              if (random.nextDouble() > 0.99) {
+                final t = random.nextDouble();
+                final lx = node.x + (target.x - node.x) * t;
+                final ly = node.y + (target.y - node.y) * t;
+                canvas.drawCircle(Offset(lx, ly), 1.5, _particlePaint);
+              }
+            }
           }
         }
       }
+    }
 
-      // Draw Node Dot
+    // 4. Draw Node Dots
+    for (int i = 0; i < nodes.length; i++) {
+      final node = nodes[i];
       double radius =
           2.0 + node.layer + math.sin(animValue * 2 * math.pi + i) * 0.5;
 
-      Paint nodePaint = Paint()..style = PaintingStyle.fill;
+      Color baseColor;
       if (node.layer == 0) {
-        nodePaint.color = AppTheme.purple500.withValues(alpha: 0.8);
+        baseColor = AppTheme.purple500;
       } else if (node.layer == 1) {
-        nodePaint.color = AppTheme.blue500.withValues(alpha: 0.8);
+        baseColor = AppTheme.blue500;
       } else {
-        nodePaint.color = AppTheme.pink500.withValues(alpha: 0.8);
+        baseColor = AppTheme.pink500;
       }
 
       // Glow
-      canvas.drawCircle(
-        Offset(node.x, node.y),
-        radius * 2,
-        nodePaint..color = nodePaint.color.withValues(alpha: 0.3),
-      );
+      _nodePaint.color = baseColor.withValues(alpha: 0.3);
+      canvas.drawCircle(Offset(node.x, node.y), radius * 2, _nodePaint);
       // Core
-      canvas.drawCircle(
-        Offset(node.x, node.y),
-        radius,
-        nodePaint..color = nodePaint.color.withValues(alpha: 1.0),
-      );
+      _nodePaint.color = baseColor.withValues(alpha: 0.8);
+      canvas.drawCircle(Offset(node.x, node.y), radius, _nodePaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant ParticlePainter oldDelegate) => true;
+  bool shouldRepaint(covariant ParticlePainter oldDelegate) =>
+      oldDelegate.animValue != animValue ||
+      oldDelegate.boostValue != boostValue;
 }

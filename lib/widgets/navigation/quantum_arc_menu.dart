@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/cached_styles.dart';
 
 class QuantumArcMenu extends StatefulWidget {
   final String activeTab;
@@ -91,6 +91,7 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
   String _targetLabel = '';
 
   static const _scrambleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#\$%&';
+  final Random _rng = Random(); // Cached — avoid allocation per tick
 
   @override
   void initState() {
@@ -154,14 +155,13 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
     final progress = _labelController.value;
     final targetLen = _targetLabel.length;
     final revealCount = (progress * targetLen).ceil();
-    final rng = Random();
 
     String result = '';
     for (int i = 0; i < targetLen; i++) {
       if (i < revealCount) {
         result += _targetLabel[i];
       } else {
-        result += _scrambleChars[rng.nextInt(_scrambleChars.length)];
+        result += _scrambleChars[_rng.nextInt(_scrambleChars.length)];
       }
     }
     setState(() => _displayLabel = result);
@@ -239,11 +239,7 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
                   children: [
                     Text(
                       _displayLabel,
-                      style: GoogleFonts.outfit(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 6,
-                        color: Colors.white,
+                      style: CachedStyles.outfitW700Size28L6White.copyWith(
                         shadows: [
                           Shadow(
                             color: AppTheme.cyan500.withValues(alpha: 0.8),
@@ -308,16 +304,18 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
               return Positioned(
                 left: x - 40,
                 top: y - 40,
-                child: Transform.scale(
-                  scale: isCentered ? 1.4 : scale,
-                  child: Opacity(
-                    opacity: isCentered ? 1.0 : opacity,
-                    child: GestureDetector(
-                      onTap: () => _selectItem(i),
-                      child: _ArcItemWidget(
-                        item: _items[i],
-                        isCentered: isCentered,
-                        glowAnimation: _glowController,
+                child: RepaintBoundary(
+                  child: Transform.scale(
+                    scale: isCentered ? 1.4 : scale,
+                    child: Opacity(
+                      opacity: isCentered ? 1.0 : opacity,
+                      child: GestureDetector(
+                        onTap: () => _selectItem(i),
+                        child: _ArcItemWidget(
+                          item: _items[i],
+                          isCentered: isCentered,
+                          glowAnimation: _glowController,
+                        ),
                       ),
                     ),
                   ),
@@ -402,13 +400,9 @@ class _ArcItemWidget extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 item.id.toUpperCase(),
-                style: GoogleFonts.outfit(
-                  fontSize: 9,
-                  fontWeight: isCentered ? FontWeight.bold : FontWeight.w400,
-                  color: isCentered ? AppTheme.cyan500 : Colors.white54,
-                  letterSpacing: 1.5,
-                  height: 1.1,
-                ),
+                style: isCentered
+                    ? CachedStyles.outfitBoldSize9L1_5Cyan
+                    : CachedStyles.outfitW400Size9L1_5White54,
               ),
             ],
           ),

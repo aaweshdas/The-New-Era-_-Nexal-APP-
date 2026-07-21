@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
 import 'theme/app_theme.dart';
-import 'screens/splash_video_screen.dart';
+import 'screens/auth/splash_router.dart';
+import 'providers/auth_provider.dart';
+import 'providers/feed_provider.dart';
+import 'providers/user_provider.dart';
+import 'providers/notifications_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +25,20 @@ class NexalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Nexal',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      navigatorObservers: [routeObserver],
-      home: const SplashVideoScreen(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => FeedProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationsProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Nexal',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        navigatorObservers: [routeObserver],
+        home: const SplashRouter(),
+      ),
     );
   }
 }

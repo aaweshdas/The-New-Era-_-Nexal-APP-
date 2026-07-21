@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -39,6 +40,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
   late TabController _tabCtrl;
   double _gyroX = 0;
   double _gyroY = 0;
+  bool _gyroDirty = false;
   StreamSubscription<GyroscopeEvent>? _gyroSub;
 
   final List<MessageItem> _primary = [
@@ -62,12 +64,17 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
     _tabCtrl = TabController(length: 2, vsync: this);
     _gyroSub = gyroscopeEventStream().listen((event) {
       if (!mounted) return;
-      setState(() {
-        _gyroX += event.y * 0.5;
-        _gyroY += event.x * 0.5;
-        _gyroX = _gyroX.clamp(-15.0, 15.0);
-        _gyroY = _gyroY.clamp(-15.0, 15.0);
-      });
+      _gyroX += event.y * 0.5;
+      _gyroY += event.x * 0.5;
+      _gyroX = _gyroX.clamp(-15.0, 15.0);
+      _gyroY = _gyroY.clamp(-15.0, 15.0);
+      // Throttle: batch sensor events to one setState per frame
+      if (!_gyroDirty) {
+        _gyroDirty = true;
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() => _gyroDirty = false);
+        });
+      }
     });
   }
 

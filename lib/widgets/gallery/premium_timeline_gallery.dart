@@ -6,12 +6,14 @@ class TimelineEntry {
   final String title;
   final String description;
   final String imageUrl;
+  final String category;
 
   TimelineEntry({
     required this.year,
     required this.title,
     required this.description,
     required this.imageUrl,
+    required this.category,
   });
 }
 
@@ -23,6 +25,7 @@ final List<TimelineEntry> mockTimelineData = [
         'First civilian flights to the Martian colonies began, opening the solar system to all.',
     imageUrl:
         'https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=2000&auto=format&fit=crop',
+    category: 'Space & Tech',
   ),
   TimelineEntry(
     year: '2025',
@@ -31,6 +34,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Global energy grid fully transitioned to zero-point quantum extraction.',
     imageUrl:
         'https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?q=80&w=2000&auto=format&fit=crop',
+    category: 'AI & Future',
   ),
   TimelineEntry(
     year: '2024',
@@ -38,7 +42,8 @@ final List<TimelineEntry> mockTimelineData = [
     description:
         'Historic first manned mission entering the outer rim territories. A monumental leap for humanity.',
     imageUrl:
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop', // Earth lights
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop',
+    category: 'Space & Tech',
   ),
   TimelineEntry(
     year: '2023',
@@ -46,7 +51,8 @@ final List<TimelineEntry> mockTimelineData = [
     description:
         'The global initialization of the connected cyber-grid. Cities woke up in a wave of synchronous light.',
     imageUrl:
-        'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop', // Cyberpunk city
+        'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop',
+    category: 'Culture & Web3',
   ),
   TimelineEntry(
     year: '2022',
@@ -54,7 +60,8 @@ final List<TimelineEntry> mockTimelineData = [
     description:
         'Final environmental restoration phase completed prior to orbital migration.',
     imageUrl:
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop', // Circuit board
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop',
+    category: 'Culture & Web3',
   ),
   TimelineEntry(
     year: '2021',
@@ -62,7 +69,8 @@ final List<TimelineEntry> mockTimelineData = [
     description:
         'A year of rebuilding and preparing for the next frontier. Global energy network established.',
     imageUrl:
-        'https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?q=80&w=2000&auto=format&fit=crop', // Deep space
+        'https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2020',
@@ -70,7 +78,8 @@ final List<TimelineEntry> mockTimelineData = [
     description:
         'First sentient algorithmic cluster awakens, beginning the new era of co-existence.',
     imageUrl:
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2000&auto=format&fit=crop', // Matrix code
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2000&auto=format&fit=crop',
+    category: 'AI & Future',
   ),
   TimelineEntry(
     year: '2019',
@@ -79,6 +88,7 @@ final List<TimelineEntry> mockTimelineData = [
         'The first commercial space station achieved full operational capacity.',
     imageUrl:
         'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2000&auto=format&fit=crop',
+    category: 'Space & Tech',
   ),
   TimelineEntry(
     year: '2018',
@@ -87,6 +97,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Breakthroughs in brain-computer interfaces allowed direct digital communication.',
     imageUrl:
         'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop',
+    category: 'AI & Future',
   ),
   TimelineEntry(
     year: '2017',
@@ -95,6 +106,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Decentralized systems integrated into mainstream financial infrastructure globally.',
     imageUrl:
         'https://images.unsplash.com/photo-1639762681485-074b7f4ec651?q=80&w=2000&auto=format&fit=crop',
+    category: 'Culture & Web3',
   ),
   TimelineEntry(
     year: '2016',
@@ -103,6 +115,7 @@ final List<TimelineEntry> mockTimelineData = [
         'High-fidelity immersive reality became indistinguishable from the physical world.',
     imageUrl:
         'https://images.unsplash.com/photo-1617802690992-15d93263d3a9?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2015',
@@ -111,6 +124,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Machine learning models began creating celebrated works of digital art.',
     imageUrl:
         'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop',
+    category: 'AI & Future',
   ),
   TimelineEntry(
     year: '2014',
@@ -119,6 +133,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Global data creation surpassed zettabyte milestones, redefining information storage.',
     imageUrl:
         'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2013',
@@ -126,6 +141,7 @@ final List<TimelineEntry> mockTimelineData = [
     description: 'Mobile internet usage overtook desktop computing worldwide.',
     imageUrl:
         'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2012',
@@ -134,6 +150,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Discovery of the Higgs boson fundamental particle confirmed by the large hadron collider.',
     imageUrl:
         'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2000&auto=format&fit=crop',
+    category: 'Space & Tech',
   ),
   TimelineEntry(
     year: '2011',
@@ -142,6 +159,7 @@ final List<TimelineEntry> mockTimelineData = [
         'The foundation of modern scalable internet architectures was solidified.',
     imageUrl:
         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2010',
@@ -150,6 +168,7 @@ final List<TimelineEntry> mockTimelineData = [
         'Social networks connected billions, reshaping communication and culture.',
     imageUrl:
         'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop',
+    category: 'Culture & Web3',
   ),
   TimelineEntry(
     year: '2009',
@@ -158,6 +177,7 @@ final List<TimelineEntry> mockTimelineData = [
         'The first cryptographic decentralized ledger was brought online.',
     imageUrl:
         'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=2000&auto=format&fit=crop',
+    category: 'Culture & Web3',
   ),
   TimelineEntry(
     year: '2008',
@@ -166,6 +186,7 @@ final List<TimelineEntry> mockTimelineData = [
         'App ecosystems launched, putting supercomputers in every pocket.',
     imageUrl:
         'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2007',
@@ -174,6 +195,7 @@ final List<TimelineEntry> mockTimelineData = [
         'The first modern multi-touch smartphones entered the consumer market.',
     imageUrl:
         'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2006',
@@ -182,6 +204,7 @@ final List<TimelineEntry> mockTimelineData = [
         'High-speed internet allowed real-time video streaming across the globe.',
     imageUrl:
         'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2005',
@@ -190,6 +213,7 @@ final List<TimelineEntry> mockTimelineData = [
         'User-generated video content disrupted traditional media broadcasting.',
     imageUrl:
         'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
   TimelineEntry(
     year: '2004',
@@ -198,14 +222,102 @@ final List<TimelineEntry> mockTimelineData = [
         'The early foundation of interconnected digital identities took shape.',
     imageUrl:
         'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop',
+    category: 'Science & Nature',
   ),
 ];
 
 class PremiumTimelineGallery extends StatelessWidget {
-  const PremiumTimelineGallery({super.key});
+  final bool isGridLayout;
+  final bool isNewestFirst;
+  final String selectedCategory;
+  final String searchQuery;
+
+  const PremiumTimelineGallery({
+    super.key,
+    this.isGridLayout = false,
+    this.isNewestFirst = true,
+    this.selectedCategory = 'All',
+    this.searchQuery = '',
+  });
 
   @override
   Widget build(BuildContext context) {
+    // 1. Filter entries
+    final entries = mockTimelineData.where((entry) {
+      final matchesCategory =
+          selectedCategory == 'All' || entry.category == selectedCategory;
+      final query = searchQuery.trim().toLowerCase();
+      final matchesSearch = query.isEmpty ||
+          entry.year.contains(query) ||
+          entry.title.toLowerCase().contains(query) ||
+          entry.description.toLowerCase().contains(query);
+      return matchesCategory && matchesSearch;
+    }).toList();
+
+    // 2. Sort entries
+    if (!isNewestFirst) {
+      entries.sort((a, b) => a.year.compareTo(b.year));
+    } else {
+      entries.sort((a, b) => b.year.compareTo(a.year));
+    }
+
+    // 3. Empty state
+    if (entries.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.manage_search,
+              size: 64,
+              color: Colors.white.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No memories found',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try clearing search or changing filters.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 4. Grid View Layout
+    if (isGridLayout) {
+      return GridView.builder(
+        padding: const EdgeInsets.only(
+          top: 100,
+          bottom: 80,
+          left: 16,
+          right: 16,
+        ),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.82,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+        ),
+        itemCount: entries.length,
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          return _buildGridCard(context, entry, index);
+        },
+      );
+    }
+
+    // 5. Classic Split Timeline Layout
     return Stack(
       children: [
         // Central vertical line
@@ -214,31 +326,135 @@ class PremiumTimelineGallery extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Center(
-                child: Container(
-                  width: 1,
-                  color: Colors.white.withValues(alpha: 0.1),
-                ),
-              );
-            },
+          child: Center(
+            child: Container(
+              width: 1,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
           ),
         ),
-        // Timeline content
+        // Timeline list content
         ListView.builder(
           padding: const EdgeInsets.only(
-            top: 120,
+            top: 100,
             bottom: 80,
-          ), // Accounts for top app bar
-          itemCount: mockTimelineData.length,
+          ),
+          itemCount: entries.length,
           itemBuilder: (context, index) {
-            final entry = mockTimelineData[index];
+            final entry = entries[index];
             final isLeftAligned = index % 2 == 0;
             return _buildTimelineRow(context, entry, isLeftAligned, index);
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildGridCard(BuildContext context, TimelineEntry entry, int index) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MonthlyTimelineView(year: entry.year),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      entry.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[900],
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Text(
+                          entry.year,
+                          style: const TextStyle(
+                            color: Color(0xFF135BEC),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    entry.category,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -248,7 +464,6 @@ class PremiumTimelineGallery extends StatelessWidget {
     bool isLeftAligned,
     int index,
   ) {
-    // Provide a minimum height to ensure rows look substantial
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
       child: Row(
@@ -278,9 +493,7 @@ class PremiumTimelineGallery extends StatelessWidget {
           width: 12,
           height: 12,
           decoration: BoxDecoration(
-            color: const Color(
-              0xFF135BEC,
-            ), // Primary blue matching tailwind config from prompt
+            color: const Color(0xFF135BEC),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -363,8 +576,7 @@ class PremiumTimelineGallery extends StatelessWidget {
         );
       },
       child: Hero(
-        tag:
-            'gallery_image_$index', // Ensure this tag matches what FullScreenImageView expects
+        tag: 'gallery_image_$index',
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
@@ -382,9 +594,7 @@ class PremiumTimelineGallery extends StatelessWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(
-              22,
-            ), // slightly smaller to account for border
+            borderRadius: BorderRadius.circular(22),
             child: AspectRatio(
               aspectRatio: 4 / 3,
               child: Image.network(

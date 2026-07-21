@@ -12,6 +12,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/common/glass_empty_state.dart';
 import '../services/aria_config.dart';
+import '../config/app_config.dart';
 
 // ---------------------------------------------------------------------------
 // MAIN SCREEN
@@ -41,7 +42,7 @@ class _SearchViewState extends State<SearchView>
   int  _activeTab      = 0;
   bool _isLoading      = false;
   bool _hasError       = false;
-  String _baseUrl      = 'http://localhost:3004';
+  String _baseUrl      = AppConfig.apiBaseUrl;
   Timer? _debounce;
   final http.Client _client = http.Client();
 

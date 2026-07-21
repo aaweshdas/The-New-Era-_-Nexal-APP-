@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
 
@@ -15,6 +16,9 @@ class GyroParallax extends StatefulWidget {
 class _GyroParallaxState extends State<GyroParallax> {
   double _x = 0;
   double _y = 0;
+  double _targetX = 0;
+  double _targetY = 0;
+  bool _dirty = false;
   StreamSubscription? _subscription;
 
   // Smoothing factor
@@ -31,17 +35,25 @@ class _GyroParallaxState extends State<GyroParallax> {
 
       // Calculate target tilt (normalized somewhat)
       // x usually ranges -10 to 10.
-      double targetX = -event.x * widget.intensity;
-      double targetY =
+      _targetX = -event.x * widget.intensity;
+      _targetY =
           -(event.y - 7.0) *
           widget
               .intensity; // -7 offset assumes ~45 deg usage angle or similar natural holding
 
-      setState(() {
-        // Low-pass filter for smoothing
-        _x = _x + _alpha * (targetX - _x);
-        _y = _y + _alpha * (targetY - _y);
-      });
+      // Throttle: schedule a single frame callback instead of setState per event
+      if (!_dirty) {
+        _dirty = true;
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() {
+            // Low-pass filter for smoothing
+            _x = _x + _alpha * (_targetX - _x);
+            _y = _y + _alpha * (_targetY - _y);
+            _dirty = false;
+          });
+        });
+      }
     });
   }
 

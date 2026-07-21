@@ -104,8 +104,9 @@ class _VideoBackgroundState extends State<VideoBackground>
       );
     }
 
-    return Opacity(
+    return AnimatedOpacity(
       opacity: widget.opacity,
+      duration: const Duration(milliseconds: 300),
       child: SizedBox.expand(
         child: FittedBox(
           fit: BoxFit.cover,

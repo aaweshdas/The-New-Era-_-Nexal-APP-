@@ -4,12 +4,18 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/cached_styles.dart';
 import '../widgets/common/post_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'messages_view.dart';
 import '../widgets/notifications/notification_view.dart';
+import 'create_post_screen.dart';
+import 'story_viewer_screen.dart';
+import 'post_detail_screen.dart';
+import '../models/post_model.dart';
 
 // ── Feed Filter Enum ─────────────────────────────────────────────────────────
 enum FeedFilter { forYou, trending, following, aiPicks, global }
@@ -136,8 +142,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     Post(id: 'gl4', userName: 'Seoul AI Lab', userAvatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200', isVerified: true, content: '🌐 Korea\'s new brain-computer interface goes live. The age of telepathy begins 🧠',     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', timeAgo: '8h',  likes:  9800, comments: 567, shares: 342, views: 120000),
   ];
 
-  // ── Computed posts list (filter + search) ────────────────────────────────
+  // ── Computed posts list (filter + search) — cached to avoid recompute ──
+  List<Post>? _cachedPosts;
+  FeedFilter? _cachedFilter;
+  String? _cachedSearchQuery;
+
   List<Post> get _currentPosts {
+    // Return cached result if inputs haven't changed
+    if (_cachedPosts != null && _cachedFilter == _activeFilter && _cachedSearchQuery == _searchQuery) {
+      return _cachedPosts!;
+    }
     late List<Post> base;
     switch (_activeFilter) {
       case FeedFilter.forYou:    base = _forYouPosts;    break;
@@ -146,11 +160,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       case FeedFilter.aiPicks:   base = _aiPicksPosts;   break;
       case FeedFilter.global:    base = _globalPosts;    break;
     }
-    if (_searchQuery.isEmpty) return base;
-    return base.where((p) =>
-      p.userName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-      p.content.toLowerCase().contains(_searchQuery.toLowerCase()),
-    ).toList();
+    if (_searchQuery.isEmpty) {
+      _cachedPosts = base;
+    } else {
+      final lowerQuery = _searchQuery.toLowerCase();
+      _cachedPosts = base.where((p) =>
+        p.userName.toLowerCase().contains(lowerQuery) ||
+        p.content.toLowerCase().contains(lowerQuery),
+      ).toList();
+    }
+    _cachedFilter = _activeFilter;
+    _cachedSearchQuery = _searchQuery;
+    return _cachedPosts!;
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -246,25 +267,28 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                            if (index == _currentPosts.length) return _buildLoadMoreIndicator();
+                            final posts = _currentPosts;
+                            if (index == posts.length) return _buildLoadMoreIndicator();
                             // Inject suggested users after 1st post
-                            if (index == 1 && _currentPosts.length > 1) {
+                            if (index == 1 && posts.length > 1) {
                               return Column(children: [
-                                _buildPostItem(_currentPosts[0], 0),
+                                _buildPostItem(posts[0], 0),
                                 _buildSuggestedUsers(),
-                                _buildPostItem(_currentPosts[1], 1),
+                                _buildPostItem(posts[1], 1),
                               ]);
                             }
-                            if (index == 0 && _currentPosts.length == 1) {
+                            if (index == 0 && posts.length == 1) {
                               return Column(children: [
-                                _buildPostItem(_currentPosts[0], 0),
+                                _buildPostItem(posts[0], 0),
                                 _buildSuggestedUsers(),
                               ]);
                             }
                             if (index < 2) return const SizedBox.shrink();
-                            return _buildPostItem(_currentPosts[index], index);
+                            return _buildPostItem(posts[index], index);
                           },
                           childCount: _currentPosts.length + 1,
+                          addAutomaticKeepAlives: false,
+                          addRepaintBoundaries: true,
                         ),
                       ),
                     ),
@@ -308,22 +332,25 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
             const SizedBox(width: 14),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              AnimatedBuilder(
-                animation: _headerGlowController,
-                builder: (context, child) {
-                  final offset = _headerGlowController.value * 2 - 0.5;
-                  return ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      begin: Alignment(-1.0 + offset, 0),
-                      end: Alignment(1.0 + offset, 0),
-                      colors: const [Color(0xFFC084FC), Color(0xFF06B6D4), Color(0xFFC084FC)],
-                      stops: const [0.0, 0.5, 1.0],
-                    ).createShader(bounds),
-                    child: Text("Quantum Feed", style: GoogleFonts.rye(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                  );
-                },
+              RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _headerGlowController,
+                  builder: (context, child) {
+                    final offset = _headerGlowController.value * 2 - 0.5;
+                    return ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        begin: Alignment(-1.0 + offset, 0),
+                        end: Alignment(1.0 + offset, 0),
+                        colors: const [Color(0xFFC084FC), Color(0xFF06B6D4), Color(0xFFC084FC)],
+                        stops: const [0.0, 0.5, 1.0],
+                      ).createShader(bounds),
+                      child: child,
+                    );
+                  },
+                  child: Text("Quantum Feed", style: CachedStyles.ryeW700Size18White.copyWith(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                ),
               ),
-              Text("AI-curated content stream", style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13, fontWeight: FontWeight.w400)),
+              Text("AI-curated content stream", style: CachedStyles.outfitW400Size13White38),
             ]),
           ]),
           Row(children: [
@@ -449,10 +476,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('Stories', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
+          Text('Stories', style: CachedStyles.outfitW600Size14White60L0_3),
           GestureDetector(
             onTap: () {},
-            child: Text('See all', style: GoogleFonts.outfit(color: AppTheme.cyan500.withValues(alpha: 0.7), fontSize: 12, fontWeight: FontWeight.w500)),
+            child: Text('See all', style: CachedStyles.outfitW500Size12White70.copyWith(color: AppTheme.cyan500.withValues(alpha: 0.7))),
           ),
         ]),
       ),
@@ -468,6 +495,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               onTap: () {
                 HapticFeedback.selectionClick();
                 setState(() => story.isSeen = true);
+                final mockStories = _stories.map((s) => StoryItem(
+                  userName: s.name,
+                  userAvatar: s.avatarUrl,
+                  imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
+                  caption: 'Quantum vibes in deep space 🌌 ✨',
+                  timeAgo: '2h ago',
+                )).toList();
+                Navigator.push(context, MaterialPageRoute(builder: (_) => StoryViewerScreen(stories: mockStories, initialIndex: i)));
               },
               child: Container(
                 width: 66,
@@ -486,17 +521,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(2.5),
                     child: story.isOwn
                         ? Stack(children: [
-                            ClipOval(child: Image.network(story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppTheme.purple500.withValues(alpha: 0.3)))),
+                            ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(color: AppTheme.purple500.withValues(alpha: 0.3)))),
                             Positioned(right: 0, bottom: 0, child: Container(
                               width: 18, height: 18,
                               decoration: BoxDecoration(color: AppTheme.purple500, shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 1.5)),
                               child: const Icon(LucideIcons.plus, color: Colors.white, size: 11),
                             )),
                           ])
-                        : ClipOval(child: Image.network(story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppTheme.cyan500.withValues(alpha: 0.3)))),
+                        : ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(color: AppTheme.cyan500.withValues(alpha: 0.3)))),
                   ),
                   const SizedBox(height: 6),
-                  Text(story.name, style: GoogleFonts.outfit(color: story.isSeen ? Colors.white38 : Colors.white70, fontSize: 11, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+                  Text(story.name, style: story.isSeen ? CachedStyles.outfitW500Size11White38 : CachedStyles.outfitW500Size11White70, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
                 ]),
               ),
             );
@@ -537,7 +572,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 border: Border.all(color: isSelected ? AppTheme.purple500.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.08)),
                 boxShadow: isSelected ? [BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.25), blurRadius: 12)] : [],
               ),
-              child: Text(filter.label, style: GoogleFonts.outfit(color: isSelected ? Colors.white : Colors.white54, fontSize: 13, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400, letterSpacing: 0.2)),
+              child: Text(filter.label, style: isSelected ? CachedStyles.outfitW600Size13White54L0_2.copyWith(color: Colors.white) : CachedStyles.outfitW400Size13White54L0_2),
             ),
           );
         }).toList(),
@@ -562,11 +597,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           Row(children: [
             Icon(LucideIcons.userPlus, color: AppTheme.purple500.withValues(alpha: 0.7), size: 15),
             const SizedBox(width: 8),
-            Text('Suggested For You', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
+            Text('Suggested For You', style: CachedStyles.outfitW600Size14White.copyWith(color: Colors.white70)),
           ]),
           GestureDetector(
             onTap: () {},
-            child: Text('See all', style: GoogleFonts.outfit(color: AppTheme.cyan500.withValues(alpha: 0.7), fontSize: 12)),
+            child: Text('See all', style: CachedStyles.outfitBoldSize12White.copyWith(color: AppTheme.cyan500.withValues(alpha: 0.7), fontWeight: FontWeight.normal)),
           ),
         ]),
         const SizedBox(height: 14),
@@ -579,11 +614,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(children: [
-        ClipOval(child: Image.network(user.avatarUrl, width: 44, height: 44, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(width: 44, height: 44, color: AppTheme.purple500.withValues(alpha: 0.3)))),
+        ClipOval(child: CachedNetworkImage(imageUrl: user.avatarUrl, width: 44, height: 44, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(width: 44, height: 44, color: AppTheme.purple500.withValues(alpha: 0.3)))),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(user.name, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-          Text('${user.handle} · ${_formatCount(user.followers)} followers', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
+          Text(user.name, style: CachedStyles.outfitW600Size13White),
+          Text('${user.handle} · ${_formatCount(user.followers)} followers', style: CachedStyles.outfitSize11White38),
         ])),
         GestureDetector(
           onTap: () {
@@ -599,7 +634,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: user.isFollowing ? Colors.white.withValues(alpha: 0.12) : Colors.transparent),
             ),
-            child: Text(user.isFollowing ? 'Following' : 'Follow', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(user.isFollowing ? 'Following' : 'Follow', style: CachedStyles.outfitW600Size12White),
           ),
         ),
       ]),
@@ -622,9 +657,29 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
           ),
-          child: PostCard(
-            post: post,
-            onOptionsTap: () => _showPostOptions(post),
+          child: GestureDetector(
+            onTap: () {
+              final model = PostModel(
+                id: post.id,
+                userId: 'user_1',
+                userName: post.userName,
+                userAvatar: post.userAvatar,
+                isVerified: post.isVerified,
+                content: post.content,
+                imageUrl: post.image,
+                timeAgo: post.timeAgo,
+                likes: post.likes,
+                commentsCount: post.comments,
+                sharesCount: post.shares,
+                viewsCount: post.views,
+                isLiked: post.isLiked,
+              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: model)));
+            },
+            child: PostCard(
+              post: post,
+              onOptionsTap: () => _showPostOptions(post),
+            ),
           ),
         ),
 
@@ -647,7 +702,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           ),
         ),
       ]),
-    ]).animate().fadeIn(delay: (300 + index * 120).ms, duration: 450.ms).slideY(begin: 0.05, end: 0, duration: 450.ms, curve: Curves.easeOut);
+    ]);
   }
 
   Widget _buildSavedOverlayBtn({required bool isBookmarked, required VoidCallback onTap}) {
@@ -1607,7 +1662,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             GestureDetector(
               onTap: () {
                 Navigator.pop(ctx);
-                _showPostComposerModal();
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen()));
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

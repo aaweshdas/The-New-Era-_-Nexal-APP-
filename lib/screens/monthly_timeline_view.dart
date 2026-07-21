@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import 'immersive_dome_gallery_view.dart';
 
@@ -454,203 +455,228 @@ class _MonthlyTimelineViewState extends State<MonthlyTimelineView> {
               ),
 
             // ═══════════════════════════════════════════════════
-            // Premium Floating Glassmorphic Header
+            // Ultra-Adaptive Device-Aware 3 Floating Windows
             // ═══════════════════════════════════════════════════
             Positioned(
-              top: 12,
-              left: 16,
-              right: 16,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        // Back Button (circle)
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 10,
+              right: 10,
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 580),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Floating Window 1: Back + Year Pill
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(22),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                           child: Container(
-                            width: 36,
-                            height: 36,
+                            height: 44,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.08),
-                              shape: BoxShape.circle,
+                              color: const Color(0xFF090414).withValues(alpha: 0.88),
+                              borderRadius: BorderRadius.circular(22),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.white.withValues(alpha: 0.16),
+                                width: 1,
                               ),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                LucideIcons.arrowLeft,
-                                color: Colors.white70,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        // Home Button
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(
-                              context,
-                            ).popUntil((route) => route.isFirst);
-                          },
-                          child: const Icon(
-                            LucideIcons.home,
-                            color: Colors.white54,
-                            size: 18,
-                          ),
-                        ),
-                        // Divider
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 10),
-                          height: 16,
-                          width: 1,
-                          color: Colors.white24,
-                        ),
-                        // Year Pill with gradient
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF135BEC).withValues(alpha: 0.3),
-                                const Color(0xFF135BEC).withValues(alpha: 0.1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.35),
+                                  blurRadius: 16,
+                                ),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: const Color(
-                                0xFF135BEC,
-                              ).withValues(alpha: 0.4),
-                            ),
-                          ),
-                          child: Text(
-                            widget.year,
-                            style: const TextStyle(
-                              color: Color(0xFF135BEC),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.5,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(
+                                      LucideIcons.arrowLeft,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                                  height: 14,
+                                  width: 1,
+                                  color: Colors.white24,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF135BEC).withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: const Color(0xFF135BEC).withValues(alpha: 0.4),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    widget.year,
+                                    style: const TextStyle(
+                                      color: Color(0xFF135BEC),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        const Spacer(),
-                        // NEXAL branding with glow underline
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              "NEXAL",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 6,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Container(
-                              height: 2,
-                              width: 40,
+                      ),
+
+                      const SizedBox(width: 6),
+
+                      // Floating Window 2: NEXAL GALLERY Hero Title
+                      Flexible(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                            child: Container(
+                              height: 44,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF135BEC),
-                                borderRadius: BorderRadius.circular(2),
+                                color: const Color(0xFF090414).withValues(alpha: 0.92),
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  width: 1.2,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(
-                                      0xFF135BEC,
-                                    ).withValues(alpha: 0.8),
-                                    blurRadius: 8,
+                                    color: const Color(0xFF135BEC).withValues(alpha: 0.22),
+                                    blurRadius: 18,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      "NEXAL GALLERY",
+                                      style: GoogleFonts.rye(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 2.0,
+                                        shadows: [
+                                          Shadow(
+                                            color: const Color(0xFF135BEC).withValues(alpha: 0.7),
+                                            blurRadius: 8,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Container(
+                                    height: 2,
+                                    width: 48,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF00F2FE),
+                                          Color(0xFF135BEC),
+                                          Color(0xFF00F2FE),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF135BEC).withValues(alpha: 0.9),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const Spacer(),
-                        // Search icon with notification dot
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isSearching = !_isSearching;
-                                  if (!_isSearching) {
-                                    _searchController.clear();
-                                    _filteredData = List.from(_allData);
-                                  }
-                                });
-                              },
-                              child: Icon(
-                                _isSearching
-                                    ? LucideIcons.x
-                                    : LucideIcons.search,
-                                color: _isSearching
-                                    ? const Color(0xFF135BEC)
-                                    : Colors.white70,
-                                size: 20,
-                              ),
-                            ),
-                            if (!_isSearching)
-                              Positioned(
-                                top: -2,
-                                right: -2,
-                                child: Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF135BEC),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFF135BEC,
-                                        ).withValues(alpha: 0.8),
-                                        blurRadius: 5,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(width: 14),
-                        // More options
-                        GestureDetector(
-                          onTap: _showSettingsSheet,
-                          child: const Icon(
-                            Icons.more_vert,
-                            color: Colors.white70,
-                            size: 22,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+
+                      const SizedBox(width: 6),
+
+                      // Floating Window 3: Action Icons (Search + Settings)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(22),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                          child: Container(
+                            height: 44,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF090414).withValues(alpha: 0.88),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.16),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.35),
+                                  blurRadius: 16,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _isSearching = !_isSearching;
+                                      if (!_isSearching) {
+                                        _searchController.clear();
+                                        _filteredData = List.from(_allData);
+                                      }
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Icon(
+                                      _isSearching ? LucideIcons.x : LucideIcons.search,
+                                      color: _isSearching ? const Color(0xFF135BEC) : Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: _showSettingsSheet,
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(
+                                      Icons.more_vert,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

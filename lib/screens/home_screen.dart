@@ -55,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
     });
   }
 
+  bool _assetsPrecached = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -62,6 +64,26 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
     final route = ModalRoute.of(context);
     if (route is PageRoute) {
       routeObserver.subscribe(this, route);
+    }
+    // Precache nav icon assets to avoid micro-stutter on first navigation
+    if (!_assetsPrecached) {
+      _assetsPrecached = true;
+      const navIcons = [
+        'assets/nav_icons/home.png',
+        'assets/nav_icons/reel.png',
+        'assets/nav_icons/Camera.png',
+        'assets/nav_icons/Gallery.png',
+        'assets/nav_icons/Long Video.png',
+        'assets/nav_icons/Message.png',
+        'assets/nav_icons/map.png',
+        'assets/nav_icons/notification.png',
+        'assets/nav_icons/profile.png',
+        'assets/nav_icons/saved_icon.png',
+        'assets/nav_icons/settings.png',
+      ];
+      for (final path in navIcons) {
+        precacheImage(AssetImage(path), context);
+      }
     }
   }
 

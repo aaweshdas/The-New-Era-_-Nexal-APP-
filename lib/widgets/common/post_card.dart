@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
@@ -489,13 +488,14 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      child: GlassContainer(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.fromBorderSide(
-          BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: Colors.black.withValues(alpha: 0.45),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
         ),
-        color: Colors.black.withValues(alpha: 0.45),
-        blur: 10,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
