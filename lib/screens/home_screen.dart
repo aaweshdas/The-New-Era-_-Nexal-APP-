@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../theme/cached_styles.dart';
-import '../widgets/background/video_background.dart';
+import '../widgets/background/smart_background.dart';
 import '../widgets/effects/gyro_parallax.dart';
 import '../widgets/navigation/quantum_arc_menu.dart';
 import '../widgets/settings/settings_modal.dart';
@@ -189,8 +189,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
         children: [
           // 1. Animated Video Background
           Positioned.fill(
-            child: VideoBackground(
-              opacity: 0.8, // Slightly dimmed for better content contrast
+            child: SmartBackground(
+              opacity: 0.8,
               isPaused: _isVideoPaused,
             ),
           ),

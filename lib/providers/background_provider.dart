@@ -1,0 +1,121 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Background types supported
+enum BackgroundType { defaultVideo, customVideo, customImage }
+
+class BackgroundItem {
+  final String path;     // file path
+  final BackgroundType type;
+  final String name;
+  final DateTime addedAt;
+
+  const BackgroundItem({
+    required this.path,
+    required this.type,
+    required this.name,
+    required this.addedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'path': path,
+    'type': type.name,
+    'name': name,
+    'addedAt': addedAt.toIso8601String(),
+  };
+
+  factory BackgroundItem.fromJson(Map<String, dynamic> j) => BackgroundItem(
+    path: j['path'] as String,
+    type: BackgroundType.values.firstWhere(
+      (e) => e.name == j['type'],
+      orElse: () => BackgroundType.customImage,
+    ),
+    name: j['name'] as String,
+    addedAt: DateTime.parse(j['addedAt'] as String),
+  );
+}
+
+class BackgroundProvider extends ChangeNotifier {
+  static const String _activeKey   = 'bg_active_path';
+  static const String _activeType  = 'bg_active_type';
+  static const String _libraryKey  = 'bg_library';
+
+  // Active background
+  BackgroundType activeType   = BackgroundType.defaultVideo;
+  String         activePath   = 'assets/videos/Background.mp4';
+
+  // User's saved media library
+  List<BackgroundItem> library = [];
+
+  bool _initialized = false;
+  bool get initialized => _initialized;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final typeName = prefs.getString(_activeType);
+    if (typeName != null) {
+      activeType = BackgroundType.values.firstWhere(
+        (e) => e.name == typeName,
+        orElse: () => BackgroundType.defaultVideo,
+      );
+    }
+    activePath = prefs.getString(_activeKey) ?? 'assets/videos/Background.mp4';
+
+    final raw = prefs.getStringList(_libraryKey) ?? [];
+    library = raw
+        .map((e) => BackgroundItem.fromJson(json.decode(e) as Map<String, dynamic>))
+        .toList();
+
+    _initialized = true;
+    notifyListeners();
+  }
+
+  Future<void> setBackground(BackgroundItem item) async {
+    activeType = item.type;
+    activePath = item.path;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_activeType, item.type.name);
+    await prefs.setString(_activeKey, item.path);
+    notifyListeners();
+  }
+
+  Future<void> resetToDefault() async {
+    activeType = BackgroundType.defaultVideo;
+    activePath = 'assets/videos/Background.mp4';
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_activeType, BackgroundType.defaultVideo.name);
+    await prefs.setString(_activeKey, activePath);
+    notifyListeners();
+  }
+
+  Future<void> addToLibrary(BackgroundItem item) async {
+    // Avoid duplicates
+    if (library.any((e) => e.path == item.path)) return;
+    library = [item, ...library];
+    await _saveLibrary();
+    notifyListeners();
+  }
+
+  Future<void> removeFromLibrary(String path) async {
+    library = library.where((e) => e.path != path).toList();
+    // If the removed item was active, reset to default
+    if (activePath == path) {
+      await resetToDefault();
+    } else {
+      await _saveLibrary();
+      notifyListeners();
+    }
+  }
+
+  Future<void> _saveLibrary() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _libraryKey,
+      library.map((e) => json.encode(e.toJson())).toList(),
+    );
+  }
+}

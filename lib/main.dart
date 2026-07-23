@@ -8,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'providers/feed_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/notifications_provider.dart';
+import 'providers/background_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,11 @@ class NexalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FeedProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => NotificationsProvider()),
+        ChangeNotifierProvider(create: (_) {
+          final p = BackgroundProvider();
+          p.load(); // load persisted background on startup
+          return p;
+        }),
       ],
       child: MaterialApp(
         title: 'Nexal',

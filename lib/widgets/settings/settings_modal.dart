@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/aria_config.dart';
 import '../../services/aria_service.dart';
+import '../../screens/settings/dashboard_background_screen.dart';
 
 class SettingsModal extends StatefulWidget {
   const SettingsModal({super.key});
@@ -790,6 +791,85 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
                 }),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader("DASHBOARD BACKGROUND", LucideIcons.monitor),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const DashboardBackgroundScreen(),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF22D3EE).withValues(alpha: 0.10),
+                  const Color(0xFF0EA5E9).withValues(alpha: 0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: const Color(0xFF22D3EE).withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF22D3EE).withValues(alpha: 0.4),
+                        blurRadius: 12,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(LucideIcons.image, color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Dashboard Background",
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        "Image & video backgrounds • Save to library",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(LucideIcons.chevronRight,
+                    color: Color(0xFF22D3EE), size: 20),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 24),
