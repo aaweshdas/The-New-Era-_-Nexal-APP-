@@ -770,7 +770,7 @@ class _BackgroundCard extends StatelessWidget {
     }
 
     if (item.type == BackgroundType.customImage) {
-      return Image.file(File(item.path), fit: BoxFit.cover);
+      return Image.file(File(item.path), fit: BoxFit.cover, cacheWidth: 300);
     }
 
     // Video — show a file icon + name since we can't easily thumbnail without initializing

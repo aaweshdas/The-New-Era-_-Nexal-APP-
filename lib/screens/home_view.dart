@@ -594,14 +594,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(2.5),
                     child: story.isOwn
                         ? Stack(children: [
-                            ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(color: AppTheme.purple500.withValues(alpha: 0.3)))),
+                            ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, memCacheWidth: 110, errorWidget: (_, __, ___) => Container(color: AppTheme.purple500.withValues(alpha: 0.3)))),
                             Positioned(right: 0, bottom: 0, child: Container(
                               width: 18, height: 18,
                               decoration: BoxDecoration(color: AppTheme.purple500, shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 1.5)),
                               child: const Icon(LucideIcons.plus, color: Colors.white, size: 11),
                             )),
                           ])
-                        : ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(color: AppTheme.cyan500.withValues(alpha: 0.3)))),
+                        : ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, memCacheWidth: 110, errorWidget: (_, __, ___) => Container(color: AppTheme.cyan500.withValues(alpha: 0.3)))),
                   ),
                   const SizedBox(height: 6),
                   Text(story.name, style: story.isSeen ? CachedStyles.outfitW500Size11White38 : CachedStyles.outfitW500Size11White70, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
@@ -690,7 +690,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(children: [
-        ClipOval(child: CachedNetworkImage(imageUrl: user.avatarUrl, width: 44, height: 44, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(width: 44, height: 44, color: AppTheme.purple500.withValues(alpha: 0.3)))),
+        ClipOval(child: CachedNetworkImage(imageUrl: user.avatarUrl, width: 44, height: 44, fit: BoxFit.cover, memCacheWidth: 90, errorWidget: (_, __, ___) => Container(width: 44, height: 44, color: AppTheme.purple500.withValues(alpha: 0.3)))),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(user.name, style: CachedStyles.outfitW600Size13White),
@@ -726,7 +726,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final isBookmarked = feedProvider.bookmarkedIds.contains(post.id);
 
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return RepaintBoundary(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // Post with action row overlay
       Stack(children: [
         Container(
@@ -776,7 +777,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           ),
         ),
       ]),
-    ]);
+    ]));
   }
 
   Widget _buildSavedOverlayBtn({required bool isBookmarked, required VoidCallback onTap}) {

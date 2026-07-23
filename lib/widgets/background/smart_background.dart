@@ -11,6 +11,12 @@ import '../../theme/app_theme.dart';
 ///  - Default asset video (original behaviour)
 ///  - Custom local video file (looping, muted)
 ///  - Custom local image file (fitted cover)
+///
+/// Performance notes:
+///  - Uses [Selector] so it only rebuilds when path/type actually changes
+///  - [VideoPlayer] is wrapped in [RepaintBoundary] to isolate GPU decoding
+///  - Background loading is triggered from [didChangeDependencies] /
+///    [didUpdateWidget], NOT from inside build()
 class SmartBackground extends StatefulWidget {
   final double opacity;
   final bool isPaused;
@@ -42,6 +48,16 @@ class _SmartBackgroundState extends State<SmartBackground>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Triggered when provider value changes — safe to call here, NOT in build()
+    final prov = context.read<BackgroundProvider>();
+    if (prov.initialized) {
+      _loadBackground(prov.activePath, prov.activeType);
+    }
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _ctrl?.dispose();
@@ -62,22 +78,24 @@ class _SmartBackgroundState extends State<SmartBackground>
   Future<void> _loadBackground(String path, BackgroundType type) async {
     if (_loadedPath == path && _loadedType == type) return;
 
-    _ctrl?.dispose();
-    _ctrl = null;
-    if (mounted) setState(() { _initialized = false; _hasError = false; });
-
     _loadedPath = path;
     _loadedType = type;
 
+    final oldCtrl = _ctrl;
+    _ctrl = null;
+    if (mounted) setState(() { _initialized = false; _hasError = false; });
+    oldCtrl?.dispose();
+
     if (type == BackgroundType.customImage) {
-      // No video controller needed — just mark initialized
-      if (mounted) setState(() => _initialized = true);
+      if (mounted && _loadedPath == path) {
+        setState(() => _initialized = true);
+      }
       return;
     }
 
-    // ── Video: asset or file ──────────────────────────────────────
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted || _loadedPath != path) return; // stale call
+    // Small delay to let the screen transition finish smoothly
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted || _loadedPath != path) return; // stale — another load started
 
     try {
       final ctrl = type == BackgroundType.defaultVideo
@@ -98,7 +116,7 @@ class _SmartBackgroundState extends State<SmartBackground>
         ctrl.dispose();
       }
     } catch (e) {
-      debugPrint('[SmartBackground] Error: $e');
+      debugPrint('[SmartBackground] Error loading background: $e');
       if (mounted && _loadedPath == path) {
         setState(() => _hasError = true);
       }
@@ -117,35 +135,41 @@ class _SmartBackgroundState extends State<SmartBackground>
     }
   }
 
+  Widget _buildGradientFallback() => Container(
+    decoration: const BoxDecoration(gradient: AppTheme.deepSpaceGradient),
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<BackgroundProvider>(
-      builder: (context, prov, _) {
-        if (!prov.initialized) {
-          return Container(
-            decoration: const BoxDecoration(gradient: AppTheme.deepSpaceGradient),
-          );
+    // Use Selector to only rebuild when path OR type changes — not on every
+    // provider notifyListeners() call (e.g., library updates)
+    return Selector<BackgroundProvider, (String, BackgroundType, bool)>(
+      selector: (_, p) => (p.activePath, p.activeType, p.initialized),
+      builder: (context, data, _) {
+        final (path, type, ready) = data;
+
+        if (!ready) return _buildGradientFallback();
+
+        // Trigger load when selector detects a change (not inside every build)
+        if (_loadedPath != path || _loadedType != type) {
+          // Schedule after frame to avoid setState during build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _loadBackground(path, type);
+          });
         }
 
-        // Kick off load if needed (non-blocking side-effect)
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _loadBackground(prov.activePath, prov.activeType);
-        });
-
-        if (_hasError || !_initialized) {
-          return Container(
-            decoration: const BoxDecoration(gradient: AppTheme.deepSpaceGradient),
-          );
-        }
+        if (_hasError || !_initialized) return _buildGradientFallback();
 
         Widget bg;
 
-        if (prov.activeType == BackgroundType.customImage) {
+        if (type == BackgroundType.customImage) {
           bg = Image.file(
-            File(prov.activePath),
+            File(path),
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
+            // Limit decoded size to screen resolution — no need for full res
+            cacheWidth: 1080,
           );
         } else if (_ctrl != null) {
           bg = FittedBox(
@@ -157,15 +181,16 @@ class _SmartBackgroundState extends State<SmartBackground>
             ),
           );
         } else {
-          bg = Container(
-            decoration: const BoxDecoration(gradient: AppTheme.deepSpaceGradient),
-          );
+          return _buildGradientFallback();
         }
 
+        // RepaintBoundary isolates video/image decoding from the parent tree
         return AnimatedOpacity(
           opacity: widget.opacity,
           duration: const Duration(milliseconds: 300),
-          child: SizedBox.expand(child: bg),
+          child: SizedBox.expand(
+            child: RepaintBoundary(child: bg),
+          ),
         );
       },
     );

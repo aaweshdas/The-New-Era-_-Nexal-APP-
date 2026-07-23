@@ -228,7 +228,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
             const SizedBox(height: 16),
             CircleAvatar(
               radius: 36,
-              backgroundImage: CachedNetworkImageProvider(widget.post.userAvatar),
+              backgroundImage: CachedNetworkImageProvider(widget.post.userAvatar, maxWidth: 100),
             ),
             const SizedBox(height: 10),
             Row(
@@ -308,7 +308,11 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
               clipBehavior: Clip.none,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.contain),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.contain,
+                  memCacheWidth: 800,
+                ),
               ),
             ),
             Positioned(
@@ -357,7 +361,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(radius: 18, backgroundImage: CachedNetworkImageProvider(c.userAvatar)),
+                          CircleAvatar(radius: 18, backgroundImage: CachedNetworkImageProvider(c.userAvatar, maxWidth: 80)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -590,7 +594,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                           ),
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundImage: CachedNetworkImageProvider(widget.post.userAvatar),
+                            backgroundImage: CachedNetworkImageProvider(widget.post.userAvatar, maxWidth: 100),
                           ),
                         ),
                         if (widget.post.isOnline)
@@ -687,6 +691,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                       child: CachedNetworkImage(
                         imageUrl: widget.post.image!,
                         fit: BoxFit.cover,
+                        memCacheWidth: 600,
                         placeholder: (_, __) => Container(color: Colors.white.withValues(alpha: 0.05)),
                       ),
                     ),
