@@ -42,8 +42,8 @@ class BackgroundProvider extends ChangeNotifier {
   static const String _libraryKey  = 'bg_library';
 
   // Active background
-  BackgroundType activeType   = BackgroundType.defaultVideo;
-  String         activePath   = 'assets/videos/Background.mp4';
+  BackgroundType activeType   = BackgroundType.assetImage;
+  String         activePath   = 'assets/backgrounds/11.png';
 
   // User's saved media library
   List<BackgroundItem> library = [];
@@ -58,10 +58,10 @@ class BackgroundProvider extends ChangeNotifier {
     if (typeName != null) {
       activeType = BackgroundType.values.firstWhere(
         (e) => e.name == typeName,
-        orElse: () => BackgroundType.defaultVideo,
+        orElse: () => BackgroundType.assetImage,
       );
     }
-    activePath = prefs.getString(_activeKey) ?? 'assets/videos/Background.mp4';
+    activePath = prefs.getString(_activeKey) ?? 'assets/backgrounds/11.png';
 
     final raw = prefs.getStringList(_libraryKey);
     if (raw == null) {
@@ -128,11 +128,11 @@ class BackgroundProvider extends ChangeNotifier {
   }
 
   Future<void> resetToDefault() async {
-    activeType = BackgroundType.defaultVideo;
-    activePath = 'assets/videos/Background.mp4';
+    activeType = BackgroundType.assetImage;
+    activePath = 'assets/backgrounds/11.png';
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_activeType, BackgroundType.defaultVideo.name);
+    await prefs.setString(_activeType, BackgroundType.assetImage.name);
     await prefs.setString(_activeKey, activePath);
     notifyListeners();
   }
