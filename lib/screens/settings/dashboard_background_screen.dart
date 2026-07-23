@@ -136,15 +136,19 @@ class _DashboardBackgroundScreenState
   String _label(BackgroundType t) {
     switch (t) {
       case BackgroundType.defaultVideo: return 'Default';
-      case BackgroundType.customVideo:  return 'Video';
-      case BackgroundType.customImage:  return 'Image';
+      case BackgroundType.assetVideo:   return 'Asset Video';
+      case BackgroundType.customVideo:  return 'Custom Video';
+      case BackgroundType.assetImage:   return 'Asset Image';
+      case BackgroundType.customImage:  return 'Custom Image';
     }
   }
 
   Color _typeColor(BackgroundType t) {
     switch (t) {
       case BackgroundType.defaultVideo: return const Color(0xFF22D3EE);
+      case BackgroundType.assetVideo:   return const Color(0xFF00FFB2);
       case BackgroundType.customVideo:  return const Color(0xFFC084FC);
+      case BackgroundType.assetImage:   return const Color(0xFFFFB200);
       case BackgroundType.customImage:  return const Color(0xFFFF6B9D);
     }
   }
@@ -339,7 +343,9 @@ class _DashboardBackgroundScreenState
                   item: item,
                   isActive: isActive,
                   onApply: () => _applyBackground(item),
-                  onDelete: item.type == BackgroundType.defaultVideo
+                  onDelete: (item.type == BackgroundType.defaultVideo ||
+                          item.type == BackgroundType.assetVideo ||
+                          item.type == BackgroundType.assetImage)
                       ? null
                       : () => prov.removeFromLibrary(item.path),
                   onPreview: () => _startPreview(item.path, item.type),
@@ -773,6 +779,10 @@ class _BackgroundCard extends StatelessWidget {
 
     if (item.type == BackgroundType.customImage) {
       return Image.file(File(item.path), fit: BoxFit.cover, cacheWidth: 300);
+    }
+
+    if (item.type == BackgroundType.assetImage) {
+      return Image.asset(item.path, fit: BoxFit.cover, cacheWidth: 300);
     }
 
     // Video — show a file icon + name since we can't easily thumbnail without initializing

@@ -86,7 +86,7 @@ class _SmartBackgroundState extends State<SmartBackground>
     if (mounted) setState(() { _initialized = false; _hasError = false; });
     oldCtrl?.dispose();
 
-    if (type == BackgroundType.customImage) {
+    if (type == BackgroundType.customImage || type == BackgroundType.assetImage) {
       if (mounted && _loadedPath == path) {
         setState(() => _initialized = true);
       }
@@ -98,7 +98,7 @@ class _SmartBackgroundState extends State<SmartBackground>
     if (!mounted || _loadedPath != path) return; // stale — another load started
 
     try {
-      final ctrl = type == BackgroundType.defaultVideo
+      final ctrl = (type == BackgroundType.defaultVideo || type == BackgroundType.assetVideo)
           ? VideoPlayerController.asset(path)
           : VideoPlayerController.file(File(path));
 
@@ -168,7 +168,14 @@ class _SmartBackgroundState extends State<SmartBackground>
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
-            // Limit decoded size to screen resolution — no need for full res
+            cacheWidth: 1080,
+          );
+        } else if (type == BackgroundType.assetImage) {
+          bg = Image.asset(
+            path,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
             cacheWidth: 1080,
           );
         } else if (_ctrl != null) {

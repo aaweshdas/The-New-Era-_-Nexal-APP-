@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Background types supported
-enum BackgroundType { defaultVideo, customVideo, customImage }
+enum BackgroundType { defaultVideo, customVideo, customImage, assetVideo, assetImage }
 
 class BackgroundItem {
   final String path;     // file path
@@ -63,13 +63,58 @@ class BackgroundProvider extends ChangeNotifier {
     }
     activePath = prefs.getString(_activeKey) ?? 'assets/videos/Background.mp4';
 
-    final raw = prefs.getStringList(_libraryKey) ?? [];
-    library = raw
-        .map((e) => BackgroundItem.fromJson(json.decode(e) as Map<String, dynamic>))
-        .toList();
+    final raw = prefs.getStringList(_libraryKey);
+    if (raw == null) {
+      library = _getDefaultPreseededLibrary();
+      await _saveLibrary();
+    } else {
+      library = raw
+          .map((e) => BackgroundItem.fromJson(json.decode(e) as Map<String, dynamic>))
+          .toList();
+      
+      final preseeded = _getDefaultPreseededLibrary();
+      bool updated = false;
+      for (final item in preseeded) {
+        if (!library.any((e) => e.path == item.path)) {
+          library.add(item);
+          updated = true;
+        }
+      }
+      if (updated) {
+        await _saveLibrary();
+      }
+    }
 
     _initialized = true;
     notifyListeners();
+  }
+
+  List<BackgroundItem> _getDefaultPreseededLibrary() {
+    final list = <BackgroundItem>[];
+    
+    list.add(BackgroundItem(
+      path: 'assets/videos/startup.mp4',
+      type: BackgroundType.assetVideo,
+      name: 'Startup Cyberpunk',
+      addedAt: DateTime(2026),
+    ));
+    list.add(BackgroundItem(
+      path: 'assets/videos/map_startup.mp4',
+      type: BackgroundType.assetVideo,
+      name: 'Map Wireframe Grid',
+      addedAt: DateTime(2026),
+    ));
+
+    for (int i = 1; i <= 11; i++) {
+      list.add(BackgroundItem(
+        path: 'assets/backgrounds/$i.png',
+        type: BackgroundType.assetImage,
+        name: 'Neo-City Grid $i',
+        addedAt: DateTime(2026),
+      ));
+    }
+    
+    return list;
   }
 
   Future<void> setBackground(BackgroundItem item) async {
