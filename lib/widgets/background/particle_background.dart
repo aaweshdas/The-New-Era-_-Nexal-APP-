@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 
 class ParticleBackground extends StatefulWidget {
   const ParticleBackground({super.key});
@@ -10,67 +9,66 @@ class ParticleBackground extends StatefulWidget {
 }
 
 class _ParticleBackgroundState extends State<ParticleBackground>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late AnimationController _boostController;
-  final List<Node> _nodes = [];
-  final List<EnergyPulse> _pulses = [];
+  final List<_HairParticle> _particles = [];
   final math.Random _random = math.Random();
-  final int _nodeCount = 150;
+  final int _maxParticles = 80;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10), // Arbitrary, drives the tick
+      duration: const Duration(seconds: 10),
     )..repeat();
-
-    _boostController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2), // Slow down duration
-      value: 1.0, // Start fully boosted
-    );
-
-    // Speed boost for first 15 seconds
-    Future.delayed(const Duration(seconds: 15), () {
-      if (mounted) {
-        _boostController.animateTo(0.0, curve: Curves.easeInOut);
-      }
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_nodes.isEmpty) {
-      _initNodes(MediaQuery.of(context).size);
+    if (_particles.isEmpty) {
+      final size = MediaQuery.of(context).size;
+      for (int i = 0; i < _maxParticles; i++) {
+        _particles.add(_createParticle(size, randomY: true));
+      }
     }
   }
 
-  void _initNodes(Size size) {
-    _nodes.clear();
-    for (int i = 0; i < _nodeCount; i++) {
-      final layer = _random.nextInt(3);
-      final speed = 0.5 + layer * 0.3; // Layer based speed
+  _HairParticle _createParticle(Size size, {bool randomY = false}) {
+    // Spawn particles in the bottom half / neck area of the cat representation
+    final double x = size.width * 0.15 + _random.nextDouble() * size.width * 0.7;
+    final double y = randomY 
+        ? _random.nextDouble() * size.height 
+        : size.height + _random.nextDouble() * 50;
 
-      _nodes.add(
-        Node(
-          x: _random.nextDouble() * size.width,
-          y: _random.nextDouble() * size.height,
-          vx: (_random.nextDouble() - 0.5) * speed,
-          vy: (_random.nextDouble() - 0.5) * speed,
-          layer: layer,
-          connections: [],
-        ),
-      );
+    // Distribute colors matching the cat's fur and accents in 11.png
+    Color color;
+    final double r = _random.nextDouble();
+    if (r < 0.60) {
+      color = Colors.white; // Main white/silver neck fur
+    } else if (r < 0.85) {
+      color = const Color(0xFF80DEEA); // Luminous teal reflection matching background streaks
+    } else {
+      color = const Color(0xFFFBBF24); // Warm amber/yellow eye and inner ear accents
     }
+
+    final double speed = 1.0 + _random.nextDouble() * 1.8;
+
+    return _HairParticle(
+      x: x,
+      y: y,
+      speed: speed,
+      size: 1.2 + _random.nextDouble() * 1.8,
+      color: color,
+      opacity: 0.15 + _random.nextDouble() * 0.55,
+      angle: -math.pi / 2, // Pointing upwards initially
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _boostController.dispose();
     super.dispose();
   }
 
@@ -78,28 +76,52 @@ class _ParticleBackgroundState extends State<ParticleBackground>
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: AnimatedBuilder(
-        animation: Listenable.merge([_controller, _boostController]),
+        animation: _controller,
         builder: (context, child) {
-          // Randomly add energy pulse
-          if (_random.nextDouble() > 0.98) {
-            final size = MediaQuery.of(context).size;
-            _pulses.add(
-              EnergyPulse(
-                x: size.width / 2,
-                y: size.height / 2,
-                maxRadius: 300 + _random.nextDouble() * 200,
-              ),
-            );
+          final size = MediaQuery.of(context).size;
+          
+          // Update particles
+          for (int i = 0; i < _particles.length; i++) {
+            final p = _particles[i];
+            
+            // Cat fur flow physics alignment field:
+            // Cat's head is roughly situated around x = 0.45 * width, y = 0.35 * height.
+            final double headX = size.width * 0.45;
+            final double headY = size.height * 0.35;
+            
+            // Distance vector to cat's head region
+            final double dx = headX - p.x;
+            
+            double targetAngle = -math.pi / 2; // Flows straight up by default
+            
+            if (p.y > headY) {
+              // Below head (neck region): flow up along the neck profile, curving slightly inward
+              targetAngle = -math.pi / 2 + (dx / size.width) * 0.45;
+            } else {
+              // Above head: flow outward to mimic whisker curves and ears tips outward angles
+              targetAngle = -math.pi / 2 + (p.x < headX ? -0.4 : 0.4);
+            }
+            
+            // Smoothly interpolate angle to prevent sharp direction changes
+            p.angle = p.angle * 0.88 + targetAngle * 0.12;
+            
+            // Translate position along angle vector
+            p.x += math.cos(p.angle) * p.speed;
+            p.y += math.sin(p.angle) * p.speed;
+            
+            // Fade out as they reach the top screen edge
+            if (p.y < size.height * 0.12) {
+              p.opacity -= 0.015;
+            }
+            
+            // Reset if out of viewport bounds or fully faded
+            if (p.y < 0 || p.x < 0 || p.x > size.width || p.opacity <= 0) {
+              _particles[i] = _createParticle(size);
+            }
           }
 
           return CustomPaint(
-            painter: ParticlePainter(
-              nodes: _nodes,
-              pulses: _pulses,
-              animValue: _controller.value,
-              boostValue: _boostController.value,
-              random: _random,
-            ),
+            painter: _CatHairParticlePainter(particles: _particles),
             size: Size.infinite,
           );
         },
@@ -108,190 +130,55 @@ class _ParticleBackgroundState extends State<ParticleBackground>
   }
 }
 
-class Node {
+class _HairParticle {
   double x, y;
-  double vx, vy;
-  int layer;
-  List<int> connections;
+  double speed;
+  double size;
+  Color color;
+  double opacity;
+  double angle;
 
-  Node({
+  _HairParticle({
     required this.x,
     required this.y,
-    required this.vx,
-    required this.vy,
-    required this.layer,
-    required this.connections,
+    required this.speed,
+    required this.size,
+    required this.color,
+    required this.opacity,
+    required this.angle,
   });
 }
 
-class EnergyPulse {
-  double x, y;
-  double radius = 0;
-  double maxRadius;
-  bool isDead = false;
+class _CatHairParticlePainter extends CustomPainter {
+  final List<_HairParticle> particles;
 
-  EnergyPulse({required this.x, required this.y, required this.maxRadius});
-}
-
-class ParticlePainter extends CustomPainter {
-  final List<Node> nodes;
-  final List<EnergyPulse> pulses;
-  final double animValue;
-  final double boostValue;
-  final math.Random random;
-
-  // Pre-allocated paint objects to avoid GC churn
-  static final Paint _pulsePaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 2.0;
-  static final Paint _linePaint = Paint()..strokeWidth = 1.0;
-  static final Paint _particlePaint = Paint()
-    ..color = Colors.white.withValues(alpha: 0.8)
-    ..style = PaintingStyle.fill;
-  static final Paint _nodePaint = Paint()..style = PaintingStyle.fill;
-
-  // Pre-computed layer colors
-  static final Color _layerColor0 = Color.lerp(AppTheme.purple500, AppTheme.pink500, 0.5)!;
-  static final Color _layerColor1 = Color.lerp(AppTheme.blue500, AppTheme.cyan500, 0.5)!;
-  static final Color _layerColor2 = Color.lerp(AppTheme.pink500, AppTheme.purple500, 0.5)!;
-
-  ParticlePainter({
-    required this.nodes,
-    required this.pulses,
-    required this.animValue,
-    required this.boostValue,
-    required this.random,
-  });
+  _CatHairParticlePainter({required this.particles});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Update Pulses
-    for (var pulse in pulses) {
-      if (pulse.isDead) continue;
-      pulse.radius += 2.0;
-      if (pulse.radius >= pulse.maxRadius) {
-        pulse.isDead = true;
-        continue;
-      }
+    final paint = Paint()..style = PaintingStyle.fill;
 
-      final opacity = 1.0 - (pulse.radius / pulse.maxRadius);
-      _pulsePaint.color = AppTheme.purple500.withValues(alpha: opacity * 0.3);
-      canvas.drawCircle(Offset(pulse.x, pulse.y), pulse.radius, _pulsePaint);
-    }
-    pulses.removeWhere((p) => p.isDead);
-
-    // 2. Build spatial grid for O(N) neighbour lookups instead of O(N²)
-    const double cellSize = 100.0;
-    final int gridCols = (size.width / cellSize).ceil() + 1;
-    final int gridRows = (size.height / cellSize).ceil() + 1;
-    final List<List<int>> grid = List.generate(gridCols * gridRows, (_) => <int>[]);
-
-    // Speed multiplier: 1.0 (normal) to 5.0 (boosted)
-    double speedMultiplier = 1.0 + (boostValue * 4.0);
-
-    // Update positions and insert into grid
-    for (int i = 0; i < nodes.length; i++) {
-      final node = nodes[i];
-
-      // Move
-      node.x += node.vx * speedMultiplier;
-      node.y += node.vy * speedMultiplier;
-
-      // Bounce
-      if (node.x < 0 || node.x > size.width) {
-        node.vx *= -1;
-        node.x = node.x.clamp(0.0, size.width);
-      }
-      if (node.y < 0 || node.y > size.height) {
-        node.vy *= -1;
-        node.y = node.y.clamp(0.0, size.height);
-      }
-
-      // Insert into grid
-      final col = (node.x / cellSize).floor().clamp(0, gridCols - 1);
-      final row = (node.y / cellSize).floor().clamp(0, gridRows - 1);
-      grid[row * gridCols + col].add(i);
-    }
-
-    // 3. Draw connections using spatial grid (check only neighbouring cells)
-    for (int i = 0; i < nodes.length; i++) {
-      final node = nodes[i];
-      final col = (node.x / cellSize).floor().clamp(0, gridCols - 1);
-      final row = (node.y / cellSize).floor().clamp(0, gridRows - 1);
-
-      // Check the 3x3 neighbourhood of cells
-      for (int dr = -1; dr <= 1; dr++) {
-        for (int dc = -1; dc <= 1; dc++) {
-          final nr = row + dr;
-          final nc = col + dc;
-          if (nr < 0 || nr >= gridRows || nc < 0 || nc >= gridCols) continue;
-          final cell = grid[nr * gridCols + nc];
-          for (final j in cell) {
-            if (j <= i) continue; // Avoid double-drawing and self
-            final target = nodes[j];
-            final dx = node.x - target.x;
-            final dy = node.y - target.y;
-            final distSq = dx * dx + dy * dy;
-
-            if (distSq < 10000) { // 100*100 threshold
-              final dist = math.sqrt(distSq);
-              final opacity = (1.0 - (dist / 100)) * 0.5;
-
-              Color color;
-              if (node.layer == 0) {
-                color = _layerColor0;
-              } else if (node.layer == 1) {
-                color = _layerColor1;
-              } else {
-                color = _layerColor2;
-              }
-
-              _linePaint.color = color.withValues(alpha: opacity);
-              canvas.drawLine(
-                Offset(node.x, node.y),
-                Offset(target.x, target.y),
-                _linePaint,
-              );
-
-              // Data Flow Particle on line (randomly)
-              if (random.nextDouble() > 0.99) {
-                final t = random.nextDouble();
-                final lx = node.x + (target.x - node.x) * t;
-                final ly = node.y + (target.y - node.y) * t;
-                canvas.drawCircle(Offset(lx, ly), 1.5, _particlePaint);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // 4. Draw Node Dots
-    for (int i = 0; i < nodes.length; i++) {
-      final node = nodes[i];
-      double radius =
-          2.0 + node.layer + math.sin(animValue * 2 * math.pi + i) * 0.5;
-
-      Color baseColor;
-      if (node.layer == 0) {
-        baseColor = AppTheme.purple500;
-      } else if (node.layer == 1) {
-        baseColor = AppTheme.blue500;
-      } else {
-        baseColor = AppTheme.pink500;
-      }
-
-      // Glow
-      _nodePaint.color = baseColor.withValues(alpha: 0.3);
-      canvas.drawCircle(Offset(node.x, node.y), radius * 2, _nodePaint);
-      // Core
-      _nodePaint.color = baseColor.withValues(alpha: 0.8);
-      canvas.drawCircle(Offset(node.x, node.y), radius, _nodePaint);
+    for (final p in particles) {
+      if (p.opacity <= 0) continue;
+      
+      // Calculate trailing path to draw hair/droplet shape
+      final double tailX = p.x - math.cos(p.angle) * (p.speed * 8.0);
+      final double tailY = p.y - math.sin(p.angle) * (p.speed * 8.0);
+      
+      // Paint the hair stroke/capsule
+      final strokePaint = Paint()
+        ..color = p.color.withValues(alpha: p.opacity)
+        ..strokeWidth = p.size
+        ..strokeCap = StrokeCap.round;
+        
+      canvas.drawLine(Offset(p.x, p.y), Offset(tailX, tailY), strokePaint);
+      
+      // Add a bright core spot at the tip
+      paint.color = p.color.withValues(alpha: math.min(1.0, p.opacity * 1.3));
+      canvas.drawCircle(Offset(p.x, p.y), p.size * 0.6, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant ParticlePainter oldDelegate) =>
-      oldDelegate.animValue != animValue ||
-      oldDelegate.boostValue != boostValue;
+  bool shouldRepaint(covariant _CatHairParticlePainter oldDelegate) => true;
 }
