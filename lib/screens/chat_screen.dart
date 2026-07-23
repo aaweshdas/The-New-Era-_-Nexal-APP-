@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import 'messages_view.dart';
 
@@ -31,6 +33,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   bool _showEmoji = false;
   bool _showScrollDown = false;
   bool _isTyping = false;
+  ChatMessage? _replyingTo; // for reply-thread feature
+  File? _pendingImage; // for image attachment preview
+  final _imagePicker = ImagePicker();
 
   static const _emojis = [
     '😊','😂','❤️','🔥','👍','✨','🚀','🎵','😍','🙏',
@@ -72,12 +77,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   void _sendMessage() {
     final text = _inputCtrl.text.trim();
-    if (text.isEmpty) return;
-    final msg = ChatMessage(text: text, isSent: true, time: DateTime.now());
+    final hasImage = _pendingImage != null;
+    if (text.isEmpty && !hasImage) return;
+
+    final replyPrefix = _replyingTo != null ? '↩️ Replying to: "${_replyingTo!.text}"\n' : '';
+    final fullText = hasImage ? '📷 Photo' : '$replyPrefix$text';
+
+    final msg = ChatMessage(text: fullText, isSent: true, time: DateTime.now());
     setState(() {
       _messages.add(msg);
       _inputCtrl.clear();
       _showEmoji = false;
+      _replyingTo = null;
+      _pendingImage = null;
     });
     widget.onMessageSent(msg);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -143,10 +155,38 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _attachOption(LucideIcons.camera, 'Camera', AppTheme.purple500),
-                _attachOption(LucideIcons.image, 'Gallery', AppTheme.cyan500),
-                _attachOption(LucideIcons.fileText, 'Document', AppTheme.pink500),
-                _attachOption(LucideIcons.mic, 'Audio', const Color(0xFF22C55E)),
+                _attachOption(LucideIcons.camera, 'Camera', AppTheme.purple500, () async {
+                  Navigator.pop(context);
+                  final picked = await _imagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
+                  if (picked != null && mounted) {
+                    setState(() => _pendingImage = File(picked.path));
+                  }
+                }),
+                _attachOption(LucideIcons.image, 'Gallery', AppTheme.cyan500, () async {
+                  Navigator.pop(context);
+                  final picked = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                  if (picked != null && mounted) {
+                    setState(() => _pendingImage = File(picked.path));
+                  }
+                }),
+                _attachOption(LucideIcons.fileText, 'Document', AppTheme.pink500, () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Document picker coming soon', style: GoogleFonts.outfit(color: Colors.white)),
+                    backgroundColor: const Color(0xFF1a1a2e),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                }),
+                _attachOption(LucideIcons.mic, 'Audio', const Color(0xFF22C55E), () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Voice recorder coming soon', style: GoogleFonts.outfit(color: Colors.white)),
+                    backgroundColor: const Color(0xFF1a1a2e),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ));
+                }),
               ],
             ),
             const SizedBox(height: 24),
@@ -156,17 +196,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _attachOption(IconData icon, String label, Color color) {
+  Widget _attachOption(IconData icon, String label, Color color, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('$label selected', style: GoogleFonts.outfit(color: Colors.white)),
-          backgroundColor: const Color(0xFF1a1a2e),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
-      },
+      onTap: onTap,
       child: Column(
         children: [
           Container(
@@ -221,7 +253,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 duration: const Duration(seconds: 1),
               ));
             }),
-            _msgAction(LucideIcons.reply, 'Reply', () => Navigator.pop(context)),
+            _msgAction(LucideIcons.reply, 'Reply', () {
+              setState(() => _replyingTo = msg);
+              Navigator.pop(context);
+              FocusScope.of(context).requestFocus(FocusNode()); // open keyboard
+            }),
             if (msg.isSent) _msgAction(LucideIcons.trash2, 'Delete', () {
               setState(() => _messages.remove(msg));
               Navigator.pop(context);
@@ -262,6 +298,53 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         children: [
           _buildAppBar(),
           Expanded(child: _buildMessageList()),
+          // Pending image preview
+          if (_pendingImage != null)
+            Container(
+              color: const Color(0xFF0d0d1a),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(_pendingImage!, width: 60, height: 60, fit: BoxFit.cover),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Photo ready to send', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13))),
+                  GestureDetector(
+                    onTap: () => setState(() => _pendingImage = null),
+                    child: const Icon(LucideIcons.x, color: Colors.white38, size: 20),
+                  ),
+                ],
+              ),
+            ),
+          // Reply preview bar
+          if (_replyingTo != null)
+            Container(
+              color: const Color(0xFF0d0d1a),
+              padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
+              child: Row(
+                children: [
+                  Container(width: 3, height: 36, decoration: BoxDecoration(color: AppTheme.cyan500, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Replying to ${_replyingTo!.isSent ? 'you' : widget.item.name}',
+                            style: GoogleFonts.outfit(color: AppTheme.cyan500, fontSize: 11, fontWeight: FontWeight.w600)),
+                        Text(_replyingTo!.text, maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _replyingTo = null),
+                    child: const Icon(LucideIcons.x, color: Colors.white38, size: 18),
+                  ),
+                ],
+              ),
+            ),
           if (_showEmoji) _buildEmojiPicker(),
           _buildInputBar(),
         ],

@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
 
 class PostComment {
@@ -250,19 +253,30 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
               ],
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.purple500,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                minimumSize: const Size(double.infinity, 44),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Following ${widget.post.userName}')),
+            Consumer<UserProvider>(
+              builder: (ctx, userProvider, _) {
+                final isFollowing = userProvider.isFollowing(widget.post.userName);
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isFollowing ? Colors.white.withValues(alpha: 0.1) : AppTheme.purple500,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    side: isFollowing ? BorderSide(color: Colors.white.withValues(alpha: 0.2)) : null,
+                    minimumSize: const Size(double.infinity, 44),
+                  ),
+                  onPressed: () {
+                    userProvider.toggleFollow(widget.post.userName);
+                    HapticFeedback.lightImpact();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isFollowing ? 'Unfollowed ${widget.post.userName}' : 'Following ${widget.post.userName}'),
+                        backgroundColor: const Color(0xFF1a1a2e),
+                      ),
+                    );
+                  },
+                  child: Text(isFollowing ? 'Following' : 'Follow', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
                 );
               },
-              child: Text('Follow', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -413,6 +427,62 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
     );
   }
 
+  void _showShareToMessagesContactSheet() {
+    final contacts = [
+      {'name': 'Aria Storm', 'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'},
+      {'name': 'Neo Sync', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'},
+      {'name': 'Luna Nova', 'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'},
+      {'name': 'Zara Void', 'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'},
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0F0022),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            Text('Send to Chat', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: contacts.length,
+                itemBuilder: (_, i) => ListTile(
+                  leading: CircleAvatar(backgroundImage: NetworkImage(contacts[i]['avatar']!)),
+                  title: Text(contacts[i]['name']!, style: GoogleFonts.outfit(color: Colors.white)),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [AppTheme.purple500, AppTheme.pink500]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('Send', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Post shared with ${contacts[i]['name']!}! 🚀', style: GoogleFonts.outfit()),
+                      backgroundColor: const Color(0xFF00E5FF),
+                    ));
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showShareModal() {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
@@ -443,15 +513,19 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                 }),
                 _shareOption(LucideIcons.send, 'Send Message', AppTheme.pink500, () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shared to messages!')));
+                  _showShareToMessagesContactSheet();
                 }),
                 _shareOption(LucideIcons.aperture, 'To Story', AppTheme.purple500, () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Added to your story!')));
                 }),
-                _shareOption(LucideIcons.share2, 'More', Colors.white70, () {
+                _shareOption(LucideIcons.share2, 'More', Colors.white70, () async {
                   Navigator.pop(context);
                   setState(() { _shareCount++; widget.post.shares = _shareCount; });
+                  await Share.share(
+                    'Check out this post on Nexal: "${widget.post.content}" by ${widget.post.userName}\nhttps://nexal.app/post/${widget.post.id}',
+                    subject: 'Nexal Post Share',
+                  );
                 }),
               ],
             ),

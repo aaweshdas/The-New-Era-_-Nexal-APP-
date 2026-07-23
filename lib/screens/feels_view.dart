@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 
 class Feel {
@@ -23,7 +24,32 @@ class _FeelsViewState extends State<FeelsView> {
   int _currentPage = 0;
   final Set<int> _likedIndices = {};
   final Set<int> _followedIndices = {};
+  final Set<String> _savedFeelIds = {};
   bool _isMuted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedFeels();
+  }
+
+  Future<void> _loadSavedFeels() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList('saved_feels') ?? [];
+    setState(() => _savedFeelIds.addAll(saved));
+  }
+
+  Future<void> _toggleSaveFeel(String feelId) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (_savedFeelIds.contains(feelId)) {
+        _savedFeelIds.remove(feelId);
+      } else {
+        _savedFeelIds.add(feelId);
+      }
+    });
+    await prefs.setStringList('saved_feels', _savedFeelIds.toList());
+  }
 
   final _feels = [
     Feel(id: '1', userName: 'Aria Storm', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', videoImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1080', caption: 'Living in the moment ✨ #nexal #vibes', sound: 'Midnight Drive – NeoPulse', likes: 45620, comments: 892, shares: 234, isVerified: true),
@@ -129,8 +155,19 @@ class _FeelsViewState extends State<FeelsView> {
               _sideAction(LucideIcons.share2, _fmtNum(feel.shares), Colors.white, () => _showShareSheet(feel)),
               const SizedBox(height: 18),
 
-              // Bookmark
-              _sideAction(LucideIcons.bookmark, 'Save', Colors.white, () => _snack('Saved to collection')),
+              // Bookmark — now persisted
+              (() {
+                final isSaved = _savedFeelIds.contains(feel.id);
+                return _sideAction(
+                  LucideIcons.bookmark,
+                  isSaved ? 'Saved' : 'Save',
+                  isSaved ? AppTheme.cyan500 : Colors.white,
+                  () async {
+                    await _toggleSaveFeel(feel.id);
+                    if (mounted) _snack(_savedFeelIds.contains(feel.id) ? '✅ Saved to collection' : 'Removed from saved');
+                  },
+                );
+              })(),
               const SizedBox(height: 18),
 
               // More

@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/app_theme.dart';
 import '../theme/cached_styles.dart';
@@ -16,6 +19,7 @@ import 'create_post_screen.dart';
 import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
 import '../models/post_model.dart';
+import '../providers/feed_provider.dart';
 
 // ── Feed Filter Enum ─────────────────────────────────────────────────────────
 enum FeedFilter { forYou, trending, following, aiPicks, global }
@@ -79,6 +83,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   bool _showSearch = false;
   FeedFilter _activeFilter = FeedFilter.forYou;
   String _searchQuery = '';
+  int _pendingNewPostsCount = 0;
   final Set<String> _bookmarkedPosts = {};
 
   // Controllers
@@ -87,6 +92,30 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _headerGlowController;
   Timer? _newPostsTimer;
+
+  Future<void> _loadBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('home_bookmarked_posts') ?? [];
+    if (mounted) {
+      setState(() {
+        _bookmarkedPosts.addAll(list);
+      });
+    }
+  }
+
+  Future<void> _saveBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('home_bookmarked_posts', _bookmarkedPosts.toList());
+  }
+
+  // Pending new posts pool (shown when banner is tapped)
+  final List<Post> _pendingNewPosts = [
+    Post(id: 'new1', userName: 'Cyber Nova',   userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200', isVerified: true, content: '🚀 Just uploaded the next quantum milestone. Check it out!', image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800', timeAgo: 'Just now', likes: 128, comments: 14, shares: 5, views: 890),
+    Post(id: 'new2', userName: 'Luna Drift',   userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200', content: '🌌 Midnight thoughts from the cosmos… #space', image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', timeAgo: 'Just now', likes: 67, comments: 8, shares: 2, views: 340),
+    Post(id: 'new3', userName: 'Orion Flux',   userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200', isVerified: true, content: '⚡ Breaking: Nexal hits 100M users!', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800', timeAgo: 'Just now', likes: 4500, comments: 340, shares: 210, views: 12000),
+    Post(id: 'new4', userName: 'Zara Pulse',   userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200', content: '🎨 New generative art collection live now.', image: 'https://images.unsplash.com/photo-1611086615542-635f48ae4656?w=800', timeAgo: 'Just now', likes: 233, comments: 19, shares: 11, views: 1200),
+    Post(id: 'new5', userName: 'Hex Bloom',    userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200', content: '🧠 AI consciousness research just got upgraded.', image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', timeAgo: 'Just now', likes: 901, comments: 55, shares: 32, views: 5600),
+  ];
 
   // ── Stories ──────────────────────────────────────────────────────────────
   final List<_Story> _stories = [
@@ -178,11 +207,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _loadBookmarks();
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) setState(() => _isLoading = false);
     });
+    // Schedule banner to appear after 5s with random pending count
     _newPostsTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) setState(() => _showNewPostsBanner = true);
+      if (mounted) {
+        final count = math.Random().nextInt(4) + 1; // 1-5 new posts
+        setState(() {
+          _pendingNewPostsCount = count;
+          _showNewPostsBanner = true;
+        });
+      }
     });
     _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))..repeat(reverse: true);
     _headerGlowController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000))..repeat(reverse: true);
@@ -201,11 +238,38 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _scrollController.animateTo(0, duration: const Duration(milliseconds: 600), curve: Curves.easeOutCubic);
   }
 
+  void _injectNewPosts() {
+    // Prepend pending posts to the currently-active filter list
+    final count = math.min(_pendingNewPostsCount, _pendingNewPosts.length);
+    final toAdd = _pendingNewPosts.sublist(0, count);
+    setState(() {
+      _forYouPosts.insertAll(0, toAdd);
+      _pendingNewPostsCount = 0;
+      _showNewPostsBanner = false;
+      _cachedPosts = null; // Invalidate cache
+    });
+    _scrollToTop();
+    // Schedule next banner wave
+    _newPostsTimer = Timer(const Duration(seconds: 30), () {
+      if (mounted) {
+        final count = math.Random().nextInt(4) + 1;
+        setState(() {
+          _pendingNewPostsCount = count;
+          _showNewPostsBanner = true;
+        });
+      }
+    });
+  }
+
   Future<void> _onRefresh() async {
     HapticFeedback.mediumImpact();
     setState(() { _isLoading = true; _showNewPostsBanner = false; });
     await Future.delayed(const Duration(milliseconds: 1200));
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) {
+      // Inject any pending posts on refresh too
+      if (_pendingNewPostsCount > 0) _injectNewPosts();
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -441,8 +505,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        _scrollToTop();
-        setState(() => _showNewPostsBanner = false);
+        _injectNewPosts();
       },
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -456,10 +519,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           child: Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
             const Icon(LucideIcons.arrowUp, color: Colors.white, size: 15),
             const SizedBox(width: 8),
-            Text('3 new posts • tap to refresh', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+            Text('$_pendingNewPostsCount new post${_pendingNewPostsCount != 1 ? 's' : ''} • tap to load', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: () => setState(() => _showNewPostsBanner = false),
+              onTap: () => setState(() { _showNewPostsBanner = false; _pendingNewPostsCount = 0; }),
               child: const Icon(LucideIcons.x, color: Colors.white70, size: 14),
             ),
           ]),
@@ -478,7 +541,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('Stories', style: CachedStyles.outfitW600Size14White60L0_3),
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              // Show all stories in the full viewer from the first unseen story
+              final mockStories = _stories.map((s) => StoryItem(
+                userName: s.name,
+                userAvatar: s.avatarUrl,
+                imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
+                caption: 'Quantum vibes in deep space 🌌 ✨',
+                timeAgo: '2h ago',
+              )).toList();
+              Navigator.push(context, MaterialPageRoute(builder: (_) => StoryViewerScreen(stories: mockStories, initialIndex: 0)));
+            },
             child: Text('See all', style: CachedStyles.outfitW500Size12White70.copyWith(color: AppTheme.cyan500.withValues(alpha: 0.7))),
           ),
         ]),
@@ -600,7 +673,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             Text('Suggested For You', style: CachedStyles.outfitW600Size14White.copyWith(color: Colors.white70)),
           ]),
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              // Navigate to MessagesView as the suggested users are potential connections
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagesView()));
+            },
             child: Text('See all', style: CachedStyles.outfitBoldSize12White.copyWith(color: AppTheme.cyan500.withValues(alpha: 0.7), fontWeight: FontWeight.normal)),
           ),
         ]),
@@ -645,7 +721,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // POST ITEM (wraps PostCard + bookmark + context menu)
   // ═══════════════════════════════════════════════════════
   Widget _buildPostItem(Post post, int index) {
-    final isBookmarked = _bookmarkedPosts.contains(post.id);
+    // Use FeedProvider for persisted bookmarks
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    final isBookmarked = feedProvider.bookmarkedIds.contains(post.id);
 
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -691,13 +769,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             isBookmarked: isBookmarked,
             onTap: () {
               HapticFeedback.lightImpact();
-              setState(() {
-                if (isBookmarked) {
-                  _bookmarkedPosts.remove(post.id);
-                } else {
-                  _bookmarkedPosts.add(post.id);
-                }
-              });
+              // Toggle through FeedProvider → persisted in SharedPreferences
+              Provider.of<FeedProvider>(context, listen: false).toggleBookmark(post.id);
+              setState(() {}); // Rebuild to reflect new state
             },
           ),
         ),
@@ -864,25 +938,27 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     label: isBookmarked ? 'Bookmarked' : 'Save Post',
                     accentColor: isBookmarked ? AppTheme.cyan500 : AppTheme.purple500,
                     isActive: isBookmarked,
-                    onTap: () {
+                    onTap: () async {
                       HapticFeedback.lightImpact();
-                      setState(() {
-                        if (isBookmarked) {
-                          _bookmarkedPosts.remove(post.id);
-                        } else {
-                          _bookmarkedPosts.add(post.id);
-                        }
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: const Color(0xFF1A0035),
-                          content: Text(
-                            isBookmarked ? 'Post removed from saved' : 'Post saved successfully ✨',
-                            style: GoogleFonts.outfit(color: Colors.white),
+                      if (isBookmarked) {
+                        _bookmarkedPosts.remove(post.id);
+                      } else {
+                        _bookmarkedPosts.add(post.id);
+                      }
+                      await _saveBookmarks();
+                      setState(() {});
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: const Color(0xFF1A0035),
+                            content: Text(
+                              isBookmarked ? 'Post removed from saved' : 'Post saved successfully ✨',
+                              style: GoogleFonts.outfit(color: Colors.white),
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
                   ),
                 ),

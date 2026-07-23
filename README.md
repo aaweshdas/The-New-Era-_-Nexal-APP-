@@ -5,7 +5,7 @@
 <h1 align="center">NEXAL — Super App Studio</h1>
 
 <p align="center">
-  <em>A flagship, next-generation AI super app engine — built with Flutter, Node.js, WebGL 3D & a self-hosted OpenStreetMap engine.</em>
+  <em>A flagship, next-generation AI Super App engine — built with Flutter, Node.js, WebGL 3D, and a self-hosted OpenStreetMap engine. Consolidation at scale to eliminate storage exhaustion and device fragmentation.</em>
 </p>
 
 <p align="center">
@@ -26,7 +26,8 @@
 
 ## 📖 Table of Contents
 
-- [✦ Overview](#-overview)
+- [✦ The Core Problem: App Fatigue & Storage Exhaustion](#-the-core-problem-app-fatigue--storage-exhaustion)
+- [💡 The Nexal Solution: One App, Infinite Cosmos](#-the-nexal-solution-one-app-infinite-cosmos)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🎨 Design Language & Aesthetic System](#-design-language--aesthetic-system)
 - [🚀 Comprehensive Features & Screens](#-comprehensive-features--screens)
@@ -35,6 +36,7 @@
   - [🗺️ Self-Hosted Map Engine](#-self-hosted-map-engine)
   - [🎮 3D WebGL Open World Game](#-3d-webgl-open-world-game)
   - [📱 Quantum Social Feed & Feels](#-quantum-social-feed--feels)
+  - [💬 WebSocket Real-Time Chat Engine](#-websocket-real-time-chat-engine)
   - [📸 Camera & Live Filters](#-camera--live-filters)
   - [🖼️ Immersive Dome & Timeline Gallery](#-immersive-dome--timeline-gallery)
 - [📡 Unified Backend Services & Gateway](#-unified-backend-services--gateway)
@@ -47,11 +49,20 @@
 
 ---
 
-## ✦ Overview
+## ✦ The Core Problem: App Fatigue & Storage Exhaustion
 
-**Nexal** is a production-grade, full-stack **super app** powered by Flutter on the frontend and backed by a real-time Node.js/TypeScript multi-service backend gateway. It merges high-end glassmorphic UI design, real-time AI voice streaming, a self-hosted vector tile navigation engine, a 3D WebGL open-world game, and a suite of interactive social media tools into a single experience.
+Modern smart device ecosystems suffer from **Storage Bloat** and **App Fatigue**. 
+* **The Storage Crisis:** The average user maintains dozens of single-purpose apps. A typical map app (350MB+), an AI assistant (200MB+), a 3D explorer game (500MB+), instant messengers (250MB+), and multiple social platforms (400MB+ each) collectively consume **several gigabytes** of local device storage, cache footprints, and RAM overhead.
+* **Resource Exhaustion:** Multiple independent applications run overlapping background daemons, sync pipelines, push receivers, and tracking engines, leading to thermal throttling and rapid battery drain.
+* **Context Fragmentation:** Navigating between isolated user interfaces with disparate design paradigms interrupts flow, decreases productivity, and complicates user experiences.
 
-### Why Nexal?
+---
+
+## 💡 The Nexal Solution: One App, Infinite Cosmos
+
+**Nexal** redefines the mobile paradigm by consolidating five distinct technology layers into a single, high-performance, lightweight **Super App**. By combining social feeds, real-time voice AI, self-hosted navigation, offline gallery tools, and an embedded 3D environment, Nexal eliminates the need for separate installs—**saving up to 80% of device storage space**.
+
+### Why Consolidate under Nexal?
 - **Zero Third-Party Map Dependencies**: Built using a 100% self-hosted OpenStreetMap stack (MapLibre GL + Nominatim + OSRM) with native Flutter high-accuracy GPS injection.
 - **Real-Time Voice AI (ARIA)**: Low-latency streaming speech-to-text (Deepgram Nova-2), LLM completion streaming (Groq Llama-3.1), and neural text-to-speech (Deepgram Aura-2).
 - **Interactive Creation Studio**: Individual, custom-designed modals for Posts, Stories, Video Reels, and Live Streams with background artwork integration (`assets/normal_bg.png`).
@@ -121,8 +132,9 @@ Triggered by the glowing gradient `+` floating action button, this module offers
 1. **✍️ Post Composer Studio**:
    - User profile header (`Alex Quantum ✔️`) with audience selector (`🌐 Public Broadcast`).
    - High-contrast text editor with live AI Writer assist (`✨ AI Writer`), hashtag inserter (`#FutureVision`), and poll creator.
-   - Sample visual media selector grid with glowing checkmark indicators.
-   - Instantly prepends published posts to top of the Quantum Feed.
+   - Real-time location geotagging using Geolocator GPS & reverse Geocoding placemark services.
+   - Local media attachment storage utilizing local file paths directly inside `PostModel` structure.
+   - Dynamic emoji panel overlay for fast character injection.
 
 2. **📸 Story Studio**:
    - Interactive Phone Canvas live preview with customizable caption overlay.
@@ -134,13 +146,11 @@ Triggered by the glowing gradient `+` floating action button, this module offers
    - Video thumbnail preview card with duration indicator (`00:15 HD`) and pulsing play button.
    - Audio track selector (`Quantum Beats 🎵`, `Deep Space Vibe 🌌`, `Synthwave Pulse ⚡`, `Cyber Ambient 🔮`).
    - Category selector chips (`Tech 🚀`, `AI & Future 🤖`, `Design 🎨`, `Gaming 🎮`).
-   - Publishes short video reel directly into the social feed.
 
 4. **📡 Live Broadcast Studio**:
    - Camera Viewfinder preview box with corner reticles and red `● LIVE PREVIEW` badge.
    - Live stream statistics simulation (`👁️ 142 Viewers • 60 FPS`).
    - Control toggle chips (`🎤 Mic ON`, `📹 Cam ON`, `💬 Chat ON`).
-   - Stream title composer and broadcast launch trigger.
 
 ---
 
@@ -170,7 +180,15 @@ Triggered by the glowing gradient `+` floating action button, this module offers
 ### 📱 Quantum Social Feed & Feels
 - **Quantum Feed**: Interactive social media feed featuring user avatars, verified badges, multi-image carousels, like/comment counter animations, and custom 3-dot post options modal (Share, Save, Copy Link, Mute, Report Post with reason selector).
 - **Feels Short Videos**: Vertical full-screen swipe video reels with double-tap heart explosion animations, creator comments sheet, and audio track badges.
-- **Saved Posts Drawer**: Fast access to saved content using custom `assets/saved_icon.png`.
+- **Bookmark & Collection Persistence**: Full support for local data caching via `SharedPreferences` to persistently save liked posts and reels.
+
+---
+
+### 💬 WebSocket Real-Time Chat Engine
+- **Real-Time Messaging**: Built on Socket.IO client, supporting instantaneous message sync, typing indicators, and user online states.
+- **Message Attachment Handlers**: Capture and attach photos from camera or gallery using native `ImagePicker`.
+- **Reply Thread States**: Double-tap or swipe to reply to a message with a quoted preview window above the input box.
+- **Chat Filtering & Inbox Layout**: Filter your inbox instantly between Primary and Requests, filter by Unread or Online users, and use active chat search.
 
 ---
 
@@ -184,7 +202,7 @@ Triggered by the glowing gradient `+` floating action button, this module offers
 ### 🖼️ Immersive Dome & Timeline Gallery
 - **Dome 360° Gallery**: Interactive spherical 360°-inspired visual photo browser.
 - **River of Time**: Horizontal scrolling timeline view grouped by date.
-- **Full-Screen Viewer**: Immersive photo inspector with pinch-to-zoom and gesture dismiss.
+- **Full-Screen Viewer**: Immersive photo inspector with pinch-to-zoom, gesture dismiss, native `share_plus` system sharing, and `image_gallery_saver` download utility.
 
 ---
 
@@ -210,39 +228,28 @@ Nexal_App/
 │   ├── main.dart                              # Entrypoint & MaterialApp configuration
 │   ├── theme/
 │   │   └── app_theme.dart                    # Design system tokens, colors & gradients
-│   ├── utils/
-│   │   └── filter_generator.dart             # Camera color filter matrix generators
+│   ├── models/
+│   │   └── post_model.dart                   # Post model schema with geolocation tags
+│   ├── providers/
+│   │   ├── feed_provider.dart                # Persistent bookmarks & feed state management
+│   │   └── user_provider.dart                # Connection lists & dynamic follow state notifier
 │   ├── services/
 │   │   ├── aria_service.dart                 # Socket.IO client, streaming audio & chat handlers
-│   │   └── aria_config.dart                  # SharedPreferences local storage & API keys
+│   │   └── api_service.dart                  # Centralized HTTP Client with Bearer token inject
 │   ├── screens/
-│   │   ├── splash_video_screen.dart          # Startup cinematic video player
-│   │   ├── home_screen.dart                  # Galaxy Hub + orbital arc navigation
 │   │   ├── home_view.dart                    # Quantum Feed, Post Options & Creation Studio Modals
-│   │   ├── feels_view.dart                   # Vertical short video reels feed
-│   │   ├── messages_view.dart                # Chat inbox (Primary & Requests)
-│   │   ├── chat_screen.dart                  # Interactive messaging thread
-│   │   ├── video_view.dart                   # Video streaming hub
+│   │   ├── feels_view.dart                   # Vertical short video reels feed with SharedPreferences save
+│   │   ├── messages_view.dart                # Chat inbox with search, tabs, & new conversation sheet
 │   │   ├── camera_view.dart                  # Camera view with filters & MLKit face detection
-│   │   ├── search_view.dart                  # Search & trending topics API view
-│   │   ├── ai_assist_view.dart               # ARIA AI Chat studio interface
 │   │   ├── map_view.dart                     # Self-hosted MapLibre GL navigation map
-│   │   ├── open_world_games_view.dart        # Arcade hub
-│   │   ├── game_webview_screen.dart          # 3D WebGL embedded game view
-│   │   ├── profile_view.dart                 # User profile & badge achievements
-│   │   ├── gallery_view.dart                 # Multi-view photo gallery
-│   │   ├── full_screen_image_view.dart       # Full-screen image zoom viewer
-│   │   ├── immersive_dome_gallery_view.dart  # 360° Dome gallery browser
-│   │   └── monthly_timeline_view.dart        # Timeline-grouped photo gallery
+│   │   ├── profile_view.dart                 # User profile, custom stats & clipboard share
+│   │   ├── settings/
+│   │   │   └── two_factor_screen.dart        # 2FA TOTP setup flow with QR codes
+│   │   └── full_screen_image_view.dart       # Full-screen image viewer with share & gallery download
 │   └── widgets/                              # Reusable components, backgrounds & glass cards
 │
-├── assets/
-│   ├── nexal_logo.png                        # App logo
-│   ├── normal_bg.png                         # Studio modal starry mountain background
-│   ├── saved_icon.png                        # Custom bookmark asset icon
-│   ├── videos/                               # Startup.mp4 & Background.mp4
-│   ├── map/                                  # Compiled React map frontend
-│   └── wordl/                                # 3D WebGL game assets
+├── android/
+│   └── build.gradle.kts                      # Kotlin DSL Gradle build script with subprojects AGP patch
 │
 └── Backend/
     ├── src/gateway.ts                        # Microservice unified gateway router
@@ -326,6 +333,8 @@ npm run dev
 - `socket_io_client` (`^3.0.2`): Real-time WebSocket event communication
 - `record` (`^6.2.1`): High-fidelity microphone PCM audio stream recording
 - `audioplayers` (`^6.0.0`): Synthesized neural TTS WAV playback
+- `share_plus` (`^10.1.4`): Native system sharing provider
+- `image_gallery_saver` (`^2.0.3`): Image downloading and storage utility
 
 ---
 

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../providers/feed_provider.dart';
 import '../providers/auth_provider.dart';
@@ -22,6 +24,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   File? _selectedImage;
   String _selectedTag = 'General';
   bool _isPosting = false;
+  String? _locationLabel;
+  bool _isFetchingLocation = false;
+  bool _showEmojiPanel = false;
+
+  static const _emojis = [
+    '🚀','✨','🔥','😍','🧠','👏','🌙','👾','🌌','⚡',
+    '💜','😈','🌟','🙏','💥','🔮','🤖','🎨','🥏','📸',
+    '👀','💛','💚','💙','❤️','💔','🏠','👍','🙌','🤙',
+    '📝','🔓','💎','🎉','🌈','☂️','🌞','🌝','🌏','🎤',
+  ];
 
   final List<String> _tags = ['General', 'Quantum', 'Sci-Fi', 'Art', 'Dev', 'AI'];
 
@@ -41,9 +53,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked != null) {
       setState(() => _selectedImage = File(picked.path));
+    }
+  }
+
+  Future<void> _fetchLocation() async {
+    setState(() => _isFetchingLocation = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() { _locationLabel = 'Location services disabled'; _isFetchingLocation = false; });
+        return;
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        setState(() { _locationLabel = 'Location permission denied'; _isFetchingLocation = false; });
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+      final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        final parts = [p.locality, p.administrativeArea, p.country].where((s) => s != null && s.isNotEmpty);
+        setState(() => _locationLabel = parts.join(', '));
+      } else {
+        setState(() => _locationLabel = '${pos.latitude.toStringAsFixed(2)}°, ${pos.longitude.toStringAsFixed(2)}°');
+      }
+    } catch (_) {
+      setState(() => _locationLabel = 'Location unavailable');
+    } finally {
+      setState(() => _isFetchingLocation = false);
     }
   }
 
@@ -66,6 +110,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     setState(() => _isPosting = true);
     await Future.delayed(const Duration(milliseconds: 600));
 
+    // Use real local file path when image was picked from gallery
+    final imageUrlOrPath = _selectedImage != null
+        ? _selectedImage!.path  // real local file path
+        : null;
+
     final newPost = PostModel(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
       userId: user?.uid ?? 'guest',
@@ -74,10 +123,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200',
       isVerified: true,
       content: text.isEmpty ? 'Shared a new memory ⚡' : text,
-      imageUrl: _selectedImage != null
-          ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800'
-          : null,
+      imageUrl: imageUrlOrPath,
       timeAgo: 'Just now',
+      location: _locationLabel,
     );
 
     if (mounted) {
@@ -310,9 +358,36 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 ),
 
                 // Bottom Action Bar (Attach Media)
+                // Emoji Panel
+                if (_showEmojiPanel)
+                  Container(
+                    height: 200,
+                    color: Colors.white.withValues(alpha: 0.04),
+                    padding: const EdgeInsets.all(8),
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10, mainAxisSpacing: 4, crossAxisSpacing: 4),
+                      itemCount: _emojis.length,
+                      itemBuilder: (_, i) => GestureDetector(
+                        onTap: () {
+                          final text = _contentCtrl.text;
+                          final sel = _contentCtrl.selection;
+                          final newText = text.replaceRange(
+                            sel.start < 0 ? text.length : sel.start,
+                            sel.end < 0 ? text.length : sel.end,
+                            _emojis[i],
+                          );
+                          _contentCtrl.value = TextEditingValue(
+                            text: newText,
+                            selection: TextSelection.collapsed(offset: (sel.start < 0 ? text.length : sel.start) + _emojis[i].length),
+                          );
+                        },
+                        child: Center(child: Text(_emojis[i], style: const TextStyle(fontSize: 22))),
+                      ),
+                    ),
+                  ),
+
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.04),
                     border: Border(
@@ -324,27 +399,37 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(LucideIcons.image,
-                            color: Color(0xFF00E5FF)),
+                        icon: const Icon(LucideIcons.image, color: Color(0xFF00E5FF)),
                         onPressed: _pickImage,
                       ),
-                      IconButton(
-                        icon: const Icon(LucideIcons.mapPin,
-                            color: Colors.white54),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Location tagged: Digital Space Station',
-                                  style: GoogleFonts.outfit()),
-                              backgroundColor: const Color(0xFF135BEC),
-                            ),
-                          );
-                        },
+                      // Location tag button — real GPS
+                      GestureDetector(
+                        onTap: _isFetchingLocation ? null : _fetchLocation,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: _isFetchingLocation
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white54))
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(LucideIcons.mapPin, color: _locationLabel != null ? const Color(0xFF00E5FF) : Colors.white54, size: 20),
+                                    if (_locationLabel != null) ...[
+                                      const SizedBox(width: 4),
+                                      Text(_locationLabel!, style: GoogleFonts.outfit(color: const Color(0xFF00E5FF), fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    ],
+                                  ],
+                                ),
+                        ),
                       ),
+                      const Spacer(),
+                      // Emoji toggle button
                       IconButton(
-                        icon: const Icon(LucideIcons.smile,
-                            color: Colors.white54),
-                        onPressed: () {},
+                        icon: Icon(LucideIcons.smile,
+                            color: _showEmojiPanel ? const Color(0xFF00E5FF) : Colors.white54),
+                        onPressed: () {
+                          setState(() => _showEmojiPanel = !_showEmojiPanel);
+                          if (_showEmojiPanel) FocusScope.of(context).unfocus();
+                        },
                       ),
                     ],
                   ),

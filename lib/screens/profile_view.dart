@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -79,7 +80,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         const SizedBox(width: 12),
         Expanded(child: Center(child: Text(_profileName, style: GoogleFonts.rye(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)))),
         const SizedBox(width: 12),
-        _iconBtn(LucideIcons.share2, () => _snack('Share profile link copied!')),
+        _iconBtn(LucideIcons.share2, () async {
+          await Clipboard.setData(ClipboardData(text: 'https://$_profileLink'));
+          if (mounted) _snack('🔗 Profile link copied to clipboard!');
+        }),
         const SizedBox(width: 10),
         _iconBtn(LucideIcons.settings, () => _showSettings()),
       ]),

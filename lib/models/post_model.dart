@@ -8,6 +8,7 @@ class PostModel {
   final String? imageUrl;
   final String? videoUrl;
   final String timeAgo;
+  final String? location; // GPS location label
   int likes;
   int commentsCount;
   int sharesCount;
@@ -25,6 +26,7 @@ class PostModel {
     this.imageUrl,
     this.videoUrl,
     required this.timeAgo,
+    this.location,
     this.likes = 0,
     this.commentsCount = 0,
     this.sharesCount = 0,

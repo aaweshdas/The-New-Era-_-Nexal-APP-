@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -11,8 +12,50 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
-  final _emailCtrl = TextEditingController(text: 'nexus@nexal.space');
-  final _usernameCtrl = TextEditingController(text: 'neuralnexus');
+  final _emailCtrl = TextEditingController();
+  final _usernameCtrl = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _usernameCtrl.text = prefs.getString('user_username') ?? 'neuralnexus';
+      _emailCtrl.text = prefs.getString('user_email') ?? 'nexus@nexal.space';
+    });
+  }
+
+  Future<void> _saveSettings() async {
+    final username = _usernameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    if (username.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Username and email cannot be empty', style: GoogleFonts.outfit()),
+          backgroundColor: Colors.red.shade800,
+        ),
+      );
+      return;
+    }
+    setState(() => _isSaving = true);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_username', username);
+    await prefs.setString('user_email', email);
+    setState(() => _isSaving = false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Account settings saved! 🚀', style: GoogleFonts.outfit()),
+          backgroundColor: const Color(0xFF00E5FF),
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -76,11 +119,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                       ),
+                      prefixIcon: const Icon(LucideIcons.user, color: Colors.white38, size: 18),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
                     style: GoogleFonts.outfit(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Email Address',
@@ -91,6 +136,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                       ),
+                      prefixIcon: const Icon(LucideIcons.mail, color: Colors.white38, size: 18),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -104,16 +150,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Account settings saved! 🚀', style: GoogleFonts.outfit()),
-                            backgroundColor: const Color(0xFF00E5FF),
-                          ),
-                        );
-                      },
-                      child: Text('SAVE CHANGES',
-                          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                      onPressed: _isSaving ? null : _saveSettings,
+                      child: _isSaving
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text('SAVE CHANGES',
+                              style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

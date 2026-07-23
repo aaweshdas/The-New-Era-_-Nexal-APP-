@@ -4,6 +4,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../theme/app_theme.dart';
 
 class FullScreenImageView extends StatefulWidget {
@@ -49,6 +54,51 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  // Download image bytes and save to device gallery
+  Future<void> _saveToGallery() async {
+    try {
+      // Request storage permission on Android
+      final status = await Permission.storage.request();
+      if (!status.isGranted && !status.isLimited) {
+        _showSnackBar('Storage permission denied', icon: LucideIcons.alertCircle, color: Colors.redAccent);
+        return;
+      }
+      _showSnackBar('Saving photo…', icon: LucideIcons.loader);
+      final response = await Dio().get<List<int>>(widget.imageUrl,
+          options: Options(responseType: ResponseType.bytes));
+      final result = await ImageGallerySaver.saveImage(
+        response.data as dynamic,
+        quality: 90,
+        name: 'nexal_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      if (mounted) {
+        final success = result['isSuccess'] == true || result['filePath'] != null;
+        _showSnackBar(
+          success ? 'Photo saved to gallery! 📸' : 'Save failed — try again',
+          icon: success ? LucideIcons.download : LucideIcons.alertCircle,
+          color: success ? const Color(0xFF00E5FF) : Colors.redAccent,
+        );
+      }
+    } catch (e) {
+      if (mounted) _showSnackBar('Error saving photo', icon: LucideIcons.alertCircle, color: Colors.redAccent);
+    }
+  }
+
+  // Download to temp file then open system share sheet
+  Future<void> _sharePhoto() async {
+    try {
+      _showSnackBar('Preparing share…', icon: LucideIcons.share2);
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/nexal_share.jpg';
+      await Dio().download(widget.imageUrl, filePath);
+      if (mounted) {
+        await Share.shareXFiles([XFile(filePath)], text: 'Check this out on Nexal! ✨');
+      }
+    } catch (e) {
+      if (mounted) _showSnackBar('Error sharing photo', icon: LucideIcons.alertCircle, color: Colors.redAccent);
+    }
   }
 
   void _handleShare() {
@@ -134,10 +184,15 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                       label: 'Save',
                       onTap: () {
                         Navigator.pop(context);
-                        _showSnackBar(
-                          'Photo saved to device!',
-                          icon: LucideIcons.download,
-                        );
+                        _saveToGallery(); // Real gallery save
+                      },
+                    ),
+                    _ShareOption(
+                      icon: LucideIcons.share2,
+                      label: 'Share',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _sharePhoto(); // Real system share sheet
                       },
                     ),
                   ],
