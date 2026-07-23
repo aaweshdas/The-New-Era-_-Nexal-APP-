@@ -46,19 +46,21 @@ class _DashboardBackgroundScreenState
   Future<void> _pickImage() async {
     final prov = context.read<BackgroundProvider>();
     try {
-      final file = await _picker.pickImage(source: ImageSource.gallery);
-      if (file == null || !mounted) return;
+      final files = await _picker.pickMultiImage();
+      if (files.isEmpty || !mounted) return;
 
-      final item = BackgroundItem(
-        path: file.path,
-        type: BackgroundType.customImage,
-        name: file.name,
-        addedAt: DateTime.now(),
-      );
-      await prov.addToLibrary(item);
-      _showSnack('Image added to your library ✓');
+      for (final file in files) {
+        final item = BackgroundItem(
+          path: file.path,
+          type: BackgroundType.customImage,
+          name: file.name,
+          addedAt: DateTime.now(),
+        );
+        await prov.addToLibrary(item);
+      }
+      _showSnack('${files.length} images added to your library ✓');
     } catch (e) {
-      _showSnack('Failed to pick image', error: true);
+      _showSnack('Failed to pick images', error: true);
     }
   }
 
