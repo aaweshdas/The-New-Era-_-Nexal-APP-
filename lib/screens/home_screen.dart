@@ -19,6 +19,7 @@ import 'ai_assist_view.dart';
 import 'gallery_view.dart';
 import 'open_world_games_view.dart';
 import 'map_view.dart';
+import 'settings/dashboard_background_screen.dart';
 import '../main.dart'; // Import to access routeObserver
 import '../services/map_video_preloader.dart';
 
@@ -335,6 +336,44 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (context) => const SettingsModal(),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          // 4.5 Change Background Icon (Bottom Left)
+          Positioned(
+            bottom: 30,
+            left: 20,
+            child: AnimatedOpacity(
+              opacity: _showIcons ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 600),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.purple500.withValues(alpha: 0.2),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: Image.asset(
+                    'assets/nav_icons/Gallery.png',
+                    width: 28,
+                    height: 28,
+                  ),
+                  onPressed: () {
+                    debugPrint("Navigate: DashboardBackgroundScreen");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DashboardBackgroundScreen(),
+                      ),
                     );
                   },
                 ),
