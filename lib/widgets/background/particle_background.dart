@@ -36,24 +36,29 @@ class _ParticleBackgroundState extends State<ParticleBackground>
   }
 
   _HairParticle _createParticle(Size size, {bool randomY = false}) {
-    // Spawn particles in the bottom half / neck area of the cat representation
-    final double x = size.width * 0.15 + _random.nextDouble() * size.width * 0.7;
-    final double y = randomY 
-        ? _random.nextDouble() * size.height 
-        : size.height + _random.nextDouble() * 50;
+    // Generate from the middle of the body (jaw/throat level down to mid-chest)
+    final double x = size.width * 0.36 + _random.nextDouble() * size.width * 0.22;
+    double y;
+    if (randomY) {
+      // Seed particles across the entire height of the flow on first load
+      y = size.height * 0.35 + _random.nextDouble() * size.height * 0.50;
+    } else {
+      // Spawn strictly in the middle of the body
+      y = size.height * 0.35 + _random.nextDouble() * size.height * 0.22;
+    }
 
-    // Distribute colors matching the cat's fur and accents in 11.png
+    // Color palette aligned to the cat's fur and accents in 11.png
     Color color;
     final double r = _random.nextDouble();
     if (r < 0.60) {
-      color = Colors.white; // Main white/silver neck fur
+      color = Colors.white; // White chest/neck fur
     } else if (r < 0.85) {
-      color = const Color(0xFF80DEEA); // Luminous teal reflection matching background streaks
+      color = const Color(0xFF80DEEA); // Luminous teal highlight matching background
     } else {
-      color = const Color(0xFFFBBF24); // Warm amber/yellow eye and inner ear accents
+      color = const Color(0xFFFBBF24); // Warm amber/yellow eye and ear highlights
     }
 
-    final double speed = 1.0 + _random.nextDouble() * 1.8;
+    final double speed = 0.8 + _random.nextDouble() * 1.5;
 
     return _HairParticle(
       x: x,
@@ -61,8 +66,8 @@ class _ParticleBackgroundState extends State<ParticleBackground>
       speed: speed,
       size: 1.2 + _random.nextDouble() * 1.8,
       color: color,
-      opacity: 0.15 + _random.nextDouble() * 0.55,
-      angle: -math.pi / 2, // Pointing upwards initially
+      opacity: 0.15 + _random.nextDouble() * 0.6,
+      angle: math.pi / 2, // Directing downwards initially
     );
   }
 
@@ -84,38 +89,30 @@ class _ParticleBackgroundState extends State<ParticleBackground>
           for (int i = 0; i < _particles.length; i++) {
             final p = _particles[i];
             
-            // Cat fur flow physics alignment field:
-            // Cat's head is roughly situated around x = 0.45 * width, y = 0.35 * height.
-            final double headX = size.width * 0.45;
-            final double headY = size.height * 0.35;
+            // Cat's vertical center line representing the spine/throat center
+            final double neckCenterX = size.width * 0.45;
             
-            // Distance vector to cat's head region
-            final double dx = headX - p.x;
+            // Horizontal offset from center
+            final double dx = p.x - neckCenterX;
             
-            double targetAngle = -math.pi / 2; // Flows straight up by default
+            // Flow downwards (math.pi / 2) and curve outwards matching the hair direction
+            // Left side curves down-left, right side curves down-right
+            double targetAngle = math.pi / 2 + (dx / size.width) * 0.8;
             
-            if (p.y > headY) {
-              // Below head (neck region): flow up along the neck profile, curving slightly inward
-              targetAngle = -math.pi / 2 + (dx / size.width) * 0.45;
-            } else {
-              // Above head: flow outward to mimic whisker curves and ears tips outward angles
-              targetAngle = -math.pi / 2 + (p.x < headX ? -0.4 : 0.4);
-            }
+            // Interpolate current angle towards the fur's directional angle
+            p.angle = p.angle * 0.9 + targetAngle * 0.1;
             
-            // Smoothly interpolate angle to prevent sharp direction changes
-            p.angle = p.angle * 0.88 + targetAngle * 0.12;
-            
-            // Translate position along angle vector
+            // Translate particles downward along the calculated angle vector
             p.x += math.cos(p.angle) * p.speed;
             p.y += math.sin(p.angle) * p.speed;
             
-            // Fade out as they reach the top screen edge
-            if (p.y < size.height * 0.12) {
-              p.opacity -= 0.015;
+            // Fade out as they approach the bottom edge
+            if (p.y > size.height * 0.82) {
+              p.opacity -= 0.02;
             }
             
             // Reset if out of viewport bounds or fully faded
-            if (p.y < 0 || p.x < 0 || p.x > size.width || p.opacity <= 0) {
+            if (p.y > size.height || p.x < 0 || p.x > size.width || p.opacity <= 0) {
               _particles[i] = _createParticle(size);
             }
           }
