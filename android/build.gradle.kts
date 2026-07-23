@@ -23,25 +23,31 @@ tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
 
+// Explicit namespace overrides for legacy packages that use the deprecated
+// package= attribute in their AndroidManifest.xml (not supported in AGP 8+).
+val namespaceOverrides = mapOf(
+    "image_gallery_saver" to "com.example.imagegallerysaver"
+)
+
 subprojects {
-    fun configureNamespace(proj: Project) {
-        val isAndroid = proj.plugins.hasPlugin("com.android.application") || 
+    fun configureProject(proj: Project) {
+        val isAndroid = proj.plugins.hasPlugin("com.android.application") ||
                         proj.plugins.hasPlugin("com.android.library")
         if (isAndroid) {
             val android = proj.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
-            if (android != null) {
-                if (android.namespace == null) {
-                    android.namespace = "com.example.${proj.name.replace("-", "_").replace(".", "_")}"
-                }
+            if (android != null && android.namespace == null) {
+                // Inject namespace for packages that used the deprecated package= attribute
+                android.namespace = namespaceOverrides[proj.name]
+                    ?: "com.example.${proj.name.replace("-", "_").replace(".", "_")}"
             }
         }
     }
 
     if (project.state.executed) {
-        configureNamespace(project)
+        configureProject(project)
     } else {
         project.afterEvaluate {
-            configureNamespace(project)
+            configureProject(project)
         }
     }
 }

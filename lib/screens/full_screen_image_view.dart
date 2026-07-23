@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:ui';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:gal/gal.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -56,30 +57,24 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
     );
   }
 
-  // Download image bytes and save to device gallery
   Future<void> _saveToGallery() async {
     try {
-      // Request storage permission on Android
-      final status = await Permission.storage.request();
-      if (!status.isGranted && !status.isLimited) {
-        _showSnackBar('Storage permission denied', icon: LucideIcons.alertCircle, color: Colors.redAccent);
-        return;
+      // Request gallery access (gal handles permissions internally on Android 13+)
+      final hasAccess = await Gal.hasAccess(toAlbum: false);
+      if (!hasAccess) {
+        final granted = await Gal.requestAccess(toAlbum: false);
+        if (!granted) {
+          _showSnackBar('Storage permission denied', icon: LucideIcons.alertCircle, color: Colors.redAccent);
+          return;
+        }
       }
       _showSnackBar('Saving photo…', icon: LucideIcons.loader);
       final response = await Dio().get<List<int>>(widget.imageUrl,
           options: Options(responseType: ResponseType.bytes));
-      final result = await ImageGallerySaver.saveImage(
-        response.data as dynamic,
-        quality: 90,
-        name: 'nexal_${DateTime.now().millisecondsSinceEpoch}',
-      );
+      final bytes = Uint8List.fromList(response.data!);
+      await Gal.putImageBytes(bytes, name: 'nexal_${DateTime.now().millisecondsSinceEpoch}');
       if (mounted) {
-        final success = result['isSuccess'] == true || result['filePath'] != null;
-        _showSnackBar(
-          success ? 'Photo saved to gallery! 📸' : 'Save failed — try again',
-          icon: success ? LucideIcons.download : LucideIcons.alertCircle,
-          color: success ? const Color(0xFF00E5FF) : Colors.redAccent,
-        );
+        _showSnackBar('Photo saved to gallery! 📸', icon: LucideIcons.download);
       }
     } catch (e) {
       if (mounted) _showSnackBar('Error saving photo', icon: LucideIcons.alertCircle, color: Colors.redAccent);
