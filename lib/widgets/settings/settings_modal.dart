@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,6 +56,134 @@ class _SettingsModalState extends State<SettingsModal> {
   bool _obscureGroq     = true;
   bool _obscureDeepgram = true;
   bool _obscureLivekit  = true;
+
+  // Backend Suite Orchestrator State
+  Map<String, bool> _backendHealth = {
+    'Gateway (10000)': false,
+    'ARIA AI (3003)': false,
+    'Search (3004)': false,
+    'Game (3005)': false,
+    'Map (3006)': false,
+    'Camera (3007)': false,
+    'Settings (3008)': false,
+  };
+  bool _startingAllBackends = false;
+
+  Future<void> _checkAllBackendsHealth() async {
+    final targets = {
+      'Gateway (10000)': 'http://localhost:10000/health',
+      'ARIA AI (3003)': 'http://localhost:3003/health',
+      'Search (3004)': 'http://localhost:3004/health',
+      'Game (3005)': 'http://localhost:3005/health',
+      'Map (3006)': 'http://localhost:3006/map/health',
+      'Camera (3007)': 'http://localhost:3007/health',
+      'Settings (3008)': 'http://localhost:3008/health',
+    };
+
+    final Map<String, bool> updated = {};
+
+    // 1. Try single Gateway health check first
+    for (final gwUrl in ['http://localhost:10000/health', 'http://127.0.0.1:10000/health']) {
+      try {
+        final res = await http.get(Uri.parse(gwUrl)).timeout(const Duration(seconds: 2));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          if (data['status'] == 'online') {
+            for (final k in targets.keys) {
+              updated[k] = true;
+            }
+            if (mounted) setState(() => _backendHealth = updated);
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Direct checks per port (trying both localhost and 127.0.0.1)
+    for (final entry in targets.entries) {
+      bool ok = false;
+      final urls = [
+        entry.value,
+        entry.value.replaceAll('localhost', '127.0.0.1'),
+      ];
+      for (final u in urls) {
+        try {
+          final res = await http.get(Uri.parse(u)).timeout(const Duration(seconds: 2));
+          if (res.statusCode == 200) {
+            ok = true;
+            break;
+          }
+        } catch (_) {}
+      }
+      updated[entry.key] = ok;
+    }
+
+    if (mounted) {
+      setState(() {
+        _backendHealth = updated;
+      });
+    }
+  }
+
+  Future<void> _turnOnAllBackends() async {
+    setState(() => _startingAllBackends = true);
+    HapticFeedback.heavyImpact();
+
+    // Send HTTP trigger to all potential listening server ports
+    final triggerUrls = [
+      'http://localhost:3007/start-all',
+      'http://localhost:3005/game/api/start-all',
+      'http://localhost:3008/settings/start-all',
+    ];
+    for (final url in triggerUrls) {
+      try {
+        await http.post(Uri.parse(url)).timeout(const Duration(seconds: 2));
+      } catch (_) {}
+    }
+
+    // On native desktop platform launch batch file
+    if (!kIsWeb) {
+      try {
+        final candidatePaths = [
+          's:/All Code/Antigravity/Nexal_App/Backend/start_all_backends.bat',
+          '${Directory.current.path}/Backend/start_all_backends.bat',
+        ];
+        for (final p in candidatePaths) {
+          final f = File(p);
+          if (f.existsSync()) {
+            await Process.start('cmd.exe', ['/c', f.path], workingDirectory: f.parent.path);
+            break;
+          }
+        }
+      } catch (e) {
+        debugPrint('[Settings] Batch launch error: $e');
+      }
+    }
+
+    // Poll up to 10 seconds for backends to report online
+    for (int i = 0; i < 5; i++) {
+      await Future.delayed(const Duration(seconds: 2));
+      await _checkAllBackendsHealth();
+      if (_backendHealth['Gateway (10000)'] == true) {
+        break;
+      }
+    }
+
+    if (mounted) {
+      setState(() => _startingAllBackends = false);
+      final count = _backendHealth.values.where((v) => v).length;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+          count > 0
+              ? '⚡ All $count Backends Online & Connected!'
+              : 'Backend launch signal sent! Please run start_all_backends.bat if launching locally.',
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: count > 0 ? _accent.primary : Colors.amber.shade800,
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
 
   // Navigation
   int _activeTab = 0;
@@ -736,11 +868,180 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
+  Widget _buildAllBackendsCard() {
+    final onlineCount = _backendHealth.values.where((v) => v).length;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D1117),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _accent.primary.withValues(alpha: 0.35), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: _accent.primary.withValues(alpha: 0.12),
+            blurRadius: 20,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _accent.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: _accent.primary.withValues(alpha: 0.4)),
+                ),
+                child: Icon(LucideIcons.server, color: _accent.primary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'UNIFIED BACKEND SUITE',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Text(
+                      'ARIA AI · Search · Game · Map · Camera · Settings',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: (onlineCount > 0 ? Colors.greenAccent : Colors.amber).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: (onlineCount > 0 ? Colors.greenAccent : Colors.amber).withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  '$onlineCount / 7 ONLINE',
+                  style: GoogleFonts.shareTechMono(
+                    color: onlineCount > 0 ? Colors.greenAccent : Colors.amber,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Microservices status grid
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _backendHealth.entries.map((e) {
+              final isOnline = e.value;
+              final color = isOnline ? Colors.greenAccent : Colors.redAccent.withValues(alpha: 0.7);
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6, height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: color,
+                        boxShadow: isOnline ? [BoxShadow(color: color, blurRadius: 4)] : [],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      e.key,
+                      style: GoogleFonts.shareTechMono(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 18),
+
+          // Big "TURN ON ALL BACKENDS" CTA Button
+          GestureDetector(
+            onTap: _startingAllBackends ? null : _turnOnAllBackends,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _accent.primary,
+                    _accent.secondary,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: _accent.primary.withValues(alpha: 0.35),
+                    blurRadius: 16,
+                    spreadRadius: -2,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _startingAllBackends
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                        )
+                      : const Icon(LucideIcons.power, color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Text(
+                    _startingAllBackends ? 'TURNING ON ALL SERVICES...' : '⚡ TURN ON ALL BACKENDS',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── TAB 0: SYSTEM ──────────────────────────────────────────────────────────
   Widget _buildSystemTab() {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
       children: [
+        _buildAllBackendsCard(),
+        const SizedBox(height: 12),
         _sectionLabel('ENVIRONMENT', LucideIcons.layers),
         Row(
           children: [

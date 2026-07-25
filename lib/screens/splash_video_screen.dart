@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'home_screen.dart';
+
 
 class SplashVideoScreen extends StatefulWidget {
   const SplashVideoScreen({super.key});
@@ -21,17 +21,11 @@ class _SplashVideoScreenState extends State<SplashVideoScreen>
     // Force full-screen immersive mode for the splash
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
+    // Progress animation — purely visual, routing is handled by SplashRouter
     _progressCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000), // 3 seconds load time
+      duration: const Duration(milliseconds: 400),
     );
-
-    _progressCtrl.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _navigateToHome();
-      }
-    });
-
     _progressCtrl.forward();
   }
 
@@ -39,27 +33,6 @@ class _SplashVideoScreenState extends State<SplashVideoScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     precacheImage(const AssetImage('assets/starting_screen.png'), context);
-  }
-
-  void _navigateToHome() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
-
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
   }
 
   @override

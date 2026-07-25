@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
-import '../splash_video_screen.dart';
 import '../home_screen.dart';
-import 'onboarding_screen.dart';
 import 'login_screen.dart';
 
 class SplashRouter extends StatefulWidget {
@@ -24,31 +22,18 @@ class _SplashRouterState extends State<SplashRouter> {
     // Initialize auth service (checks Supabase session)
     await AuthService.instance.init();
 
-    // Small delay to let splash animation settle
-    await Future.delayed(const Duration(milliseconds: 2800));
-
     if (!mounted) return;
 
     // ── Routing logic ────────────────────────────────────────────────────────
     // ALWAYS check the live Supabase session to decide auth state.
-    // Never rely solely on SharedPreferences — it can be stale.
     final supabase = Supabase.instance.client;
     final session = supabase.auth.currentSession;
 
     final bool hasValidSession = session != null &&
         !_isSessionExpired(session);
 
-    final onboardingDone = await AuthService.instance.isOnboardingComplete();
-
-    Widget nextScreen;
-    if (!onboardingDone) {
-      nextScreen = const OnboardingScreen();
-    } else if (!hasValidSession) {
-      // No valid session → always show login
-      nextScreen = const LoginScreen();
-    } else {
-      nextScreen = const HomeScreen();
-    }
+    // Direct routing: No slides, no onboarding delay, no video player before login
+    final Widget nextScreen = hasValidSession ? const HomeScreen() : const LoginScreen();
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -57,7 +42,7 @@ class _SplashRouterState extends State<SplashRouter> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 200),
       ),
     );
   }
@@ -66,13 +51,24 @@ class _SplashRouterState extends State<SplashRouter> {
   bool _isSessionExpired(Session session) {
     final expiresAt = session.expiresAt;
     if (expiresAt == null) return true;
-    // expiresAt is in seconds since epoch
     final expiry = DateTime.fromMillisecondsSinceEpoch(expiresAt * 1000);
     return DateTime.now().isAfter(expiry);
   }
 
   @override
   Widget build(BuildContext context) {
-    return const SplashVideoScreen();
+    return const Scaffold(
+      backgroundColor: Color(0xFF060913),
+      body: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF7C3AED),
+          ),
+        ),
+      ),
+    );
   }
 }

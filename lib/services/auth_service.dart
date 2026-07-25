@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -165,18 +167,52 @@ class AuthService {
     return true;
   }
 
-  // ── Google OAuth ──────────────────────────────────────────────────────────
+  static const String googleClientId = '851929744766-b1fadinn47jjmu1mhap34knlc9h0i2tu.apps.googleusercontent.com';
+
+  // ── Google OAuth / Native Sign-In ─────────────────────────────────────────
   Future<bool> loginWithGoogle() async {
+    // 1. Try native Google Sign-In with configured Client ID
     try {
-      await _supabase.auth.signInWithOAuth(
+      final googleSignIn = GoogleSignIn(
+        clientId: googleClientId,
+        serverClientId: googleClientId,
+        scopes: ['email', 'profile'],
+      );
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        // User explicitly cancelled the Google prompt
+        return false;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken != null) {
+        final res = await _supabase.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+        if (res.session != null) {
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint('[AuthService] Native Google Sign-In not supported or error: $e. Using Supabase OAuth fallback...');
+    }
+
+    // 2. Fallback to Supabase OAuth browser flow (Desktop / Web / Unsupported native)
+    try {
+      final res = await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: 'io.nexal.app://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
-      // The actual session will be captured in the onAuthStateChange listener
-      // Return true to signal the OAuth flow was launched
-      return true;
-    } catch (e) {
+      return res;
+    } catch (err) {
+      debugPrint('[AuthService] Google OAuth fallback failed: $err');
       return false;
     }
   }

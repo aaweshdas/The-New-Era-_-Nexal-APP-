@@ -67,6 +67,7 @@ dependencies:
   emoji_picker_flutter: ^4.3.0
   qr_flutter: ^4.1.0
   supabase_flutter: ^2.8.0
+  google_sign_in: ^6.2.1
 
 
 
@@ -101,11 +102,13 @@ flutter:
     - assets/videos/map_startup.mp4
     - assets/backgrounds/
     - assets/gallery/
+    - assets/images/
     - assets/nexal_logo.png
     - assets/aria_background.png
     - assets/starting_screen.png
     - assets/search_background.png
     - assets/normal_bg.png
+    - assets/Arcade BG.png
     - assets/saved_icon.png
     - assets/3d_map.png
     - assets/wordl/

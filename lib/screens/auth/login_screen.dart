@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -212,20 +213,39 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleGoogleLogin() async {
     HapticFeedback.lightImpact();
     setState(() => _isGoogleLoading = true);
-    final launched = await AuthService.instance.loginWithGoogle();
+
+    final success = await AuthService.instance.loginWithGoogle();
     if (!mounted) return;
-    if (!launched) {
+
+    // Check if user is already logged in (native ID token flow)
+    if (AuthService.instance.isLoggedIn) {
       setState(() => _isGoogleLoading = false);
-      _showSnackBar('Google Sign-In unavailable. Please try again.', isError: true);
+      HapticFeedback.mediumImpact();
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, _) => const HomeScreen(),
+          transitionsBuilder: (context, animation, _, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+      );
       return;
     }
-    // Listen for auth state change — Supabase will fire onAuthStateChange
-    // once the OAuth redirect completes, which will update AuthService
-    // We subscribe once and navigate when signed in
-    AuthService.instance.authStateChanges.listen((session) {
+
+    if (!success) {
+      setState(() => _isGoogleLoading = false);
+      _showSnackBar('Google Sign-In cancelled or unavailable.', isError: true);
+      return;
+    }
+
+    // Subscribe to auth state changes for browser OAuth redirect flow
+    StreamSubscription? sub;
+    sub = AuthService.instance.authStateChanges.listen((session) {
       if (!mounted) return;
       if (session != null) {
+        sub?.cancel();
         setState(() => _isGoogleLoading = false);
+        HapticFeedback.mediumImpact();
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, _) => const HomeScreen(),
@@ -236,9 +256,13 @@ class _LoginScreenState extends State<LoginScreen>
         );
       }
     });
-    // Safety timeout — if redirect takes too long, stop spinner
-    await Future.delayed(const Duration(seconds: 60));
-    if (mounted) setState(() => _isGoogleLoading = false);
+
+    // Safety timeout
+    await Future.delayed(const Duration(seconds: 45));
+    if (mounted && _isGoogleLoading) {
+      sub.cancel();
+      setState(() => _isGoogleLoading = false);
+    }
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
