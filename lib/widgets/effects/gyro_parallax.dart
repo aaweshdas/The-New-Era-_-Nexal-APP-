@@ -19,6 +19,7 @@ class _GyroParallaxState extends State<GyroParallax> {
   double _targetX = 0;
   double _targetY = 0;
   bool _dirty = false;
+  int _lastEventMs = 0;
   StreamSubscription? _subscription;
 
   // Smoothing factor
@@ -27,34 +28,39 @@ class _GyroParallaxState extends State<GyroParallax> {
   @override
   void initState() {
     super.initState();
-    // Using accelerometer for tilt detection
-    _subscription = accelerometerEventStream().listen((
-      AccelerometerEvent event,
-    ) {
-      if (!mounted) return;
+    // sensors_plus is only available on Android/iOS — guard for desktop/web
+    try {
+      _subscription = accelerometerEventStream().listen((
+        AccelerometerEvent event,
+      ) {
+        if (!mounted) return;
 
-      // Calculate target tilt (normalized somewhat)
-      // x usually ranges -10 to 10.
-      _targetX = -event.x * widget.intensity;
-      _targetY =
-          -(event.y - 7.0) *
-          widget
-              .intensity; // -7 offset assumes ~45 deg usage angle or similar natural holding
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now - _lastEventMs < 16) return; // Limit to ~60fps maximum
+        _lastEventMs = now;
 
-      // Throttle: schedule a single frame callback instead of setState per event
-      if (!_dirty) {
-        _dirty = true;
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          setState(() {
-            // Low-pass filter for smoothing
-            _x = _x + _alpha * (_targetX - _x);
-            _y = _y + _alpha * (_targetY - _y);
-            _dirty = false;
+        // Calculate target tilt (normalized somewhat)
+        // x usually ranges -10 to 10.
+        _targetX = -event.x * widget.intensity;
+        _targetY = -(event.y - 7.0) * widget.intensity;
+
+        // Throttle: schedule a single frame callback instead of setState per event
+        if (!_dirty) {
+          _dirty = true;
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            setState(() {
+              // Low-pass filter for smoothing
+              _x = _x + _alpha * (_targetX - _x);
+              _y = _y + _alpha * (_targetY - _y);
+              _dirty = false;
+            });
           });
-        });
-      }
-    });
+        }
+      });
+    } catch (_) {
+      // Sensors not available on this platform (Windows, web, etc.) — ignore
+    }
   }
 
   @override

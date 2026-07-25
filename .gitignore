@@ -72,3 +72,8 @@ camera_backend/node_modules/
 camera_backend/dist/
 search_backend/node_modules/
 search_backend/dist/
+
+# OpenTTD build artifacts
+nexal-openttd-server/OpenTTD/build/
+nexal-openttd-server/*.log
+

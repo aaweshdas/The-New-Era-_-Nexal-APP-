@@ -331,12 +331,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
                   ),
                   onPressed: () {
                     debugPrint("Navigate: Settings");
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const SettingsModal(),
-                    );
+                    openSettings(context);
                   },
                 ),
               ),
@@ -387,10 +382,67 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
 }
 
 // ── Celestial Text Painter (Masks dynamic twinkling stars inside text letters) ──
+class _StarData {
+  final double normX;
+  final double normY;
+  final int tier;
+  final double baseSize;
+  final double phase;
+  final double speed;
+  final Color color;
+
+  const _StarData({
+    required this.normX,
+    required this.normY,
+    required this.tier,
+    required this.baseSize,
+    required this.phase,
+    required this.speed,
+    required this.color,
+  });
+}
+
+// ── Celestial Text Painter (Masks dynamic twinkling stars inside text letters) ──
 class _CelestialTextPainter extends CustomPainter {
   final double animationValue;
   final String text;
   final TextStyle style;
+
+  static final List<_StarData> _cachedStars = _generateStars();
+  static final Paint _sharedFillPaint = Paint()..style = PaintingStyle.fill;
+  static final Paint _sharedStrokePaint = Paint()..style = PaintingStyle.stroke;
+  static final Paint _sharedSrcInPaint = Paint()..blendMode = BlendMode.srcIn;
+
+  static List<_StarData> _generateStars() {
+    final rng = math.Random(42);
+    const starColors = [
+      Color(0xFFFFFFFF), // white
+      Color(0xFF22D3EE), // cyan
+      Color(0xFFFDE047), // gold
+      Color(0xFFC4B5FD), // lavender
+      Color(0xFFF9A8D4), // pink
+    ];
+
+    final list = <_StarData>[];
+    for (int i = 0; i < 90; i++) {
+      final tier = rng.nextInt(3);
+      final baseSize = tier == 2
+          ? 1.8 + rng.nextDouble() * 0.8
+          : tier == 1
+              ? 1.0 + rng.nextDouble() * 0.7
+              : 0.4 + rng.nextDouble() * 0.5;
+      list.add(_StarData(
+        normX: rng.nextDouble(),
+        normY: rng.nextDouble(),
+        tier: tier,
+        baseSize: baseSize,
+        phase: rng.nextDouble() * math.pi * 2,
+        speed: 1.2 + rng.nextDouble() * 1.8,
+        color: starColors[rng.nextInt(starColors.length)],
+      ));
+    }
+    return list;
+  }
 
   _CelestialTextPainter({
     required this.animationValue,
@@ -401,7 +453,8 @@ class _CelestialTextPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Save outer layer for letter-mask clipping
-    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.saveLayer(rect, _sharedFillPaint);
 
     // 2. Draw solid white text as the clip mask
     final textPainter = TextPainter(
@@ -416,15 +469,10 @@ class _CelestialTextPainter extends CustomPainter {
     textPainter.paint(canvas, Offset(x, y));
 
     // 3. SrcIn layer: everything painted here is clipped to the letter shapes
-    canvas.saveLayer(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..blendMode = BlendMode.srcIn,
-    );
-
-    final spaceRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.saveLayer(rect, _sharedSrcInPaint);
 
     // 4. Deep-space base gradient (midnight → indigo → violet → royal purple)
-    final baseGrad = const LinearGradient(
+    const baseGrad = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
@@ -437,11 +485,12 @@ class _CelestialTextPainter extends CustomPainter {
       ],
       stops: [0.0, 0.18, 0.38, 0.58, 0.80, 1.0],
     );
-    canvas.drawRect(spaceRect, Paint()..shader = baseGrad.createShader(spaceRect));
+    _sharedFillPaint.shader = baseGrad.createShader(rect);
+    canvas.drawRect(rect, _sharedFillPaint);
+    _sharedFillPaint.shader = null;
 
     // 5. Nebula colour blobs — softer, less blur so letter edges stay sharp
     const nebulaData = [
-      //  dx     dy     r    hex-color     alpha  blur
       [0.15, 0.50, 1.4, 0xFF7B2FBE, 0.32, 8.0],
       [0.45, 0.35, 1.2, 0xFF22D3EE, 0.18, 10.0],
       [0.72, 0.60, 1.2, 0xFFA855F7, 0.25, 8.0],
@@ -450,107 +499,79 @@ class _CelestialTextPainter extends CustomPainter {
       [0.85, 0.50, 1.0, 0xFFD4A843, 0.14, 8.0],
     ];
     for (final b in nebulaData) {
+      _sharedFillPaint.color = Color(b[3] as int).withValues(alpha: b[4] as double);
+      _sharedFillPaint.maskFilter = MaskFilter.blur(BlurStyle.normal, b[5] as double);
       canvas.drawCircle(
         Offset(x + textWidth * (b[0] as double), y + textHeight * (b[1] as double)),
         textHeight * (b[2] as double),
-        Paint()
-          ..color = Color(b[3] as int).withValues(alpha: b[4] as double)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, b[5] as double),
+        _sharedFillPaint,
       );
     }
+    _sharedFillPaint.maskFilter = null;
 
     // 6. Animated golden shimmer sweep
     final sweepX = -size.width * 0.3 + animationValue * size.width * 1.6;
-    final shimmerGrad = LinearGradient(
+    const shimmerGrad = LinearGradient(
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
       colors: [
         Colors.transparent,
-        Colors.white.withValues(alpha: 0.12),
-        const Color(0xFFD4A843).withValues(alpha: 0.20),
-        Colors.white.withValues(alpha: 0.12),
+        Color(0x1FFFFFFF),
+        Color(0x33D4A843),
+        Color(0x1FFFFFFF),
         Colors.transparent,
       ],
-      stops: const [0.0, 0.35, 0.50, 0.65, 1.0],
+      stops: [0.0, 0.35, 0.50, 0.65, 1.0],
     );
     final shimmerRect = Rect.fromLTWH(sweepX, 0, size.width * 0.6, size.height);
-    canvas.drawRect(shimmerRect, Paint()..shader = shimmerGrad.createShader(shimmerRect));
+    _sharedFillPaint.shader = shimmerGrad.createShader(shimmerRect);
+    canvas.drawRect(shimmerRect, _sharedFillPaint);
+    _sharedFillPaint.shader = null;
 
-    // 7. 90 twinkling stars in 3 tiers: tiny dots, medium glows, bright sparkles
-    final rng = math.Random(42); // seeded — consistent star positions
-    final starPaint = Paint()..style = PaintingStyle.fill;
-    const starColors = [
-      Color(0xFFFFFFFF), // white
-      Color(0xFF22D3EE), // cyan
-      Color(0xFFFDE047), // gold
-      Color(0xFFC4B5FD), // lavender
-      Color(0xFFF9A8D4), // pink
-    ];
+    // 7. Pre-generated 90 twinkling stars
+    for (int i = 0; i < _cachedStars.length; i++) {
+      final star = _cachedStars[i];
+      final sx = star.normX * textWidth + x;
+      final sy = star.normY * textHeight + y;
+      final twinkle = (0.25 + 0.75 * math.sin(animationValue * math.pi * 2 * star.speed + star.phase).abs()).clamp(0.0, 1.0);
 
-    for (int i = 0; i < 90; i++) {
-      final sx = rng.nextDouble() * textWidth  + x;
-      final sy = rng.nextDouble() * textHeight + y;
-      final tier = rng.nextInt(3);
-      final baseSize = tier == 2
-          ? 1.8 + rng.nextDouble() * 0.8
-          : tier == 1
-              ? 1.0 + rng.nextDouble() * 0.7
-              : 0.4 + rng.nextDouble() * 0.5;
+      _sharedFillPaint.color = star.color.withValues(alpha: twinkle * (star.tier == 0 ? 0.7 : 1.0));
 
-      final phase = rng.nextDouble() * math.pi * 2;
-      final speed = 1.2 + rng.nextDouble() * 1.8;
-      final twinkle = (0.25 +
-              0.75 * math.sin(animationValue * math.pi * 2 * speed + phase).abs())
-          .clamp(0.0, 1.0);
+      // Tier-2: 4-point sparkle
+      if (star.tier == 2 && twinkle > 0.5) {
+        final armLen = star.baseSize * 3.5;
+        _sharedStrokePaint.color = star.color.withValues(alpha: twinkle * 0.55);
+        _sharedStrokePaint.strokeWidth = 0.8;
+        canvas.drawLine(Offset(sx - armLen, sy), Offset(sx + armLen, sy), _sharedStrokePaint);
+        canvas.drawLine(Offset(sx, sy - armLen), Offset(sx, sy + armLen), _sharedStrokePaint);
 
-      final starColor = starColors[rng.nextInt(starColors.length)];
-      starPaint.color = starColor.withValues(alpha: twinkle * (tier == 0 ? 0.7 : 1.0));
-
-      // Tier-2: 4-point sparkle with diagonal arms + halo
-      if (tier == 2 && twinkle > 0.5) {
-        final armLen = baseSize * 3.5;
-        canvas.drawLine(Offset(sx - armLen, sy), Offset(sx + armLen, sy),
-            Paint()
-              ..color = starColor.withValues(alpha: twinkle * 0.55)
-              ..strokeWidth = 0.8
-              ..style = PaintingStyle.stroke);
-        canvas.drawLine(Offset(sx, sy - armLen), Offset(sx, sy + armLen),
-            Paint()
-              ..color = starColor.withValues(alpha: twinkle * 0.55)
-              ..strokeWidth = 0.8
-              ..style = PaintingStyle.stroke);
         final diagLen = armLen * 0.55;
-        canvas.drawLine(Offset(sx - diagLen, sy - diagLen),
-            Offset(sx + diagLen, sy + diagLen),
-            Paint()
-              ..color = starColor.withValues(alpha: twinkle * 0.28)
-              ..strokeWidth = 0.5
-              ..style = PaintingStyle.stroke);
-        canvas.drawLine(Offset(sx - diagLen, sy + diagLen),
-            Offset(sx + diagLen, sy - diagLen),
-            Paint()
-              ..color = starColor.withValues(alpha: twinkle * 0.28)
-              ..strokeWidth = 0.5
-              ..style = PaintingStyle.stroke);
-        canvas.drawCircle(Offset(sx, sy), baseSize * 2.8,
-            Paint()
-              ..color = starColor.withValues(alpha: twinkle * 0.18)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+        _sharedStrokePaint.color = star.color.withValues(alpha: twinkle * 0.28);
+        _sharedStrokePaint.strokeWidth = 0.5;
+        canvas.drawLine(Offset(sx - diagLen, sy - diagLen), Offset(sx + diagLen, sy + diagLen), _sharedStrokePaint);
+        canvas.drawLine(Offset(sx - diagLen, sy + diagLen), Offset(sx + diagLen, sy - diagLen), _sharedStrokePaint);
+
+        _sharedFillPaint.color = star.color.withValues(alpha: twinkle * 0.18);
+        _sharedFillPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        canvas.drawCircle(Offset(sx, sy), star.baseSize * 2.8, _sharedFillPaint);
+        _sharedFillPaint.maskFilter = null;
+        _sharedFillPaint.color = star.color.withValues(alpha: twinkle);
       }
 
       // Tier-1: soft glow halo
-      if (tier == 1 && twinkle > 0.55) {
-        canvas.drawCircle(Offset(sx, sy), baseSize * 2.2,
-            Paint()
-              ..color = starColor.withValues(alpha: twinkle * 0.22)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+      if (star.tier == 1 && twinkle > 0.55) {
+        _sharedFillPaint.color = star.color.withValues(alpha: twinkle * 0.22);
+        _sharedFillPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        canvas.drawCircle(Offset(sx, sy), star.baseSize * 2.2, _sharedFillPaint);
+        _sharedFillPaint.maskFilter = null;
+        _sharedFillPaint.color = star.color.withValues(alpha: twinkle);
       }
 
-      canvas.drawCircle(Offset(sx, sy), baseSize * (0.75 + 0.25 * twinkle), starPaint);
+      canvas.drawCircle(Offset(sx, sy), star.baseSize * (0.75 + 0.25 * twinkle), _sharedFillPaint);
     }
 
     // 8. Two animated shooting star streaks
-    final shootDefs = [
+    const shootDefs = [
       [0.08, 0.3, 0.55, 0.0,  0.9],
       [0.60, 0.7, 0.38, 0.5,  1.3],
     ];
@@ -566,14 +587,16 @@ class _CelestialTextPainter extends CustomPainter {
         Colors.white.withValues(alpha: tailAlpha),
       ]);
       final shootRect = Rect.fromLTWH(sx0 - tailLen, sy0 - 0.5, tailLen, 1.0);
-      canvas.drawRect(shootRect, Paint()..shader = shootGrad.createShader(shootRect));
+      _sharedFillPaint.shader = shootGrad.createShader(shootRect);
+      canvas.drawRect(shootRect, _sharedFillPaint);
+      _sharedFillPaint.shader = null;
     }
 
     // 9. Restore SrcIn + outer layers
     canvas.restore();
     canvas.restore();
 
-    // 10. Crisp golden stroke outline — NO blur, sharp letter edges
+    // 10. Crisp golden stroke outline
     final outlinePainter = TextPainter(
       text: TextSpan(
         text: text,
@@ -588,8 +611,7 @@ class _CelestialTextPainter extends CustomPainter {
     )..layout(maxWidth: size.width);
     outlinePainter.paint(canvas, Offset(x, y));
 
-    // 11. Bright semi-transparent white fill — keeps letters fully readable
-    //     while letting the celestial interior show through underneath
+    // 11. Semi-transparent white fill
     final readablePainter = TextPainter(
       text: TextSpan(
         text: text,

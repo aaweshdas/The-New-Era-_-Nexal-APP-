@@ -20,6 +20,7 @@ import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
 import '../models/post_model.dart';
 import '../providers/feed_provider.dart';
+import '../widgets/background/smart_background.dart';
 
 // ── Feed Filter Enum ─────────────────────────────────────────────────────────
 enum FeedFilter { forYou, trending, following, aiPicks, global }
@@ -63,6 +64,7 @@ class _SuggestedUser {
     required this.avatarUrl,
     required this.bio,
     required this.followers,
+    // ignore: unused_element_parameter
     this.isFollowing = false,
   });
 }
@@ -226,7 +228,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _scrollController.addListener(_onScroll);
   }
 
+  int _lastScrollCheckMs = 0;
+
   void _onScroll() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastScrollCheckMs < 50) return; // Check at most 20 times per second
+    _lastScrollCheckMs = now;
+
     final shouldShow = _scrollController.offset > 300;
     if (shouldShow != _showScrollToTop) {
       setState(() => _showScrollToTop = shouldShow);
@@ -287,20 +295,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Background
+          // 1. Animated background — same source as the galaxy screen
+          const Positioned.fill(
+            child: SmartBackground(opacity: 0.8),
+          ),
+
+          // 2. Dark overlay — 70% black = background shows through at ~30%
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0D0015), Color(0xFF000000), Color(0xFF000a14), Color(0xFF000000)],
-                  stops: [0.0, 0.3, 0.7, 1.0],
-                ),
-              ),
+              color: Colors.black.withValues(alpha: 0.70),
             ),
           ),
 
@@ -594,14 +600,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(2.5),
                     child: story.isOwn
                         ? Stack(children: [
-                            ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, memCacheWidth: 110, errorWidget: (_, __, ___) => Container(color: AppTheme.purple500.withValues(alpha: 0.3)))),
+                            ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, memCacheWidth: 110, errorWidget: (ctx, url, err) => Container(color: AppTheme.purple500.withValues(alpha: 0.3)))),
                             Positioned(right: 0, bottom: 0, child: Container(
                               width: 18, height: 18,
                               decoration: BoxDecoration(color: AppTheme.purple500, shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 1.5)),
                               child: const Icon(LucideIcons.plus, color: Colors.white, size: 11),
                             )),
                           ])
-                        : ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, memCacheWidth: 110, errorWidget: (_, __, ___) => Container(color: AppTheme.cyan500.withValues(alpha: 0.3)))),
+                        : ClipOval(child: CachedNetworkImage(imageUrl: story.avatarUrl, width: 55, height: 55, fit: BoxFit.cover, memCacheWidth: 110, errorWidget: (ctx, url, err) => Container(color: AppTheme.cyan500.withValues(alpha: 0.3)))),
                   ),
                   const SizedBox(height: 6),
                   Text(story.name, style: story.isSeen ? CachedStyles.outfitW500Size11White38 : CachedStyles.outfitW500Size11White70, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
@@ -690,7 +696,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(children: [
-        ClipOval(child: CachedNetworkImage(imageUrl: user.avatarUrl, width: 44, height: 44, fit: BoxFit.cover, memCacheWidth: 90, errorWidget: (_, __, ___) => Container(width: 44, height: 44, color: AppTheme.purple500.withValues(alpha: 0.3)))),
+        ClipOval(child: CachedNetworkImage(imageUrl: user.avatarUrl, width: 44, height: 44, fit: BoxFit.cover, memCacheWidth: 90, errorWidget: (ctx, url, err) => Container(width: 44, height: 44, color: AppTheme.purple500.withValues(alpha: 0.3)))),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(user.name, style: CachedStyles.outfitW600Size13White),
@@ -811,6 +817,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
 
 
+  // ignore: unused_element
   Widget _buildOverlayBtn(IconData icon, Color color, {required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -1924,6 +1931,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // ═══════════════════════════════════════════════════════
   // 1. POST COMPOSER STUDIO (New Post)
   // ═══════════════════════════════════════════════════════
+  // ignore: unused_element
   void _showPostComposerModal() {
     final textCtrl = TextEditingController();
     String? selectedSampleImage;

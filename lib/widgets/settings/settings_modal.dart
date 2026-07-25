@@ -1,14 +1,33 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/aria_config.dart';
 import '../../services/aria_service.dart';
+import '../../services/auth_service.dart';
+import '../../screens/auth/login_screen.dart';
+import 'settings_nav_rail.dart';
+import 'settings_sub_page_header.dart';
+
+// Opens Settings as a full-screen page
+void openSettings(BuildContext context) {
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => const SettingsModal(),
+      transitionsBuilder: (context, anim, secondaryAnimation, child) => SlideTransition(
+        position: Tween(
+          begin: const Offset(0, 0.06),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+        child: FadeTransition(opacity: anim, child: child),
+      ),
+      transitionDuration: const Duration(milliseconds: 280),
+    ),
+  );
+}
 
 class SettingsModal extends StatefulWidget {
   const SettingsModal({super.key});
@@ -17,213 +36,145 @@ class SettingsModal extends StatefulWidget {
   State<SettingsModal> createState() => _SettingsModalState();
 }
 
-class _SettingsModalState extends State<SettingsModal> with SingleTickerProviderStateMixin {
+class _SettingsModalState extends State<SettingsModal> {
   // Config Text Controllers
-  final _backendUrlCtrl   = TextEditingController();
-  final _groqKeyCtrl      = TextEditingController();
-  final _deepgramKeyCtrl  = TextEditingController();
-  final _livekitUrlCtrl   = TextEditingController();
-  final _livekitKeyCtrl   = TextEditingController();
-  final _livekitSecCtrl   = TextEditingController();
+  final _backendUrlCtrl  = TextEditingController();
+  final _groqKeyCtrl     = TextEditingController();
+  final _deepgramKeyCtrl = TextEditingController();
+  final _livekitUrlCtrl  = TextEditingController();
+  final _livekitKeyCtrl  = TextEditingController();
+  final _livekitSecCtrl  = TextEditingController();
 
-  // Dialog State
+  // State
   bool _loading = true;
   bool _saved   = false;
+  bool _saving  = false;
   bool _obscureGroq     = true;
   bool _obscureDeepgram = true;
   bool _obscureLivekit  = true;
 
-  // Redesign Navigation & Preferences
-  int _activeTab = 0; // 0: System, 1: Visuals, 2: Security, 3: Diagnostics, 4: Notifications, 5: About
-  int _selectedAccent = 1; // 0: Solar Gold, 1: Electric Cyan, 2: Cosmic Violet, 3: Ruby Rose
+  // Navigation
+  int _activeTab = 0;
+
+  // Visuals
+  int _selectedAccent = 1;
   bool _darkMode = true;
   bool _notifications = true;
-  String _selectedLanguage = "English (US)";
+  String _selectedLanguage = 'English (US)';
 
-  // Personal Security states
+  // Security
   bool _biometricsEnabled = false;
   bool _encryptSync = true;
   bool _privacyShield = false;
   bool _appLockPin = false;
-  String _autoLockTime = "Immediately";
+  String _autoLockTime = 'Immediately';
   bool _clearingActivityLogs = false;
 
-  // Diagnostics state
+  // Diagnostics
   bool _testingConnection = false;
-  String _connectionStatus = "Not Tested"; // Online, Offline, Not Tested
-  int? _connectionPing; // in ms
-  double _cacheFootprint = 18.4; // simulated tile cache footprint in MB
+  String _connectionStatus = 'Not Tested';
+  int? _connectionPing;
+  double _cacheFootprint = 18.4;
   bool _purgingCache = false;
 
-  // Notifications tab state
-  bool _notifAria = true;         // ARIA voice assistant notifications
-  bool _notifMap = true;          // Map navigation alerts
-  bool _notifFriend = true;       // Friend location pings
-  bool _notifSystem = true;       // System / health alerts
-  bool _notifSound = true;        // Acoustic feedback
-  bool _notifVibration = true;    // Haptic feedback
-  bool _notifBadge = true;        // App badge counter
-  bool _notifDoNotDisturb = false; // DND schedule toggle
-  String _notifStyle = "Banner";  // Banner / Heads-Up / Silent
-  String _notifFrequency = "Real-time"; // Real-time / Batched / Digest
+  // Notifications
+  bool _notifAria = true;
+  bool _notifMap = true;
+  bool _notifFriend = true;
+  bool _notifSystem = true;
+  bool _notifSound = true;
+  bool _notifVibration = true;
+  bool _notifBadge = true;
+  bool _notifDoNotDisturb = false;
+  String _notifStyle = 'Banner';
+  String _notifFrequency = 'Real-time';
 
-  // About tab state
-  static const String _appVersion = "2.4.1";
-  static const String _buildNumber = "20260711";
-  static const String _releaseChannel = "Beta";
+  // About
+  static const String _appVersion = '2.4.1';
+  static const String _buildNumber = '20260711';
+  static const String _releaseChannel = 'Beta';
 
-  late TabController _tabCtrl;
+  // Username for avatar
+  String _username = 'neuralnexus';
 
-  // Accent Styles definitions
+  // Accent definitions
   final List<_AccentStyle> _accents = [
-    _AccentStyle(
-      name: "Solar Gold",
-      primary: const Color(0xFFD4A843),
-      secondary: const Color(0xFFB45309),
-    ),
-    _AccentStyle(
-      name: "Electric Cyan",
-      primary: const Color(0xFF22D3EE),
-      secondary: const Color(0xFF0EA5E9),
-    ),
-    _AccentStyle(
-      name: "Cosmic Violet",
-      primary: const Color(0xFFC084FC),
-      secondary: const Color(0xFF7E22CE),
-    ),
-    _AccentStyle(
-      name: "Ruby Rose",
-      primary: const Color(0xFFF43F5E),
-      secondary: const Color(0xFFBE123C),
-    ),
+    _AccentStyle(name: 'Solar Gold',    primary: const Color(0xFFD4A843), secondary: const Color(0xFFB45309)),
+    _AccentStyle(name: 'Electric Cyan', primary: const Color(0xFF22D3EE), secondary: const Color(0xFF0EA5E9)),
+    _AccentStyle(name: 'Cosmic Violet', primary: const Color(0xFFC084FC), secondary: const Color(0xFF7E22CE)),
+    _AccentStyle(name: 'Ruby Rose',     primary: const Color(0xFFF43F5E), secondary: const Color(0xFFBE123C)),
   ];
 
-  _AccentStyle get currentAccent => _accents[_selectedAccent];
+  _AccentStyle get _accent => _accents[_selectedAccent];
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 6, vsync: this);
-    _tabCtrl.addListener(() {
-      if (mounted) {
-        setState(() {
-          _activeTab = _tabCtrl.index;
-        });
-      }
-    });
     _loadConfig();
   }
 
   Future<void> _loadConfig() async {
     final config = await AriaConfig.load();
-    _backendUrlCtrl.text   = config.backendUrl;
-    _groqKeyCtrl.text      = config.groqApiKey;
-    _deepgramKeyCtrl.text  = config.deepgramApiKey;
-    _livekitUrlCtrl.text   = config.livekitUrl;
-    _livekitKeyCtrl.text   = config.livekitApiKey;
-    _livekitSecCtrl.text   = config.livekitApiSecret;
+    _backendUrlCtrl.text  = config.backendUrl;
+    _groqKeyCtrl.text     = config.groqApiKey;
+    _deepgramKeyCtrl.text = config.deepgramApiKey;
+    _livekitUrlCtrl.text  = config.livekitUrl;
+    _livekitKeyCtrl.text  = config.livekitApiKey;
+    _livekitSecCtrl.text  = config.livekitApiSecret;
 
     final prefs = await SharedPreferences.getInstance();
-    _selectedAccent = prefs.getInt('nexal_selected_accent') ?? 1;
-    _darkMode = prefs.getBool('nexal_dark_mode') ?? true;
-    _notifications = prefs.getBool('nexal_notifications') ?? true;
-    _selectedLanguage = prefs.getString('nexal_language') ?? "English (US)";
+    _selectedAccent   = prefs.getInt('nexal_selected_accent') ?? 1;
+    _darkMode         = prefs.getBool('nexal_dark_mode') ?? true;
+    _notifications    = prefs.getBool('nexal_notifications') ?? true;
+    _selectedLanguage = prefs.getString('nexal_language') ?? 'English (US)';
+    _username         = prefs.getString('user_username') ?? 'neuralnexus';
 
-    // Personal Security loaders
     _biometricsEnabled = prefs.getBool('nexal_biometrics_enabled') ?? false;
-    _encryptSync = prefs.getBool('nexal_encrypt_sync') ?? true;
-    _privacyShield = prefs.getBool('nexal_privacy_shield') ?? false;
-    _appLockPin = prefs.getBool('nexal_app_lock_pin') ?? false;
-    _autoLockTime = prefs.getString('nexal_auto_lock_time') ?? "Immediately";
+    _encryptSync       = prefs.getBool('nexal_encrypt_sync') ?? true;
+    _privacyShield     = prefs.getBool('nexal_privacy_shield') ?? false;
+    _appLockPin        = prefs.getBool('nexal_app_lock_pin') ?? false;
+    _autoLockTime      = prefs.getString('nexal_auto_lock_time') ?? 'Immediately';
 
-    // Notifications loaders
-    _notifAria = prefs.getBool('nexal_notif_aria') ?? true;
-    _notifMap = prefs.getBool('nexal_notif_map') ?? true;
-    _notifFriend = prefs.getBool('nexal_notif_friend') ?? true;
-    _notifSystem = prefs.getBool('nexal_notif_system') ?? true;
-    _notifSound = prefs.getBool('nexal_notif_sound') ?? true;
-    _notifVibration = prefs.getBool('nexal_notif_vibration') ?? true;
-    _notifBadge = prefs.getBool('nexal_notif_badge') ?? true;
+    _notifAria         = prefs.getBool('nexal_notif_aria') ?? true;
+    _notifMap          = prefs.getBool('nexal_notif_map') ?? true;
+    _notifFriend       = prefs.getBool('nexal_notif_friend') ?? true;
+    _notifSystem       = prefs.getBool('nexal_notif_system') ?? true;
+    _notifSound        = prefs.getBool('nexal_notif_sound') ?? true;
+    _notifVibration    = prefs.getBool('nexal_notif_vibration') ?? true;
+    _notifBadge        = prefs.getBool('nexal_notif_badge') ?? true;
     _notifDoNotDisturb = prefs.getBool('nexal_notif_dnd') ?? false;
-    _notifStyle = prefs.getString('nexal_notif_style') ?? "Banner";
-    _notifFrequency = prefs.getString('nexal_notif_frequency') ?? "Real-time";
+    _notifStyle        = prefs.getString('nexal_notif_style') ?? 'Banner';
+    _notifFrequency    = prefs.getString('nexal_notif_frequency') ?? 'Real-time';
 
     if (mounted) setState(() => _loading = false);
 
-    // Try synchronizing with Settings Backend Database
+    // Remote sync
     try {
-      final syncUri = Uri.parse("${config.backendUrl}/settings");
+      final syncUri = Uri.parse('${config.backendUrl}/settings');
       final response = await http.get(syncUri).timeout(const Duration(seconds: 2));
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
-        
-        // Populate text controllers
-        _backendUrlCtrl.text = data['backendUrl'] ?? config.backendUrl;
-        _groqKeyCtrl.text = data['groqApiKey'] ?? config.groqApiKey;
-        _deepgramKeyCtrl.text = data['deepgramApiKey'] ?? config.deepgramApiKey;
-        _livekitUrlCtrl.text = data['livekitUrl'] ?? config.livekitUrl;
-        _livekitKeyCtrl.text = data['livekitApiKey'] ?? config.livekitApiKey;
-        _livekitSecCtrl.text = data['livekitApiSecret'] ?? config.livekitApiSecret;
-
-        // Parse visual/security variables
-        _selectedAccent = data['selectedAccent'] ?? _selectedAccent;
-        _darkMode = data['darkMode'] ?? _darkMode;
-        _notifications = data['notifications'] ?? _notifications;
-        _selectedLanguage = data['selectedLanguage'] ?? _selectedLanguage;
-        _biometricsEnabled = data['biometricsEnabled'] ?? _biometricsEnabled;
-        _encryptSync = data['encryptSync'] ?? _encryptSync;
-        _privacyShield = data['privacyShield'] ?? _privacyShield;
-        _appLockPin = data['appLockPin'] ?? _appLockPin;
-        _autoLockTime = data['autoLockTime'] ?? _autoLockTime;
-        _notifAria = data['notifAria'] ?? _notifAria;
-        _notifMap = data['notifMap'] ?? _notifMap;
-        _notifFriend = data['notifFriend'] ?? _notifFriend;
-        _notifSystem = data['notifSystem'] ?? _notifSystem;
-        _notifSound = data['notifSound'] ?? _notifSound;
-        _notifVibration = data['notifVibration'] ?? _notifVibration;
-        _notifBadge = data['notifBadge'] ?? _notifBadge;
-        _notifDoNotDisturb = data['notifDoNotDisturb'] ?? _notifDoNotDisturb;
-        _notifStyle = data['notifStyle'] ?? _notifStyle;
-        _notifFrequency = data['notifFrequency'] ?? _notifFrequency;
-
-        // Save back locally to SharedPreferences to keep them in sync
-        config.backendUrl = _backendUrlCtrl.text.trim();
-        config.groqApiKey = _groqKeyCtrl.text.trim();
-        config.deepgramApiKey = _deepgramKeyCtrl.text.trim();
-        config.livekitUrl = _livekitUrlCtrl.text.trim();
-        config.livekitApiKey = _livekitKeyCtrl.text.trim();
-        config.livekitApiSecret = _livekitSecCtrl.text.trim();
-        await config.save();
-
-        await prefs.setInt('nexal_selected_accent', _selectedAccent);
-        await prefs.setBool('nexal_dark_mode', _darkMode);
-        await prefs.setBool('nexal_notifications', _notifications);
-        await prefs.setString('nexal_language', _selectedLanguage);
-        await prefs.setBool('nexal_biometrics_enabled', _biometricsEnabled);
-        await prefs.setBool('nexal_encrypt_sync', _encryptSync);
-        await prefs.setBool('nexal_privacy_shield', _privacyShield);
-        await prefs.setBool('nexal_app_lock_pin', _appLockPin);
-        await prefs.setString('nexal_auto_lock_time', _autoLockTime);
-        await prefs.setBool('nexal_notif_aria', _notifAria);
-        await prefs.setBool('nexal_notif_map', _notifMap);
-        await prefs.setBool('nexal_notif_friend', _notifFriend);
-        await prefs.setBool('nexal_notif_system', _notifSystem);
-        await prefs.setBool('nexal_notif_sound', _notifSound);
-        await prefs.setBool('nexal_notif_vibration', _notifVibration);
-        await prefs.setBool('nexal_notif_badge', _notifBadge);
-        await prefs.setBool('nexal_notif_dnd', _notifDoNotDisturb);
-        await prefs.setString('nexal_notif_style', _notifStyle);
-        await prefs.setString('nexal_notif_frequency', _notifFrequency);
-
+        _backendUrlCtrl.text  = data['backendUrl']       ?? config.backendUrl;
+        _groqKeyCtrl.text     = data['groqApiKey']       ?? config.groqApiKey;
+        _deepgramKeyCtrl.text = data['deepgramApiKey']   ?? config.deepgramApiKey;
+        _livekitUrlCtrl.text  = data['livekitUrl']       ?? config.livekitUrl;
+        _livekitKeyCtrl.text  = data['livekitApiKey']    ?? config.livekitApiKey;
+        _livekitSecCtrl.text  = data['livekitApiSecret'] ?? config.livekitApiSecret;
+        _selectedAccent       = data['selectedAccent']   ?? _selectedAccent;
+        _darkMode             = data['darkMode']         ?? _darkMode;
+        _notifications        = data['notifications']    ?? _notifications;
+        _selectedLanguage     = data['selectedLanguage'] ?? _selectedLanguage;
         if (mounted) setState(() {});
       }
     } catch (_) {
-      // Offline fallback: keep local SharedPreferences loaded config
-      debugPrint("[Settings Sync] Offline or server unreachable, fallback to local database configuration");
+      debugPrint('[Settings] Offline fallback');
     }
   }
 
   Future<void> _saveConfig() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
     final config = await AriaConfig.load();
     config.backendUrl       = _backendUrlCtrl.text.trim();
     config.groqApiKey       = _groqKeyCtrl.text.trim();
@@ -235,170 +186,72 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     await AriaService.instance.pushConfigToBackend();
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('nexal_selected_accent', _selectedAccent);
-    await prefs.setBool('nexal_dark_mode', _darkMode);
-    await prefs.setBool('nexal_notifications', _notifications);
-    await prefs.setString('nexal_language', _selectedLanguage);
-
-    // Personal Security savers
+    await prefs.setInt('nexal_selected_accent',    _selectedAccent);
+    await prefs.setBool('nexal_dark_mode',         _darkMode);
+    await prefs.setBool('nexal_notifications',     _notifications);
+    await prefs.setString('nexal_language',        _selectedLanguage);
     await prefs.setBool('nexal_biometrics_enabled', _biometricsEnabled);
-    await prefs.setBool('nexal_encrypt_sync', _encryptSync);
-    await prefs.setBool('nexal_privacy_shield', _privacyShield);
-    await prefs.setBool('nexal_app_lock_pin', _appLockPin);
-    await prefs.setString('nexal_auto_lock_time', _autoLockTime);
-
-    // Notifications savers
-    await prefs.setBool('nexal_notif_aria', _notifAria);
-    await prefs.setBool('nexal_notif_map', _notifMap);
-    await prefs.setBool('nexal_notif_friend', _notifFriend);
-    await prefs.setBool('nexal_notif_system', _notifSystem);
-    await prefs.setBool('nexal_notif_sound', _notifSound);
-    await prefs.setBool('nexal_notif_vibration', _notifVibration);
-    await prefs.setBool('nexal_notif_badge', _notifBadge);
-    await prefs.setBool('nexal_notif_dnd', _notifDoNotDisturb);
-    await prefs.setString('nexal_notif_style', _notifStyle);
+    await prefs.setBool('nexal_encrypt_sync',      _encryptSync);
+    await prefs.setBool('nexal_privacy_shield',    _privacyShield);
+    await prefs.setBool('nexal_app_lock_pin',      _appLockPin);
+    await prefs.setString('nexal_auto_lock_time',  _autoLockTime);
+    await prefs.setBool('nexal_notif_aria',        _notifAria);
+    await prefs.setBool('nexal_notif_map',         _notifMap);
+    await prefs.setBool('nexal_notif_friend',      _notifFriend);
+    await prefs.setBool('nexal_notif_system',      _notifSystem);
+    await prefs.setBool('nexal_notif_sound',       _notifSound);
+    await prefs.setBool('nexal_notif_vibration',   _notifVibration);
+    await prefs.setBool('nexal_notif_badge',       _notifBadge);
+    await prefs.setBool('nexal_notif_dnd',         _notifDoNotDisturb);
+    await prefs.setString('nexal_notif_style',     _notifStyle);
     await prefs.setString('nexal_notif_frequency', _notifFrequency);
 
-    // Sync to remote settings backend database
     try {
-      final syncUri = Uri.parse("${config.backendUrl}/settings");
-      final payload = {
-        "backendUrl": config.backendUrl,
-        "groqApiKey": config.groqApiKey,
-        "deepgramApiKey": config.deepgramApiKey,
-        "livekitUrl": config.livekitUrl,
-        "livekitApiKey": config.livekitApiKey,
-        "livekitApiSecret": config.livekitApiSecret,
-        "selectedAccent": _selectedAccent,
-        "darkMode": _darkMode,
-        "notifications": _notifications,
-        "selectedLanguage": _selectedLanguage,
-        "biometricsEnabled": _biometricsEnabled,
-        "encryptSync": _encryptSync,
-        "privacyShield": _privacyShield,
-        "appLockPin": _appLockPin,
-        "autoLockTime": _autoLockTime,
-        "notifAria": _notifAria,
-        "notifMap": _notifMap,
-        "notifFriend": _notifFriend,
-        "notifSystem": _notifSystem,
-        "notifSound": _notifSound,
-        "notifVibration": _notifVibration,
-        "notifBadge": _notifBadge,
-        "notifDoNotDisturb": _notifDoNotDisturb,
-        "notifStyle": _notifStyle,
-        "notifFrequency": _notifFrequency,
-      };
-
       await http.post(
-        syncUri,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(payload),
+        Uri.parse('${config.backendUrl}/settings'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'backendUrl': config.backendUrl,
+          'groqApiKey': config.groqApiKey,
+          'deepgramApiKey': config.deepgramApiKey,
+          'livekitUrl': config.livekitUrl,
+          'livekitApiKey': config.livekitApiKey,
+          'livekitApiSecret': config.livekitApiSecret,
+          'selectedAccent': _selectedAccent,
+          'darkMode': _darkMode,
+          'notifications': _notifications,
+          'selectedLanguage': _selectedLanguage,
+          'biometricsEnabled': _biometricsEnabled,
+          'encryptSync': _encryptSync,
+          'privacyShield': _privacyShield,
+          'appLockPin': _appLockPin,
+          'autoLockTime': _autoLockTime,
+          'notifAria': _notifAria,
+          'notifMap': _notifMap,
+          'notifFriend': _notifFriend,
+          'notifSystem': _notifSystem,
+          'notifSound': _notifSound,
+          'notifVibration': _notifVibration,
+          'notifBadge': _notifBadge,
+          'notifDoNotDisturb': _notifDoNotDisturb,
+          'notifStyle': _notifStyle,
+          'notifFrequency': _notifFrequency,
+        }),
       ).timeout(const Duration(seconds: 3));
     } catch (_) {
-      debugPrint("[Settings Sync] Remote database push failed (offline), local copy saved successfully.");
+      debugPrint('[Settings] Remote sync failed');
     }
 
     if (mounted) {
-      setState(() => _saved = true);
+      setState(() { _saving = false; _saved = true; });
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) setState(() => _saved = false);
       });
     }
   }
 
-  Future<void> _testConnection() async {
-    if (_testingConnection) return;
-    setState(() {
-      _testingConnection = true;
-      _connectionStatus = "Testing...";
-    });
-
-    final stopwatch = Stopwatch()..start();
-    final url = _backendUrlCtrl.text.trim();
-
-    try {
-      // Direct HTTP check with 4-second timeout limit
-      final uri = Uri.parse(url);
-      final response = await http.get(uri).timeout(const Duration(seconds: 4));
-      stopwatch.stop();
-
-      if (mounted) {
-        setState(() {
-          _testingConnection = false;
-          _connectionPing = stopwatch.elapsedMilliseconds;
-          // Render servers return 200 or 404/others but we connected
-          if (response.statusCode >= 200 && response.statusCode < 500) {
-            _connectionStatus = "Online";
-          } else {
-            _connectionStatus = "Server Error (${response.statusCode})";
-          }
-        });
-      }
-    } catch (e) {
-      stopwatch.stop();
-      if (mounted) {
-        setState(() {
-          _testingConnection = false;
-          _connectionPing = null;
-          _connectionStatus = "Offline";
-        });
-      }
-    }
-  }
-
-  Future<void> _purgeCache() async {
-    if (_purgingCache || _cacheFootprint == 0.0) return;
-    setState(() => _purgingCache = true);
-
-    await Future.delayed(const Duration(milliseconds: 1400));
-
-    if (mounted) {
-      setState(() {
-        _purgingCache = false;
-        _cacheFootprint = 0.0;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF1E1E2E).withValues(alpha: 0.9),
-          content: Text(
-            '✓ System Map Cache Cleared',
-            style: GoogleFonts.outfit(color: Colors.greenAccent),
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _applyEnvironment(String env) {
-    if (env == 'render') {
-      _backendUrlCtrl.text = "https://nexal-backend.onrender.com";
-      _livekitUrlCtrl.text = "wss://friday-si6nqz7u.livekit.cloud";
-      _livekitKeyCtrl.text = "API6vNUPttbHXDd";
-      _livekitSecCtrl.text = "xH4Ld1M8SQZ4XSXQTMYDmMttC8ii2i8nWO09adFSwHG";
-    } else if (env == 'local') {
-      _backendUrlCtrl.text = "http://10.0.2.2:5000";
-      _livekitUrlCtrl.text = "ws://10.0.2.2:7880";
-      _livekitKeyCtrl.text = "devkey";
-      _livekitSecCtrl.text = "secret";
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 1),
-        backgroundColor: Colors.black.withValues(alpha: 0.8),
-        content: Text(
-          'Environment Preset Applied: ${env.toUpperCase()}',
-          style: GoogleFonts.outfit(color: currentAccent.primary),
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
   void dispose() {
-    _tabCtrl.dispose();
     _backendUrlCtrl.dispose();
     _groqKeyCtrl.dispose();
     _deepgramKeyCtrl.dispose();
@@ -408,817 +261,382 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    
-    // Allocate space based on screen height and keyboard visible state
-    final height = bottomInset > 0 ? screenHeight * 0.95 : screenHeight * 0.9;
-
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: height,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.45),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
-          border: Border(
-            top: BorderSide(
-              color: currentAccent.primary.withValues(alpha: 0.25),
-              width: 1.5,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: currentAccent.primary.withValues(alpha: 0.12),
-              blurRadius: 35,
-              spreadRadius: 2,
-            ),
-          ],
+  Future<void> _confirmLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF141A2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.3)),
         ),
-        child: Column(
+        title: Row(
           children: [
-            // Drag handle with glowing accent
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 14, bottom: 6),
-                width: 45,
-                height: 4.5,
-                decoration: BoxDecoration(
-                  color: currentAccent.primary.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: currentAccent.primary.withValues(alpha: 0.2),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Header Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "NEXAL CORE",
-                        style: GoogleFonts.orbitron(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: currentAccent.primary,
-                          letterSpacing: 3,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "System Dashboard",
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(LucideIcons.x, color: Colors.white70),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.08),
-                      hoverColor: Colors.white.withValues(alpha: 0.15),
-                      padding: const EdgeInsets.all(10),
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-
-            // Segmented Slidable Tabs Header
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                color: Colors.redAccent.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
               ),
-              child: TabBar(
-                controller: _tabCtrl,
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                labelPadding: EdgeInsets.zero,
-                indicator: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      currentAccent.primary.withValues(alpha: 0.25),
-                      currentAccent.secondary.withValues(alpha: 0.15),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: currentAccent.primary.withValues(alpha: 0.35),
-                  ),
-                ),
-                tabs: [
-                  _buildTabHeader(LucideIcons.cpu, "System", 0),
-                  _buildTabHeader(LucideIcons.palette, "Visuals", 1),
-                  _buildTabHeader(LucideIcons.shield, "Security", 2),
-                  _buildTabHeader(LucideIcons.activity, "Diag", 3),
-                  _buildTabHeader(LucideIcons.bell, "Notifs", 4),
-                  _buildTabHeader(LucideIcons.info, "About", 5),
-                ],
-              ),
+              child: const Icon(LucideIcons.logOut, color: Colors.redAccent, size: 20),
             ),
-
-            const Divider(color: Colors.white10, height: 1),
-
-            // Scrollable Tab View Content
-            Expanded(
-              child: _loading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: currentAccent.primary,
-                        strokeWidth: 3,
-                      ),
-                    )
-                  : TabBarView(
-                      controller: _tabCtrl,
-                      physics: const BouncingScrollPhysics(),
-                      children: [
-                        _buildAiSettingsTab(),
-                        _buildInterfaceTab(),
-                        _buildSecurityTab(),
-                        _buildDiagnosticsTab(),
-                        _buildNotificationsTab(),
-                        _buildAboutTab(),
-                      ],
-                    ),
+            const SizedBox(width: 12),
+            const Text(
+              'Log Out',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-
-            // Sticky Bottom Save Panel
-            if (!_loading) _buildSavePanel(),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTabHeader(IconData icon, String title, int index) {
-    final active = _activeTab == index;
-    return Tab(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 15,
-            color: active ? currentAccent.primary : Colors.white60,
+        content: const Text(
+          'Are you sure you want to log out of your Nexal account?',
+          style: TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              fontWeight: active ? FontWeight.bold : FontWeight.w500,
-              color: active ? Colors.white : Colors.white60,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
+
+    if (confirm == true) {
+      await AuthService.instance.logout();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, _) => const LoginScreen(),
+          transitionsBuilder: (context, animation, _, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    }
   }
 
-  // ──────── TABS IMPLEMENTATION ───────────────────────────────────────────────
-
-  // 1. AI & APIs TAB
-  Widget _buildAiSettingsTab() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        _buildSectionHeader("ENVIRONMENT PRESETS", LucideIcons.layers),
-        const SizedBox(height: 8),
-        Row(
+  // ─── BUILD ──────────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0F1E),
+      body: SafeArea(
+        child: Column(
           children: [
+            _buildHeader(),
             Expanded(
-              child: _buildPresetCard(
-                label: "Render Prod",
-                icon: LucideIcons.cloud,
-                desc: "Remote Server",
-                active: _backendUrlCtrl.text.contains("onrender.com"),
-                onTap: () => _applyEnvironment('render'),
-              ),
+              child: _loading
+                  ? Center(child: CircularProgressIndicator(
+                      color: _accent.primary, strokeWidth: 2.5))
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left vertical nav rail
+                        SettingsNavRail(
+                          selectedIndex: _activeTab,
+                          accentColor: _accent.primary,
+                          username: _username,
+                          onDestinationSelected: (i) =>
+                              setState(() => _activeTab = i),
+                          onLogoutTap: _confirmLogout,
+                        ),
+                        // Right content
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeIn,
+                            transitionBuilder: (child, anim) => FadeTransition(
+                              opacity: anim,
+                              child: SlideTransition(
+                                position: Tween(
+                                  begin: const Offset(0.03, 0),
+                                  end: Offset.zero,
+                                ).animate(anim),
+                                child: child,
+                              ),
+                            ),
+                            child: KeyedSubtree(
+                              key: ValueKey(_activeTab),
+                              child: _buildTabContent(_activeTab),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildPresetCard(
-                label: "Local Debug",
-                icon: LucideIcons.laptop,
-                desc: "10.0.2.2 localhost",
-                active: _backendUrlCtrl.text.contains("10.0.2.2"),
-                onTap: () => _applyEnvironment('local'),
-              ),
-            ),
+            if (!_loading) _buildSaveBar(),
           ],
         ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("SERVER ENGINE", LucideIcons.server),
-        const SizedBox(height: 10),
-        _buildGlowingInputField(
-          label: "Core API Endpoint",
-          controller: _backendUrlCtrl,
-          icon: LucideIcons.link,
-          hint: "https://your-api.com",
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("COGNITIVE INTELLIGENCE APIS", LucideIcons.brain),
-        const SizedBox(height: 10),
-        _buildGlowingInputField(
-          label: "Groq LLM Key",
-          controller: _groqKeyCtrl,
-          icon: LucideIcons.key,
-          obscure: _obscureGroq,
-          onToggleObscure: () => setState(() => _obscureGroq = !_obscureGroq),
-          hint: "gsk_...",
-        ),
-        const SizedBox(height: 14),
-        _buildGlowingInputField(
-          label: "Deepgram Voice Key",
-          controller: _deepgramKeyCtrl,
-          icon: LucideIcons.mic,
-          obscure: _obscureDeepgram,
-          onToggleObscure: () => setState(() => _obscureDeepgram = !_obscureDeepgram),
-          hint: "49a1...",
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("LIVEKIT WEBSOCKET PROTOCOLS", LucideIcons.radio),
-        const SizedBox(height: 10),
-        _buildGlowingInputField(
-          label: "LiveKit Agent Gateway",
-          controller: _livekitUrlCtrl,
-          icon: LucideIcons.globe,
-          hint: "wss://...",
-        ),
-        const SizedBox(height: 14),
-        _buildGlowingInputField(
-          label: "LiveKit API Key",
-          controller: _livekitKeyCtrl,
-          icon: LucideIcons.shieldAlert,
-          obscure: _obscureLivekit,
-          onToggleObscure: () => setState(() => _obscureLivekit = !_obscureLivekit),
-          hint: "API...",
-        ),
-        const SizedBox(height: 14),
-        _buildGlowingInputField(
-          label: "LiveKit API Secret",
-          controller: _livekitSecCtrl,
-          icon: LucideIcons.lock,
-          obscure: _obscureLivekit,
-          hint: "xH4L...",
-        ),
-        const SizedBox(height: 32),
-      ],
+      ),
     );
   }
 
-  // 2. INTERFACE TAB
-  Widget _buildInterfaceTab() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        _buildSectionHeader("SYSTEM PALETTE", LucideIcons.palette),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Accent Nebula Glow",
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Updates primary glowing lines, tabs, and indicator interfaces",
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: Colors.white54,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(_accents.length, (idx) {
-                  final accent = _accents[idx];
-                  final isSelected = _selectedAccent == idx;
-                  return InkWell(
-                    onTap: () => setState(() => _selectedAccent = idx),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      width: 70,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected 
-                            ? accent.primary.withValues(alpha: 0.15) 
-                            : Colors.white.withValues(alpha: 0.02),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isSelected 
-                              ? accent.primary 
-                              : Colors.white10,
-                          width: isSelected ? 1.5 : 1,
-                        ),
-                        boxShadow: isSelected ? [
-                          BoxShadow(
-                            color: accent.primary.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                          )
-                        ] : null,
-                      ),
-                      child: Column(
+  // ─── HEADER ─────────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    final tabLabels = [
+      'System', 'Visuals', 'Security', 'Diagnostics', 'Notifications', 'About'
+    ];
+    final tabIcons = [
+      LucideIcons.cpu, LucideIcons.palette, LucideIcons.shieldCheck,
+      LucideIcons.activity, LucideIcons.bell, LucideIcons.info,
+    ];
+    final currentLabel = tabLabels[_activeTab];
+    final currentIcon  = tabIcons[_activeTab];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF080C18),
+        border: Border(
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Row 1: Back · Title · Version chip ──────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 14, 20, 10),
+            child: Row(
+              children: [
+                // Back button — minimal pill style
+                Material(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [accent.primary, accent.secondary],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: accent.primary.withValues(alpha: 0.4),
-                                  blurRadius: 6,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            accent.name.split(" ")[1],
-                            style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? Colors.white : Colors.white60,
+                          Icon(LucideIcons.arrowLeft,
+                              color: Colors.white70, size: 16),
+                          SizedBox(width: 5),
+                          Text('Back',
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  );
-                }),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("SYSTEM PREFERENCES", LucideIcons.sliders),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.moon,
-          title: "Deep Space Dark Mode",
-          desc: "Saves battery on OLED displays",
-          value: _darkMode,
-          onChanged: (val) => setState(() => _darkMode = val),
-        ),
-        const SizedBox(height: 12),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.bell,
-          title: "Intelligent Notifications",
-          desc: "Push and acoustic feedback triggers",
-          value: _notifications,
-          onChanged: (val) => setState(() => _notifications = val),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("GLOBAL LOCALIZATION", LucideIcons.globe),
-        const SizedBox(height: 10),
-        _buildDropdownSelector(),
-        const SizedBox(height: 32),
-      ],
-    );
-  }
-
-  // 3. SECURITY TAB
-  Widget _buildSecurityTab() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        _buildSectionHeader("AUTHENTICATION PROTOCOLS", LucideIcons.fingerprint),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.fingerprint,
-          title: "Biometric Verification",
-          desc: "Locks app with fingerprint or FaceID",
-          value: _biometricsEnabled,
-          onChanged: (val) => setState(() => _biometricsEnabled = val),
-        ),
-        const SizedBox(height: 12),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.lock,
-          title: "Device PIN Access Lock",
-          desc: "Asks for passcode on launch",
-          value: _appLockPin,
-          onChanged: (val) => setState(() => _appLockPin = val),
-        ),
-        const SizedBox(height: 12),
-        _buildSecurityDropdownSelector(),
-        const SizedBox(height: 24),
-        _buildSectionHeader("CRYPTOGRAPHIC SECURITY & SYNC", LucideIcons.shieldCheck),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.shieldAlert,
-          title: "End-to-End Encrypted Sync",
-          desc: "Secures coordinates and settings in transit",
-          value: _encryptSync,
-          onChanged: (val) => setState(() => _encryptSync = val),
-        ),
-        const SizedBox(height: 12),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.eyeOff,
-          title: "Privacy Shield Masking",
-          desc: "Blurs preview in task switcher view",
-          value: _privacyShield,
-          onChanged: (val) => setState(() => _privacyShield = val),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("DATA MANAGEMENT", LucideIcons.trash2),
-        const SizedBox(height: 12),
-        _buildClearLogsCard(),
-        const SizedBox(height: 32),
-      ],
-    );
-  }
-
-  Widget _buildSecurityDropdownSelector() {
-    final List<String> intervals = ["Immediately", "1 Minute", "5 Minutes", "Never"];
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(LucideIcons.clock, color: currentAccent.primary, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Auto-Lock Interval",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  "Duration of inactivity before locking",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white38,
-                    fontSize: 11,
+
+                const SizedBox(width: 14),
+
+                // Title
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Settings',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
+                          height: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Nexal App Configuration',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.33),
+                          fontSize: 11.5,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          DropdownButton<String>(
-            dropdownColor: const Color(0xFF161622),
-            value: _autoLockTime,
-            icon: const Icon(LucideIcons.chevronDown, color: Colors.white38, size: 16),
-            underline: Container(),
-            style: GoogleFonts.outfit(color: currentAccent.primary, fontSize: 13, fontWeight: FontWeight.bold),
-            onChanged: (String? newVal) {
-              if (newVal != null) {
-                setState(() => _autoLockTime = newVal);
-              }
-            },
-            items: intervals.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildClearLogsCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(LucideIcons.history, color: Colors.redAccent, size: 18),
-              const SizedBox(width: 10),
-              Text(
-                "Clear Activity & Location History",
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            "Purges search queries, geolocation caches, and private logs from your local device storage permanently.",
-            style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
-                foregroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2)),
-                ),
-              ),
-              onPressed: _clearingActivityLogs ? null : _clearActivityLogs,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _clearingActivityLogs
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                // Logout chip
+                GestureDetector(
+                  onTap: _confirmLogout,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3), width: 1),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.logOut, color: Colors.redAccent, size: 12),
+                        SizedBox(width: 5),
+                        Text(
+                          'Logout',
+                          style: TextStyle(
                             color: Colors.redAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
                           ),
-                        )
-                      : const Icon(LucideIcons.trash2, size: 14),
-                  const SizedBox(width: 8),
-                  Text(
-                    _clearingActivityLogs ? "Purging Secure Database..." : "Purge Activity Logs",
-                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                ),
 
-  Future<void> _clearActivityLogs() async {
-    if (_clearingActivityLogs) return;
-    setState(() => _clearingActivityLogs = true);
-
-    final config = await AriaConfig.load();
-
-    // Call settings backend database log purge endpoint
-    try {
-      final clearUri = Uri.parse("${config.backendUrl}/settings/clear-logs");
-      await http.post(clearUri).timeout(const Duration(seconds: 3));
-    } catch (_) {
-      debugPrint("[Settings Sync] Remote database purge failed (offline), clearing local logs.");
-    }
-
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    if (mounted) {
-      setState(() => _clearingActivityLogs = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF1E1E2E).withValues(alpha: 0.9),
-          content: Text(
-            '✓ Local Activity & Secure Location History Purged',
-            style: GoogleFonts.outfit(color: Colors.greenAccent),
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  // 4. DIAGNOSTICS TAB
-  Widget _buildDiagnosticsTab() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        _buildSectionHeader("GATEWAY CONNECTIVITY TEST", LucideIcons.radio),
-        const SizedBox(height: 12),
-        _buildDiagnosticsStatusCard(),
-        const SizedBox(height: 24),
-        _buildSectionHeader("SYSTEM CACHE GAUGES", LucideIcons.hardDrive),
-        const SizedBox(height: 12),
-        _buildCacheGaugeCard(),
-        const SizedBox(height: 24),
-        _buildSectionHeader("DEVICE HARDWARE PROFILE", LucideIcons.smartphone),
-        const SizedBox(height: 12),
-        _buildHardwareCard(),
-        const SizedBox(height: 32),
-      ],
-    );
-  }
-
-  // 5. NOTIFICATIONS TAB
-  Widget _buildNotificationsTab() {
-    final List<String> styles = ["Banner", "Heads-Up", "Silent"];
-    final List<String> frequencies = ["Real-time", "Batched (15 min)", "Digest (Daily)"];
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        // Master Notifications Toggle Card
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                currentAccent.primary.withValues(alpha: 0.12),
-                currentAccent.secondary.withValues(alpha: 0.06),
+                // Version chip
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: _accent.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: _accent.primary.withValues(alpha: 0.3), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6, height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _accent.primary,
+                          boxShadow: [BoxShadow(
+                            color: _accent.primary.withValues(alpha: 0.6),
+                            blurRadius: 4,
+                          )],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'v2.4.1',
+                        style: TextStyle(
+                          color: _accent.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: currentAccent.primary.withValues(alpha: 0.25)),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: currentAccent.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
+
+          // ── Row 2: Active tab breadcrumb ────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+            child: Row(
+              children: [
+                // Glowing left-border tab badge
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _accent.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border(
+                      left: BorderSide(color: _accent.primary, width: 3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(currentIcon,
+                          size: 14, color: _accent.primary),
+                      const SizedBox(width: 7),
+                      Text(
+                        currentLabel,
+                        style: TextStyle(
+                          color: _accent.primary,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Icon(LucideIcons.bell, color: currentAccent.primary, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "All Notifications",
-                      style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+
+                const SizedBox(width: 10),
+
+                // Divider line growing to accent gradient
+                Expanded(
+                  child: Container(
+                    height: 1.5,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _accent.primary.withValues(alpha: 0.4),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _notifications ? "System notifications active" : "All notifications silenced",
-                      style: GoogleFonts.outfit(fontSize: 11, color: Colors.white54),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              Switch.adaptive(
-                value: _notifications,
-                activeThumbColor: currentAccent.primary,
-                activeTrackColor: currentAccent.primary.withValues(alpha: 0.25),
-                onChanged: (val) => setState(() => _notifications = val),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("CHANNEL CONTROLS", LucideIcons.layers),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.bot,
-          title: "ARIA Voice Assistant",
-          desc: "Push alerts from conversation AI engine",
-          value: _notifAria && _notifications,
-          onChanged: (val) => setState(() => _notifAria = val),
-        ),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.mapPin,
-          title: "Navigation & Map Alerts",
-          desc: "Route updates, detours, geofence entries",
-          value: _notifMap && _notifications,
-          onChanged: (val) => setState(() => _notifMap = val),
-        ),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.users,
-          title: "Friend Activity Pings",
-          desc: "Location sharing and check-in alerts",
-          value: _notifFriend && _notifications,
-          onChanged: (val) => setState(() => _notifFriend = val),
-        ),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.cpu,
-          title: "System Health & Security",
-          desc: "Backend health, firmware, security events",
-          value: _notifSystem && _notifications,
-          onChanged: (val) => setState(() => _notifSystem = val),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("SENSORY FEEDBACK", LucideIcons.volume2),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.volume2,
-          title: "Acoustic Sound Alerts",
-          desc: "Play system notification chimes",
-          value: _notifSound,
-          onChanged: (val) => setState(() => _notifSound = val),
-        ),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.waves,
-          title: "Haptic Vibration",
-          desc: "Tactile motor feedback on alerts",
-          value: _notifVibration,
-          onChanged: (val) => setState(() => _notifVibration = val),
-        ),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.badge,
-          title: "App Badge Counter",
-          desc: "Unread count shown on app icon",
-          value: _notifBadge,
-          onChanged: (val) => setState(() => _notifBadge = val),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("DELIVERY SCHEDULE", LucideIcons.clock),
-        const SizedBox(height: 10),
-        _buildSettingsSwitchTile(
-          icon: LucideIcons.moonStar,
-          title: "Do Not Disturb Mode",
-          desc: "Suppresses all alerts on schedule",
-          value: _notifDoNotDisturb,
-          onChanged: (val) => setState(() => _notifDoNotDisturb = val),
-        ),
-        const SizedBox(height: 12),
-        // Notification Style Selector
-        _buildNotifDropdown(
-          icon: LucideIcons.layout,
-          title: "Notification Style",
-          desc: "How alerts appear on-screen",
-          value: _notifStyle,
-          items: styles,
-          onChanged: (v) => setState(() => _notifStyle = v!),
-        ),
-        const SizedBox(height: 10),
-        _buildNotifDropdown(
-          icon: LucideIcons.refreshCw,
-          title: "Delivery Frequency",
-          desc: "Alert batching strategy",
-          value: _notifFrequency,
-          items: frequencies,
-          onChanged: (v) => setState(() => _notifFrequency = v!),
-        ),
-        const SizedBox(height: 32),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildNotifDropdown({
+  // ─── TAB ROUTER ─────────────────────────────────────────────────────────────
+  Widget _buildTabContent(int tab) {
+    return switch (tab) {
+      0 => _buildSystemTab(),
+      1 => _buildVisualsTab(),
+      2 => _buildSecurityTab(),
+      3 => _buildDiagnosticsTab(),
+      4 => _buildNotificationsTab(),
+      5 => _buildAboutTab(),
+      _ => const SizedBox(),
+    };
+  }
+
+  // ─── SHARED HELPERS ──────────────────────────────────────────────────────────
+  Widget _sectionLabel(String text, IconData icon) => SettingsSectionLabel(
+    text: text, icon: icon, accentColor: _accent.primary,
+  );
+
+  Widget _switchTile({
+    required IconData icon,
+    required String title,
+    String? desc,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: SettingsTile(
+        icon: icon, title: title, description: desc,
+        accentColor: _accent.primary,
+        trailing: Switch.adaptive(
+          value: value,
+          activeThumbColor: _accent.primary,
+          activeTrackColor: _accent.primary.withValues(alpha: 0.25),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
+  Widget _dropdownTile({
     required IconData icon,
     required String title,
     required String desc,
@@ -1226,590 +644,30 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: currentAccent.primary, size: 20),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: SettingsTile(
+        icon: icon, title: title, description: desc,
+        accentColor: _accent.primary,
+        trailing: DropdownButton<String>(
+          value: value,
+          dropdownColor: const Color(0xFF161622),
+          icon: const Icon(LucideIcons.chevronDown,
+              color: Colors.white38, size: 15),
+          underline: const SizedBox(),
+          style: TextStyle(
+            color: _accent.primary, fontSize: 12,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text(desc, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
-              ],
-            ),
-          ),
-          DropdownButton<String>(
-            dropdownColor: const Color(0xFF161622),
-            value: value,
-            icon: const Icon(LucideIcons.chevronDown, color: Colors.white38, size: 16),
-            underline: Container(),
-            style: GoogleFonts.outfit(color: currentAccent.primary, fontSize: 13, fontWeight: FontWeight.bold),
-            onChanged: onChanged,
-            items: items.map<DropdownMenuItem<String>>((String v) {
-              return DropdownMenuItem<String>(value: v, child: Text(v));
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 6. ABOUT TAB
-  Widget _buildAboutTab() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        // App version hero card
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                currentAccent.primary.withValues(alpha: 0.12),
-                const Color(0xFF0A0A14),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: currentAccent.primary.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [currentAccent.primary, currentAccent.secondary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: currentAccent.primary.withValues(alpha: 0.4),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "N",
-                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.black),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "NEXAL",
-                          style: GoogleFonts.orbitron(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 3,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: currentAccent.primary.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: currentAccent.primary.withValues(alpha: 0.3)),
-                              ),
-                              child: Text(
-                                _releaseChannel,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: currentAccent.primary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "v$_appVersion",
-                              style: GoogleFonts.outfit(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Divider(color: Colors.white10),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildAboutStat("Build", _buildNumber),
-                  _buildAboutStatDivider(),
-                  _buildAboutStat("Engine", "Flutter 3.x"),
-                  _buildAboutStatDivider(),
-                  _buildAboutStat("Platform", "Android/iOS"),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeader("STORAGE & MEMORY", LucideIcons.database),
-        const SizedBox(height: 12),
-        _buildStorageCard(),
-        const SizedBox(height: 24),
-        _buildSectionHeader("CHANGELOG", LucideIcons.gitBranch),
-        const SizedBox(height: 12),
-        _buildChangelogCard(),
-        const SizedBox(height: 24),
-        _buildSectionHeader("SUPPORT & LEGAL", LucideIcons.bookOpen),
-        const SizedBox(height: 10),
-        _buildAboutLinkTile(
-          icon: LucideIcons.helpCircle,
-          title: "Help Center",
-          desc: "Documentation, FAQs, tutorials",
-          badge: null,
-        ),
-        const SizedBox(height: 10),
-        _buildAboutLinkTile(
-          icon: LucideIcons.github,
-          title: "Source Repository",
-          desc: "View source code and contribute",
-          badge: null,
-        ),
-        const SizedBox(height: 10),
-        _buildAboutLinkTile(
-          icon: LucideIcons.mail,
-          title: "Send Feedback",
-          desc: "Report bugs, suggest features",
-          badge: "New",
-        ),
-        const SizedBox(height: 10),
-        _buildAboutLinkTile(
-          icon: LucideIcons.fileText,
-          title: "Privacy Policy",
-          desc: "How your data is processed and stored",
-          badge: null,
-        ),
-        const SizedBox(height: 10),
-        _buildAboutLinkTile(
-          icon: LucideIcons.scale,
-          title: "Terms of Service",
-          desc: "End-user license agreement",
-          badge: null,
-        ),
-        const SizedBox(height: 24),
-        // Credits footer
-        Center(
-          child: Column(
-            children: [
-              Text(
-                "Built with ❤️ by the Nexal Team",
-                style: GoogleFonts.outfit(fontSize: 12, color: Colors.white38),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "© 2026 Nexal Labs. All rights reserved.",
-                style: GoogleFonts.outfit(fontSize: 10, color: Colors.white24),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 32),
-      ],
-    );
-  }
-
-  Widget _buildAboutStat(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.orbitron(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: currentAccent.primary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.outfit(fontSize: 10, color: Colors.white38),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAboutStatDivider() {
-    return Container(
-      width: 1,
-      height: 28,
-      color: Colors.white10,
-    );
-  }
-
-  Widget _buildStorageCard() {
-    final items = [
-      ("App Core", 42.5, currentAccent.primary),
-      ("Map Tile Cache", _cacheFootprint, const Color(0xFF22D3EE)),
-      ("ARIA Model Cache", 28.0, const Color(0xFFC084FC)),
-      ("User Data", 5.2, const Color(0xFF4ADE80)),
-    ];
-    final total = items.fold(0.0, (sum, e) => sum + e.$2);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Total Used",
-                style: GoogleFonts.outfit(fontSize: 13, color: Colors.white70),
-              ),
-              Text(
-                "${total.toStringAsFixed(1)} MB",
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          // Segmented bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: SizedBox(
-              height: 8,
-              child: Row(
-                children: items.map((e) {
-                  return Flexible(
-                    flex: (e.$2 * 10).toInt(),
-                    child: Container(color: e.$3),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          ...items.map((e) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Container(width: 10, height: 10, decoration: BoxDecoration(color: e.$3, shape: BoxShape.circle)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(e.$1, style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70)),
-                ),
-                Text(
-                  "${e.$2.toStringAsFixed(1)} MB",
-                  style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChangelogCard() {
-    final entries = [
-      ("v2.4.1", "Current", [
-        "Added Notifications & About tabs in Settings",
-        "Map speed HUD + weather overlay",
-        "3D buildings toggle added",
-      ]),
-      ("v2.3.0", "Jul 2026", [
-        "Settings backend database sync",
-        "Map tile category caching (150m radius)",
-        "Geolocation mock to prevent browser prompts",
-      ]),
-      ("v2.2.0", "Jun 2026", [
-        "Security tab with biometrics & auto-lock",
-        "Full settings 4-tab redesign",
-        "Diagnostics cache gauge",
-      ]),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        children: entries.asMap().entries.map((entry) {
-          final idx = entry.key;
-          final e = entry.value;
-          final isFirst = idx == 0;
-          return Padding(
-            padding: EdgeInsets.only(bottom: idx < entries.length - 1 ? 16 : 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isFirst ? currentAccent.primary : Colors.white24,
-                        boxShadow: isFirst ? [
-                          BoxShadow(color: currentAccent.primary.withValues(alpha: 0.5), blurRadius: 6)
-                        ] : null,
-                      ),
-                    ),
-                    if (idx < entries.length - 1)
-                      Container(width: 1, height: 60, color: Colors.white10),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            e.$1,
-                            style: GoogleFonts.orbitron(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isFirst ? currentAccent.primary : Colors.white54,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            e.$2,
-                            style: GoogleFonts.outfit(fontSize: 10, color: Colors.white30),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ...e.$3.map((note) => Padding(
-                        padding: const EdgeInsets.only(bottom: 3),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("•  ", style: GoogleFonts.outfit(fontSize: 11, color: Colors.white38)),
-                            Expanded(
-                              child: Text(note, style: GoogleFonts.outfit(fontSize: 11, color: Colors.white54)),
-                            ),
-                          ],
-                        ),
-                      )),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildAboutLinkTile({
-    required IconData icon,
-    required String title,
-    required String desc,
-    required String? badge,
-  }) {
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: currentAccent.primary, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                      if (badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: currentAccent.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            badge,
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: currentAccent.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(desc, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
-                ],
-              ),
-            ),
-            Icon(LucideIcons.chevronRight, color: Colors.white24, size: 16),
-          ],
+          onChanged: onChanged,
+          items: items.map((v) =>
+              DropdownMenuItem(value: v, child: Text(v))).toList(),
         ),
       ),
     );
   }
 
-  // ──────── COMPONENT BUILDERS ────────────────────────────────────────────────
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: currentAccent.primary),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: GoogleFonts.orbitron(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: currentAccent.primary.withValues(alpha: 0.8),
-            letterSpacing: 2,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPresetCard({
-    required String label,
-    required IconData icon,
-    required String desc,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: active 
-              ? currentAccent.primary.withValues(alpha: 0.08) 
-              : Colors.white.withValues(alpha: 0.02),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: active 
-                ? currentAccent.primary.withValues(alpha: 0.5) 
-                : Colors.white.withValues(alpha: 0.05),
-            width: active ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: active 
-                    ? currentAccent.primary.withValues(alpha: 0.15) 
-                    : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: active ? currentAccent.primary : Colors.white60,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      fontWeight: active ? FontWeight.bold : FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    desc,
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      color: Colors.white38,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlowingInputField({
+  Widget _inputField({
     required String label,
     required TextEditingController controller,
     required IconData icon,
@@ -1818,574 +676,1088 @@ class _SettingsModalState extends State<SettingsModal> with SingleTickerProvider
     required String hint,
   }) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
-      child: FocusScope(
-        child: Focus(
-          onFocusChange: (hasFocus) {},
-          child: Builder(builder: (context) {
-            final isFocused = Focus.of(context).hasFocus;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isFocused 
-                      ? currentAccent.primary.withValues(alpha: 0.7) 
-                      : Colors.transparent,
-                  width: 1,
-                ),
-                boxShadow: isFocused ? [
-                  BoxShadow(
-                    color: currentAccent.primary.withValues(alpha: 0.12),
-                    blurRadius: 8,
-                  )
-                ] : null,
-              ),
-              child: Row(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon,
+                color: _accent.primary.withValues(alpha: 0.7), size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icon, color: isFocused ? currentAccent.primary : Colors.white38, size: 20),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: GoogleFonts.outfit(
-                            color: isFocused ? currentAccent.primary.withValues(alpha: 0.9) : Colors.white38,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        TextField(
-                          controller: controller,
-                          obscureText: obscure,
-                          cursorColor: currentAccent.primary,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 6),
-                            hintText: hint,
-                            hintStyle: GoogleFonts.outfit(
-                              color: Colors.white24,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.38),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  if (onToggleObscure != null)
-                    IconButton(
-                      icon: Icon(
-                        obscure ? LucideIcons.eyeOff : LucideIcons.eye,
-                        color: Colors.white38,
-                        size: 18,
+                  TextField(
+                    controller: controller,
+                    obscureText: obscure,
+                    cursorColor: _accent.primary,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 4),
+                      hintText: hint,
+                      hintStyle: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        fontSize: 14,
                       ),
-                      onPressed: onToggleObscure,
                     ),
+                  ),
                 ],
               ),
-            );
-          }),
+            ),
+            if (onToggleObscure != null)
+              GestureDetector(
+                onTap: onToggleObscure,
+                child: Icon(
+                  obscure ? LucideIcons.eyeOff : LucideIcons.eye,
+                  color: Colors.white38, size: 16,
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSettingsSwitchTile({
-    required IconData icon,
-    required String title,
-    required String desc,
-    required bool value,
-    required ValueChanged<bool> onChanged,
+  // ─── TAB 0: SYSTEM ──────────────────────────────────────────────────────────
+  Widget _buildSystemTab() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
+      children: [
+        _sectionLabel('ENVIRONMENT', LucideIcons.layers),
+        Row(
+          children: [
+            Expanded(child: _presetCard(
+              label: 'Render Prod', icon: LucideIcons.cloud,
+              desc: 'Remote Server',
+              active: _backendUrlCtrl.text.contains('onrender.com'),
+              onTap: () => _applyEnv('render'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _presetCard(
+              label: 'Local Debug', icon: LucideIcons.laptop,
+              desc: '10.0.2.2',
+              active: _backendUrlCtrl.text.contains('10.0.2.2'),
+              onTap: () => _applyEnv('local'),
+            )),
+          ],
+        ),
+        const SizedBox(height: 28),
+        _sectionLabel('SERVER ENGINE', LucideIcons.server),
+        _inputField(label: 'Core API Endpoint',
+            controller: _backendUrlCtrl,
+            icon: LucideIcons.link, hint: 'https://your-api.com'),
+        const SizedBox(height: 16),
+        _sectionLabel('AI KEYS', LucideIcons.brain),
+        _inputField(label: 'Groq LLM Key',
+            controller: _groqKeyCtrl,
+            icon: LucideIcons.key, obscure: _obscureGroq,
+            onToggleObscure: () =>
+                setState(() => _obscureGroq = !_obscureGroq),
+            hint: 'gsk_...'),
+        _inputField(label: 'Deepgram Voice Key',
+            controller: _deepgramKeyCtrl,
+            icon: LucideIcons.mic, obscure: _obscureDeepgram,
+            onToggleObscure: () =>
+                setState(() => _obscureDeepgram = !_obscureDeepgram),
+            hint: '49a1...'),
+        const SizedBox(height: 16),
+        _sectionLabel('LIVEKIT', LucideIcons.radio),
+        _inputField(label: 'Agent Gateway',
+            controller: _livekitUrlCtrl,
+            icon: LucideIcons.globe, hint: 'wss://...'),
+        _inputField(label: 'API Key',
+            controller: _livekitKeyCtrl,
+            icon: LucideIcons.shieldAlert, obscure: _obscureLivekit,
+            onToggleObscure: () =>
+                setState(() => _obscureLivekit = !_obscureLivekit),
+            hint: 'API...'),
+        _inputField(label: 'API Secret',
+            controller: _livekitSecCtrl,
+            icon: LucideIcons.lock, obscure: _obscureLivekit,
+            hint: 'xH4L...'),
+      ],
+    );
+  }
+
+  Widget _presetCard({
+    required String label, required IconData icon,
+    required String desc, required bool active,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: active
+              ? _accent.primary.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: active
+                ? _accent.primary.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.06),
+            width: active ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18,
+                color: active ? _accent.primary : Colors.white38),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(
+                    color: Colors.white, fontSize: 13,
+                    fontWeight:
+                        active ? FontWeight.w700 : FontWeight.w500,
+                  )),
+                  Text(desc, style: const TextStyle(
+                      color: Colors.white38, fontSize: 11)),
+                ],
+              ),
             ),
-            child: Icon(icon, color: currentAccent.primary, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  desc,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white38,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: value,
-            activeThumbColor: currentAccent.primary,
-            activeTrackColor: currentAccent.primary.withValues(alpha: 0.25),
-            onChanged: onChanged,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDropdownSelector() {
-    final List<String> languages = ["English (US)", "Spanish", "German", "Hindi", "French"];
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(LucideIcons.globe, color: currentAccent.primary, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Language Translation",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Default neural synthesis dialect",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white38,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DropdownButton<String>(
-            dropdownColor: const Color(0xFF161622),
-            value: _selectedLanguage,
-            icon: const Icon(LucideIcons.chevronDown, color: Colors.white38, size: 16),
-            underline: Container(),
-            style: GoogleFonts.outfit(color: currentAccent.primary, fontSize: 13, fontWeight: FontWeight.bold),
-            onChanged: (String? newVal) {
-              if (newVal != null) {
-                setState(() => _selectedLanguage = newVal);
-              }
-            },
-            items: languages.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Diagnostics status card
-  Widget _buildDiagnosticsStatusCard() {
-    Color statusColor = Colors.white54;
-    IconData statusIcon = LucideIcons.helpCircle;
-
-    if (_connectionStatus == "Online") {
-      statusColor = Colors.greenAccent;
-      statusIcon = LucideIcons.checkCircle;
-    } else if (_connectionStatus == "Offline" || _connectionStatus.contains("Error")) {
-      statusColor = Colors.redAccent;
-      statusIcon = LucideIcons.alertTriangle;
-    } else if (_connectionStatus == "Testing...") {
-      statusColor = currentAccent.primary;
-      statusIcon = LucideIcons.refreshCw;
+  void _applyEnv(String env) {
+    if (env == 'render') {
+      _backendUrlCtrl.text = 'https://nexal-backend.onrender.com';
+      _livekitUrlCtrl.text = 'wss://friday-si6nqz7u.livekit.cloud';
+      _livekitKeyCtrl.text = 'API6vNUPttbHXDd';
+      _livekitSecCtrl.text = 'xH4Ld1M8SQZ4XSXQTMYDmMttC8ii2i8nWO09adFSwHG';
+    } else {
+      _backendUrlCtrl.text = 'http://10.0.2.2:5000';
+      _livekitUrlCtrl.text = 'ws://10.0.2.2:7880';
+      _livekitKeyCtrl.text = 'devkey';
+      _livekitSecCtrl.text = 'secret';
     }
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Preset applied: ${env.toUpperCase()}',
+          style: const TextStyle(fontSize: 13)),
+      backgroundColor: const Color(0xFF1E293B),
+      duration: const Duration(seconds: 1),
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
 
+  // ─── TAB 1: VISUALS ─────────────────────────────────────────────────────────
+  Widget _buildVisualsTab() {
+    final List<String> languages = [
+      'English (US)', 'Spanish', 'German', 'Hindi', 'French'
+    ];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
+      children: [
+        _sectionLabel('ACCENT COLOR', LucideIcons.palette),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nebula Glow', style: TextStyle(
+                  color: Colors.white, fontSize: 14,
+                  fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              const Text('Choose your primary interface accent',
+                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(_accents.length, (i) {
+                  final a = _accents[i];
+                  final sel = _selectedAccent == i;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedAccent = i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 64,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? a.primary.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: sel ? a.primary : Colors.white12,
+                          width: sel ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Column(children: [
+                        Container(
+                          width: 22, height: 22,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                                colors: [a.primary, a.secondary]),
+                            boxShadow: sel ? [BoxShadow(
+                              color: a.primary.withValues(alpha: 0.4),
+                              blurRadius: 8)] : null,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(a.name.split(' ')[1], style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: sel
+                              ? FontWeight.w700 : FontWeight.w400,
+                          color: sel ? Colors.white : Colors.white38,
+                        )),
+                      ]),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        _sectionLabel('PREFERENCES', LucideIcons.sliders),
+        _switchTile(icon: LucideIcons.moon, title: 'Dark Mode',
+            desc: 'Saves battery on OLED displays',
+            value: _darkMode,
+            onChanged: (v) => setState(() => _darkMode = v)),
+        _switchTile(icon: LucideIcons.bell, title: 'Notifications',
+            desc: 'Push and acoustic feedback',
+            value: _notifications,
+            onChanged: (v) => setState(() => _notifications = v)),
+        const SizedBox(height: 28),
+        _sectionLabel('LANGUAGE', LucideIcons.globe),
+        _dropdownTile(icon: LucideIcons.globe,
+            title: 'Language', desc: 'Interface language',
+            value: _selectedLanguage, items: languages,
+            onChanged: (v) => setState(() => _selectedLanguage = v!)),
+      ],
+    );
+  }
+
+  // ─── TAB 2: SECURITY ────────────────────────────────────────────────────────
+  Widget _buildSecurityTab() {
+    final List<String> lockIntervals = [
+      'Immediately', '1 Minute', '5 Minutes', 'Never'
+    ];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
+      children: [
+        _sectionLabel('AUTHENTICATION', LucideIcons.fingerprint),
+        _switchTile(icon: LucideIcons.fingerprint,
+            title: 'Biometric Verification',
+            desc: 'Fingerprint or FaceID unlock',
+            value: _biometricsEnabled,
+            onChanged: (v) => setState(() => _biometricsEnabled = v)),
+        _switchTile(icon: LucideIcons.lock, title: 'Device PIN Lock',
+            desc: 'Passcode required on launch',
+            value: _appLockPin,
+            onChanged: (v) => setState(() => _appLockPin = v)),
+        _dropdownTile(icon: LucideIcons.clock,
+            title: 'Auto-Lock Interval', desc: 'Inactivity timeout',
+            value: _autoLockTime, items: lockIntervals,
+            onChanged: (v) => setState(() => _autoLockTime = v!)),
+        const SizedBox(height: 28),
+        _sectionLabel('PRIVACY & SYNC', LucideIcons.shieldCheck),
+        _switchTile(icon: LucideIcons.shieldAlert,
+            title: 'End-to-End Encrypted Sync',
+            desc: 'Secures data in transit',
+            value: _encryptSync,
+            onChanged: (v) => setState(() => _encryptSync = v)),
+        _switchTile(icon: LucideIcons.eyeOff, title: 'Privacy Shield',
+            desc: 'Blurs preview in app switcher',
+            value: _privacyShield,
+            onChanged: (v) => setState(() => _privacyShield = v)),
+        const SizedBox(height: 28),
+        _sectionLabel('DATA MANAGEMENT', LucideIcons.trash2),
+        _dangerCard(
+          icon: LucideIcons.history,
+          title: 'Clear Activity & Location History',
+          desc: 'Purges search queries, geolocation caches, and private logs permanently.',
+          buttonLabel: _clearingActivityLogs ? 'Purging...' : 'Purge Logs',
+          isLoading: _clearingActivityLogs,
+          onTap: _clearingActivityLogs ? null : _clearLogs,
+        ),
+      ],
+    );
+  }
+
+  Widget _dangerCard({
+    required IconData icon, required String title,
+    required String desc, required String buttonLabel,
+    required bool isLoading, required VoidCallback? onTap,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.all(12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, color: Colors.redAccent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(child: Text(title, style: const TextStyle(
+              color: Colors.white, fontSize: 14,
+              fontWeight: FontWeight.w600))),
+        ]),
+        const SizedBox(height: 6),
+        Text(desc, style: const TextStyle(
+            color: Colors.white38, fontSize: 12)),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity, height: 38,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+              foregroundColor: Colors.redAccent, elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(
+                    color: Colors.redAccent.withValues(alpha: 0.25)),
+              ),
+            ),
+            onPressed: onTap,
+            child: isLoading
+                ? const SizedBox(width: 14, height: 14,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.redAccent))
+                : Text(buttonLabel, style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Future<void> _clearLogs() async {
+    setState(() => _clearingActivityLogs = true);
+    final config = await AriaConfig.load();
+    try {
+      await http.post(Uri.parse(
+              '${config.backendUrl}/settings/clear-logs'))
+          .timeout(const Duration(seconds: 3));
+    } catch (_) {}
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (mounted) {
+      setState(() => _clearingActivityLogs = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Activity history cleared',
+            style: TextStyle(color: Colors.greenAccent, fontSize: 13)),
+        backgroundColor: Color(0xFF1E293B),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+
+  // ─── TAB 3: DIAGNOSTICS ─────────────────────────────────────────────────────
+  Widget _buildDiagnosticsTab() {
+    Color statusColor;
+    IconData statusIcon;
+    if (_connectionStatus == 'Online') {
+      statusColor = Colors.greenAccent;
+      statusIcon = LucideIcons.checkCircle;
+    } else if (_connectionStatus == 'Offline' ||
+        _connectionStatus.contains('Error')) {
+      statusColor = Colors.redAccent;
+      statusIcon = LucideIcons.alertTriangle;
+    } else if (_connectionStatus == 'Testing...') {
+      statusColor = _accent.primary;
+      statusIcon = LucideIcons.refreshCw;
+    } else {
+      statusColor = Colors.white38;
+      statusIcon = LucideIcons.helpCircle;
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
+      children: [
+        _sectionLabel('CONNECTIVITY', LucideIcons.radio),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+          child: Column(children: [
+            Row(children: [
+              Container(
+                width: 40, height: 40,
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: _testingConnection
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
+                    ? Padding(
+                        padding: const EdgeInsets.all(10),
                         child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: currentAccent.primary,
-                        ),
-                      )
-                    : Icon(statusIcon, color: statusColor, size: 20),
+                            strokeWidth: 2, color: _accent.primary))
+                    : Icon(statusIcon, color: statusColor, size: 18),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Server Health Sync",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _backendUrlCtrl.text.trim(),
-                      style: GoogleFonts.outfit(fontSize: 11, color: Colors.white30),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              const SizedBox(width: 12),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _connectionStatus,
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                    ),
-                  ),
-                  if (_connectionPing != null && !_testingConnection)
-                    Text(
-                      "${_connectionPing}ms ping",
-                      style: GoogleFonts.outfit(fontSize: 11, color: Colors.white54),
-                    ),
+                  const Text('Server Health', style: TextStyle(
+                      color: Colors.white, fontSize: 14,
+                      fontWeight: FontWeight.w600)),
+                  Text(_backendUrlCtrl.text.trim(), style: const TextStyle(
+                      color: Colors.white30, fontSize: 11),
+                      overflow: TextOverflow.ellipsis),
                 ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: currentAccent.primary.withValues(alpha: 0.1),
-                foregroundColor: currentAccent.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: currentAccent.primary.withValues(alpha: 0.25)),
+              )),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text(_connectionStatus, style: TextStyle(
+                    color: statusColor, fontSize: 13,
+                    fontWeight: FontWeight.bold)),
+                if (_connectionPing != null && !_testingConnection)
+                  Text('${_connectionPing}ms', style: const TextStyle(
+                      color: Colors.white38, fontSize: 11)),
+              ]),
+            ]),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity, height: 38,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent.primary.withValues(alpha: 0.1),
+                  foregroundColor: _accent.primary, elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                        color: _accent.primary.withValues(alpha: 0.3)),
+                  ),
                 ),
-              ),
-              onPressed: _testConnection,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(LucideIcons.play, size: 14),
-                  const SizedBox(width: 8),
-                  Text(
-                    _testingConnection ? "Pinging Gateway..." : "Run Connectivity Test",
-                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                onPressed: _testingConnection ? null : _testConn,
+                child: Text(
+                    _testingConnection ? 'Pinging...' : 'Run Test',
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
               ),
             ),
+          ]),
+        ),
+        const SizedBox(height: 28),
+        _sectionLabel('CACHE', LucideIcons.hardDrive),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
-        ],
-      ),
+          child: Column(children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Map Tile Cache', style: TextStyle(
+                    color: Colors.white, fontSize: 14,
+                    fontWeight: FontWeight.w600)),
+                Text('${_cacheFootprint.toStringAsFixed(1)} / 100 MB',
+                    style: const TextStyle(
+                        color: Colors.white54, fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: _cacheFootprint / 100,
+                minHeight: 6,
+                backgroundColor: Colors.white.withValues(alpha: 0.05),
+                color: _accent.primary,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity, height: 38,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      Colors.redAccent.withValues(alpha: 0.08),
+                  foregroundColor: _cacheFootprint == 0
+                      ? Colors.white24
+                      : Colors.redAccent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: Colors.redAccent.withValues(
+                        alpha: _cacheFootprint == 0 ? 0.05 : 0.2)),
+                  ),
+                ),
+                onPressed: _cacheFootprint == 0 ? null : _purgeCache,
+                child: Text(
+                    _purgingCache
+                        ? 'Purging...'
+                        : _cacheFootprint == 0
+                            ? 'Cache Empty'
+                            : 'Purge Cache',
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 28),
+        _sectionLabel('HARDWARE', LucideIcons.smartphone),
+        _hardwareCard(),
+      ],
     );
   }
 
-  // System tile cache footprint gauge card
-  Widget _buildCacheGaugeCard() {
+  Widget _hardwareCard() {
+    final rows = [
+      ('Renderer', 'Impeller (Vulkan)'),
+      ('Location', 'High Accuracy GPS'),
+      ('Architecture', 'AArch64 ARMv8-A'),
+      ('WebGL Tiles', 'Active — Cap @ 20'),
+    ];
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        children: rows.map((r) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(LucideIcons.hardDrive, color: currentAccent.primary, size: 18),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Local Map Cache",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                "${_cacheFootprint.toStringAsFixed(1)} MB / 100 MB max",
-                style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70),
-              ),
+              Text(r.$1, style: const TextStyle(
+                  color: Colors.white38, fontSize: 12)),
+              Text(r.$2, style: const TextStyle(
+                  color: Colors.white70, fontSize: 12,
+                  fontWeight: FontWeight.w500)),
             ],
           ),
-          const SizedBox(height: 14),
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: _cacheFootprint / 100.0,
-              minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-              color: currentAccent.primary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: _cacheFootprint == 0.0
-                    ? Colors.white.withValues(alpha: 0.02)
-                    : Colors.redAccent.withValues(alpha: 0.1),
-                foregroundColor: _cacheFootprint == 0.0 ? Colors.white24 : Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: _cacheFootprint == 0.0
-                        ? Colors.white10
-                        : Colors.redAccent.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              onPressed: _cacheFootprint == 0.0 ? null : _purgeCache,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _purgingCache
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.redAccent,
-                          ),
-                        )
-                      : Icon(
-                          _cacheFootprint == 0.0 ? LucideIcons.trash : LucideIcons.trash2,
-                          size: 14,
-                        ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _purgingCache 
-                        ? "Purging Disk Sectors..." 
-                        : _cacheFootprint == 0.0 
-                            ? "Cache Empty" 
-                            : "Purge System Tiles Cache",
-                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        )).toList(),
       ),
     );
   }
 
-  // System hardware indicators
-  Widget _buildHardwareCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Neural Engine Diagnostics",
-            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+  Future<void> _testConn() async {
+    setState(() {
+      _testingConnection = true;
+      _connectionStatus = 'Testing...';
+    });
+    final sw = Stopwatch()..start();
+    try {
+      final r = await http.get(Uri.parse(_backendUrlCtrl.text.trim()))
+          .timeout(const Duration(seconds: 4));
+      sw.stop();
+      if (mounted) { setState(() {
+        _testingConnection = false;
+        _connectionPing = sw.elapsedMilliseconds;
+        _connectionStatus = r.statusCode < 500 ? 'Online' : 'Server Error';
+      }); }
+    } catch (_) {
+      sw.stop();
+      if (mounted) { setState(() {
+        _testingConnection = false;
+        _connectionPing = null;
+        _connectionStatus = 'Offline';
+      }); }
+    }
+  }
+
+  Future<void> _purgeCache() async {
+    if (_purgingCache || _cacheFootprint == 0) return;
+    setState(() => _purgingCache = true);
+    await Future.delayed(const Duration(milliseconds: 1200));
+    if (mounted) {
+      setState(() { _purgingCache = false; _cacheFootprint = 0; });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Cache cleared', style: TextStyle(
+            color: Colors.greenAccent, fontSize: 13)),
+        backgroundColor: Color(0xFF1E293B),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+
+  // ─── TAB 4: NOTIFICATIONS ───────────────────────────────────────────────────
+  Widget _buildNotificationsTab() {
+    final styles = ['Banner', 'Heads-Up', 'Silent'];
+    final freqs  = ['Real-time', 'Batched (15 min)', 'Digest (Daily)'];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
+      children: [
+        // Master toggle card
+        Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              _accent.primary.withValues(alpha: 0.12),
+              _accent.secondary.withValues(alpha: 0.06),
+            ]),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: _accent.primary.withValues(alpha: 0.25)),
           ),
-          const SizedBox(height: 12),
-          _buildDiagLine("Rendering Backend", "Impeller (Vulkan/OpenGL)"),
-          _buildDiagLine("WebGL Context state", "Active (Tile Capped @ 20)"),
-          _buildDiagLine("Location Provider Accuracy", "High Performance GPS"),
-          _buildDiagLine("Host Architecture", "AArch64 ARMv8-A Neon"),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDiagLine(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: GoogleFonts.outfit(fontSize: 11, color: Colors.white38)),
-          Text(value, style: GoogleFonts.outfit(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
-  // sticky bottom save panel
-  Widget _buildSavePanel() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20, 
-        right: 20, 
-        top: 16, 
-        bottom: 16 + MediaQuery.of(context).padding.bottom
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF09090D).withValues(alpha: 0.8),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 48,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                  side: const BorderSide(color: Colors.white24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _accent.primary.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
               ),
+              child: Icon(LucideIcons.bell,
+                  color: _accent.primary, size: 20),
             ),
+            const SizedBox(width: 14),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('All Notifications', style: TextStyle(
+                    color: Colors.white, fontSize: 15,
+                    fontWeight: FontWeight.w700)),
+                Text(_notifications ? 'Active' : 'Silenced',
+                    style: const TextStyle(
+                        color: Colors.white38, fontSize: 12)),
+              ],
+            )),
+            Switch.adaptive(
+              value: _notifications,
+              activeThumbColor: _accent.primary,
+              activeTrackColor: _accent.primary.withValues(alpha: 0.25),
+              onChanged: (v) => setState(() => _notifications = v),
+            ),
+          ]),
+        ),
+        _sectionLabel('CHANNELS', LucideIcons.layers),
+        _switchTile(icon: LucideIcons.bot, title: 'ARIA Voice',
+            value: _notifAria && _notifications,
+            onChanged: (v) => setState(() => _notifAria = v)),
+        _switchTile(icon: LucideIcons.mapPin, title: 'Navigation & Maps',
+            value: _notifMap && _notifications,
+            onChanged: (v) => setState(() => _notifMap = v)),
+        _switchTile(icon: LucideIcons.users, title: 'Friend Activity',
+            value: _notifFriend && _notifications,
+            onChanged: (v) => setState(() => _notifFriend = v)),
+        _switchTile(icon: LucideIcons.cpu, title: 'System Health',
+            value: _notifSystem && _notifications,
+            onChanged: (v) => setState(() => _notifSystem = v)),
+        const SizedBox(height: 16),
+        _sectionLabel('FEEDBACK', LucideIcons.volume2),
+        _switchTile(icon: LucideIcons.volume2, title: 'Sound Alerts',
+            value: _notifSound,
+            onChanged: (v) => setState(() => _notifSound = v)),
+        _switchTile(icon: LucideIcons.waves, title: 'Haptic Vibration',
+            value: _notifVibration,
+            onChanged: (v) => setState(() => _notifVibration = v)),
+        _switchTile(icon: LucideIcons.badge, title: 'App Badge Counter',
+            value: _notifBadge,
+            onChanged: (v) => setState(() => _notifBadge = v)),
+        const SizedBox(height: 16),
+        _sectionLabel('SCHEDULE', LucideIcons.clock),
+        _switchTile(icon: LucideIcons.moonStar, title: 'Do Not Disturb',
+            value: _notifDoNotDisturb,
+            onChanged: (v) => setState(() => _notifDoNotDisturb = v)),
+        _dropdownTile(icon: LucideIcons.layout,
+            title: 'Notification Style',
+            desc: 'How alerts appear on screen',
+            value: _notifStyle, items: styles,
+            onChanged: (v) => setState(() => _notifStyle = v!)),
+        _dropdownTile(icon: LucideIcons.refreshCw,
+            title: 'Delivery Frequency',
+            desc: 'Alert batching strategy',
+            value: _notifFrequency, items: freqs,
+            onChanged: (v) => setState(() => _notifFrequency = v!)),
+      ],
+    );
+  }
+
+  // ─── TAB 5: ABOUT ──────────────────────────────────────────────────────────
+  Widget _buildAboutTab() {
+    final storageItems = [
+      ('App Core',    42.5,           _accent.primary),
+      ('Map Cache',   _cacheFootprint, const Color(0xFF22D3EE)),
+      ('ARIA Model',  28.0,           const Color(0xFFC084FC)),
+      ('User Data',   5.2,            const Color(0xFF4ADE80)),
+    ];
+    final changelog = [
+      ('v2.4.1', 'Current', [
+        'Notifications & About tabs', 'Map speed HUD', '3D buildings']),
+      ('v2.3.0', 'Jul 2026', [
+        'Settings backend sync', 'Map tile caching', 'Geolocation mock']),
+      ('v2.2.0', 'Jun 2026', [
+        'Biometrics & auto-lock', 'Settings redesign', 'Diagnostics']),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 44),
+      children: [
+        // App hero card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                _accent.primary.withValues(alpha: 0.12),
+                const Color(0xFF0A0F1E),
+              ],
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: _accent.primary.withValues(alpha: 0.2)),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            flex: 2,
-            child: SizedBox(
-              height: 48,
-              child: Container(
+          child: Column(children: [
+            Row(children: [
+              Container(
+                width: 52, height: 52,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _saved 
-                          ? Colors.green.withValues(alpha: 0.25) 
-                          : currentAccent.primary.withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    )
+                  gradient: LinearGradient(
+                    colors: [_accent.primary, _accent.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [BoxShadow(
+                    color: _accent.primary.withValues(alpha: 0.4),
+                    blurRadius: 14)],
+                ),
+                child: const Center(child: Text('N', style: TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.w900,
+                    color: Colors.black))),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('NEXAL', style: TextStyle(
+                      color: Colors.white, fontSize: 17,
+                      fontWeight: FontWeight.w900, letterSpacing: 2)),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _accent.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: _accent.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(_releaseChannel, style: TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.bold,
+                          color: _accent.primary)),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('v$_appVersion', style: TextStyle(
+                        color: Colors.white70, fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+                  ]),
+                ],
+              )),
+            ]),
+            const SizedBox(height: 14),
+            const Divider(color: Colors.white10),
+            const SizedBox(height: 10),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _aboutStat('Build', _buildNumber),
+                Container(width: 1, height: 24, color: Colors.white10),
+                _aboutStat('Engine', 'Flutter 3.x'),
+                Container(width: 1, height: 24, color: Colors.white10),
+                _aboutStat('Platform', 'Android/iOS'),
+              ],
+            ),
+          ]),
+        ),
+        const SizedBox(height: 20),
+
+        // Storage
+        _sectionLabel('STORAGE', LucideIcons.database),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+          child: Column(children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total Used', style: TextStyle(
+                    color: Colors.white70, fontSize: 13)),
+                Text('${storageItems.fold(0.0, (s, e) => s + e.$2).toStringAsFixed(1)} MB',
+                    style: const TextStyle(color: Colors.white,
+                        fontSize: 13, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: SizedBox(
+                height: 6,
+                child: Row(children: storageItems.map((e) =>
+                  Flexible(flex: (e.$2 * 10).toInt(),
+                    child: Container(color: e.$3))).toList()),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...storageItems.map((e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(children: [
+                Container(width: 8, height: 8, decoration: BoxDecoration(
+                    color: e.$3, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Expanded(child: Text(e.$1, style: const TextStyle(
+                    color: Colors.white60, fontSize: 12))),
+                Text('${e.$2.toStringAsFixed(1)} MB',
+                    style: const TextStyle(
+                        color: Colors.white38, fontSize: 12)),
+              ]),
+            )),
+          ]),
+        ),
+        const SizedBox(height: 20),
+
+        // Changelog
+        _sectionLabel('CHANGELOG', LucideIcons.gitBranch),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+          child: Column(
+            children: changelog.asMap().entries.map((entry) {
+              final i = entry.key;
+              final e = entry.value;
+              final isFirst = i == 0;
+              return Padding(
+                padding: EdgeInsets.only(
+                    bottom: i < changelog.length - 1 ? 14 : 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(children: [
+                      Container(width: 8, height: 8,
+                          decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isFirst
+                            ? _accent.primary : Colors.white24,
+                        boxShadow: isFirst ? [BoxShadow(
+                          color: _accent.primary.withValues(alpha: 0.5),
+                          blurRadius: 6)] : null,
+                      )),
+                      if (i < changelog.length - 1)
+                        Container(width: 1, height: 56,
+                            color: Colors.white10),
+                    ]),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Text(e.$1, style: TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.bold,
+                            color: isFirst
+                                ? _accent.primary : Colors.white54,
+                          )),
+                          const SizedBox(width: 8),
+                          Text(e.$2, style: const TextStyle(
+                              fontSize: 10, color: Colors.white30)),
+                        ]),
+                        const SizedBox(height: 4),
+                        ...e.$3.map((n) => Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('• ', style: TextStyle(
+                                  fontSize: 11, color: Colors.white30)),
+                              Expanded(child: Text(n, style: const TextStyle(
+                                  fontSize: 11, color: Colors.white54))),
+                            ],
+                          ),
+                        )),
+                      ],
+                    )),
                   ],
                 ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _saved ? Colors.green : currentAccent.primary,
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Support links
+        _sectionLabel('SUPPORT & LEGAL', LucideIcons.bookOpen),
+        ...[
+          (LucideIcons.helpCircle, 'Help Center',
+              'Documentation, FAQs, tutorials',      null),
+          (LucideIcons.github, 'Source Repository',
+              'View source code',                    null),
+          (LucideIcons.mail, 'Send Feedback',
+              'Report bugs, suggest features',       'New'),
+          (LucideIcons.fileText, 'Privacy Policy',
+              'How your data is stored',             null),
+          (LucideIcons.scale, 'Terms of Service',
+              'End-user license agreement',          null),
+        ].map((item) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: SettingsTile(
+            icon: item.$1, title: item.$2,
+            description: item.$3, accentColor: _accent.primary,
+            onTap: () {},
+            trailing: item.$4 != null
+                ? Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _accent.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                  ),
-                  onPressed: _saveConfig,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _saved ? LucideIcons.check : LucideIcons.save,
-                        size: 16,
-                        color: Colors.black,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _saved ? "SYSTEM LOADED" : "APPLY CONFIG",
-                        style: GoogleFonts.orbitron(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
+                    child: Text(item.$4!, style: TextStyle(
+                        fontSize: 9, fontWeight: FontWeight.bold,
+                        color: _accent.primary)),
+                  )
+                : const Icon(LucideIcons.chevronRight,
+                    color: Colors.white24, size: 16),
+          ),
+        )),
+        const SizedBox(height: 24),
+        const Center(child: Column(children: [
+          Text('Built with \u2764\uFE0F by the Nexal Team',
+              style: TextStyle(fontSize: 12, color: Colors.white24)),
+          SizedBox(height: 3),
+          Text('\u00A9 2026 Nexal Labs. All rights reserved.',
+              style: TextStyle(fontSize: 10, color: Colors.white12)),
+        ])),
+      ],
+    );
+  }
+
+  Widget _aboutStat(String label, String value) {
+    return Column(children: [
+      Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold,
+          color: _accent.primary)),
+      const SizedBox(height: 2),
+      Text(label, style: const TextStyle(
+          fontSize: 10, color: Colors.white38)),
+    ]);
+  }
+
+  // ─── SAVE BAR ────────────────────────────────────────────────────────────────
+  Widget _buildSaveBar() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+          20, 16, 20, 16 + MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: const Color(0xFF080C18),
+        border: Border(
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.06))),
+      ),
+      child: Row(children: [
+        Expanded(
+          child: SizedBox(
+            height: 46,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white70,
+                side: const BorderSide(color: Colors.white12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w500)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 46,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(
+                  color: (_saved ? Colors.green : _accent.primary)
+                      .withValues(alpha: 0.3),
+                  blurRadius: 12, spreadRadius: 1,
+                )],
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      _saved ? Colors.green : _accent.primary,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
+                onPressed: _saving ? null : _saveConfig,
+                child: _saving
+                    ? const SizedBox(width: 18, height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.black))
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _saved ? LucideIcons.check : LucideIcons.save,
+                            size: 15, color: Colors.black),
+                          const SizedBox(width: 8),
+                          Text(_saved ? 'Saved!' : 'Save Changes',
+                              style: const TextStyle(fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black)),
+                        ],
+                      ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 }
 
+// ─── ACCENT MODEL ────────────────────────────────────────────────────────────
 class _AccentStyle {
   final String name;
   final Color primary;
   final Color secondary;
 
-  _AccentStyle({
+  const _AccentStyle({
     required this.name,
     required this.primary,
     required this.secondary,

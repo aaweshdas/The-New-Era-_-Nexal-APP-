@@ -455,230 +455,166 @@ class _MonthlyTimelineViewState extends State<MonthlyTimelineView> {
               ),
 
             // ═══════════════════════════════════════════════════
-            // Ultra-Adaptive Device-Aware 3 Floating Windows
+            // Premium 4-Pod Floating Glass Header (Matches Year-Wise Timeline)
             // ═══════════════════════════════════════════════════
             Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              left: 10,
-              right: 10,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 580),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Floating Window 1: Back + Year Pill
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(22),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                          child: Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF090414).withValues(alpha: 0.88),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.35),
-                                  blurRadius: 16,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4.0),
-                                    child: Icon(
-                                      LucideIcons.arrowLeft,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                                  height: 14,
-                                  width: 1,
-                                  color: Colors.white24,
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF135BEC).withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: const Color(0xFF135BEC).withValues(alpha: 0.4),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    widget.year,
-                                    style: const TextStyle(
-                                      color: Color(0xFF135BEC),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 1.0,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+              top: 24,
+              left: 14,
+              right: 14,
+              child: Row(
+                children: [
+                  // Pod 1: Standalone Floating Back Button
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12),
                           ),
                         ),
-                      ),
-
-                      const SizedBox(width: 6),
-
-                      // Floating Window 2: NEXAL GALLERY Hero Title
-                      Flexible(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(22),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                            child: Container(
-                              height: 44,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF090414).withValues(alpha: 0.92),
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  width: 1.2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF135BEC).withValues(alpha: 0.22),
-                                    blurRadius: 18,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      "NEXAL GALLERY",
-                                      style: GoogleFonts.rye(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 2.0,
-                                        shadows: [
-                                          Shadow(
-                                            color: const Color(0xFF135BEC).withValues(alpha: 0.7),
-                                            blurRadius: 8,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Container(
-                                    height: 2,
-                                    width: 48,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF00F2FE),
-                                          Color(0xFF135BEC),
-                                          Color(0xFF00F2FE),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(2),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF135BEC).withValues(alpha: 0.9),
-                                          blurRadius: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            LucideIcons.arrowLeft,
+                            color: Colors.white70,
+                            size: 19,
                           ),
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          },
                         ),
                       ),
-
-                      const SizedBox(width: 6),
-
-                      // Floating Window 3: Action Icons (Search + Settings)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(22),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                          child: Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF090414).withValues(alpha: 0.88),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.35),
-                                  blurRadius: 16,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _isSearching = !_isSearching;
-                                      if (!_isSearching) {
-                                        _searchController.clear();
-                                        _filteredData = List.from(_allData);
-                                      }
-                                    });
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: Icon(
-                                      _isSearching ? LucideIcons.x : LucideIcons.search,
-                                      color: _isSearching ? const Color(0xFF135BEC) : Colors.white,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                GestureDetector(
-                                  onTap: _showSettingsSheet,
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4.0),
-                                    child: Icon(
-                                      Icons.more_vert,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  const SizedBox(width: 8),
+
+                  // Pod 2: Standalone Floating Title Pod (Nexal Gallery + Year Timeline)
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          height: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  "Nexal Gallery",
+                                  style: GoogleFonts.rye(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2.0,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                "Timeline • ${widget.year}",
+                                style: const TextStyle(
+                                  color: Color(0xFF00E5FF),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Pod 3: Standalone Floating Search Button
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            _isSearching || _searchController.text.isNotEmpty ? LucideIcons.x : LucideIcons.search,
+                            color: _isSearching || _searchController.text.isNotEmpty
+                                ? const Color(0xFF135BEC)
+                                : Colors.white70,
+                            size: 19,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (_searchController.text.isNotEmpty) {
+                                _searchController.clear();
+                                _filteredData = List.from(_allData);
+                              }
+                              _isSearching = !_isSearching;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Pod 4: Standalone Floating Three Dots Settings Button
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
+                          onPressed: _showSettingsSheet,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -740,6 +676,7 @@ class _MonthlyTimelineViewState extends State<MonthlyTimelineView> {
   // ═══ GRID VIEW ═══
   Widget _buildGridView() {
     return GridView.builder(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.only(
         top: 110,
         bottom: 120,
@@ -755,7 +692,13 @@ class _MonthlyTimelineViewState extends State<MonthlyTimelineView> {
       itemCount: _filteredData.length,
       itemBuilder: (context, index) {
         final entry = _filteredData[index];
-        return GestureDetector(
+        return _buildGridCard(context, entry);
+      },
+    );
+  }
+
+  Widget _buildGridCard(BuildContext context, MonthlyEntry entry) {
+    return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
@@ -860,8 +803,6 @@ class _MonthlyTimelineViewState extends State<MonthlyTimelineView> {
             ),
           ),
         );
-      },
-    );
   }
 
   Widget _buildMonthlyRow(

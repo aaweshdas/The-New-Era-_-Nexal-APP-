@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'full_screen_image_view.dart';
 
@@ -72,158 +73,238 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF050505),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/gallery/timeline_background.jpg',
-              fit: BoxFit.cover,
-            ),
-          ),
-          // Dark overlay for readability
-          Positioned.fill(
-            child: Container(color: Colors.black.withValues(alpha: 0.5)),
-          ),
-
-          // 2D Photo Grid
-          Positioned.fill(
-            child: GridView.builder(
-              padding: const EdgeInsets.only(
-                top: 140, // Space for top nav
-                bottom: 140, // Space for bottom nav
-                left: 16,
-                right: 16,
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background Image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/gallery/timeline_background.jpg',
+                fit: BoxFit.cover,
               ),
-              physics: const BouncingScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: _crossAxisCount,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio:
-                    0.85, // Adjust to make them slightly taller than square
-              ),
-              itemCount: _urls.length,
-              itemBuilder: (context, index) {
-                return _buildPhotoTile(index);
-              },
             ),
-          ),
+            // Dark overlay for readability
+            Positioned.fill(
+              child: Container(color: Colors.black.withValues(alpha: 0.5)),
+            ),
 
-          // Vignette / Blur mask
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.85,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.9)],
-                    stops: const [0.4, 1.0],
+            // 2D Photo Grid
+            Positioned.fill(
+              child: GridView.builder(
+                padding: const EdgeInsets.only(
+                  top: 70, // Space for top nav floating pods
+                  bottom: 90, // Space for bottom nav
+                  left: 16,
+                  right: 16,
+                ),
+                physics: const BouncingScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: _crossAxisCount,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: _urls.length,
+                itemBuilder: (context, index) {
+                  return _buildPhotoTile(index);
+                },
+              ),
+            ),
+
+            // Vignette / Blur mask
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.85,
+                      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.9)],
+                      stops: const [0.4, 1.0],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Top Nav
-          Positioned(
-            top: 48,
-            left: 24,
-            right: 24,
-            child: Center(child: _buildTopNav()),
-          ),
+            // Top Nav: Separated Floating Glass Pod Windows
+            Positioned(
+              top: 12,
+              left: 14,
+              right: 14,
+              child: _buildTopNav(),
+            ),
 
-          // Bottom Nav
-          Positioned(
-            bottom: 48,
-            left: 32,
-            right: 32,
-            child: Center(child: _buildBottomNav()),
-          ),
-        ],
+            // Bottom Nav
+            Positioned(
+              bottom: 20,
+              left: 32,
+              right: 32,
+              child: Center(child: _buildBottomNav()),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTopNav() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(100),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          constraints: const BoxConstraints(maxWidth: 400),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            borderRadius: BorderRadius.circular(100),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                spreadRadius: 5,
+    return Row(
+      children: [
+        // Pod 1: Standalone Floating Back Button (Arrow)
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
               ),
-            ],
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  LucideIcons.arrowLeft,
+                  color: Colors.white70,
+                  size: 19,
+                ),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Icon(LucideIcons.menu, color: Colors.white70),
-              ),
-              _isSearching
-                  ? Expanded(
-                      child: TextField(
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: 'Search memories...',
-                          hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+        ),
+
+        const SizedBox(width: 8),
+
+        // Pod 2: Standalone Floating Title Pod
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: Center(
+                  child: _isSearching
+                      ? TextField(
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Search collection...',
+                            hintStyle: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 13,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                          autofocus: true,
+                        )
+                      : Text(
+                          widget.title.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.rye(
+                            color: const Color(0xFF00E5FF),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                            shadows: [
+                              const Shadow(color: Color(0x9900E5FF), blurRadius: 10),
+                            ],
                           ),
                         ),
-                        onSubmitted: (_) {
-                          setState(() {
-                            _isSearching = false;
-                          });
-                        },
-                        autofocus: true,
-                      ),
-                    )
-                  : Text(
-                      widget.title.toUpperCase(),
-                      style: const TextStyle(
-                        color: Color(0xFF00E5FF),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.0,
-                        shadows: [
-                          Shadow(color: Color(0x9900E5FF), blurRadius: 10),
-                          Shadow(color: Color(0x4D00E5FF), blurRadius: 20),
-                        ],
-                      ),
-                    ),
-              GestureDetector(
-                onTap: () {
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // Pod 3: Standalone Floating Search Button
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: Icon(
+                  _isSearching ? LucideIcons.x : LucideIcons.search,
+                  color: _isSearching ? const Color(0xFF135BEC) : Colors.white70,
+                  size: 19,
+                ),
+                onPressed: () {
                   setState(() {
                     _isSearching = !_isSearching;
                   });
                 },
-                child: Icon(
-                  _isSearching ? LucideIcons.x : LucideIcons.search,
-                  color: Colors.white70,
-                ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+
+        const SizedBox(width: 8),
+
+        // Pod 4: Standalone Floating Grid Density Toggle Button
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: Icon(
+                  _crossAxisCount == 2 ? LucideIcons.layoutGrid : LucideIcons.grid,
+                  color: const Color(0xFF00E5FF),
+                  size: 19,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _crossAxisCount = _crossAxisCount == 3 ? 2 : 3;
+                  });
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

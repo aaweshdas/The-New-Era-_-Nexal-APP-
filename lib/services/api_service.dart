@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import 'auth_service.dart';
 
@@ -10,7 +11,9 @@ class ApiService {
   final http.Client _client = http.Client();
 
   Map<String, String> get _defaultHeaders {
-    final token = AuthService.instance.currentUser?.uid ?? '';
+    // Try live Supabase access token first, fallback to uid
+    final supaToken = Supabase.instance.client.auth.currentSession?.accessToken;
+    final token = supaToken ?? AuthService.instance.currentUser?.uid ?? '';
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

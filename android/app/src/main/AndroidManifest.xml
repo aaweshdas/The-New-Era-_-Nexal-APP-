@@ -15,6 +15,19 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:largeHeap="true"
         android:usesCleartextTraffic="true">
+        <!-- Force Impeller to use OpenGL ES instead of Vulkan.
+             Fixes SIGABRT crash in libGLES_mali.so (pthread_mutex_lock on
+             destroyed mutex) that occurs on Mali GPU devices (Redmi/Xiaomi)
+             with the Vulkan backend. OpenGL ES is fully stable on all Mali GPUs. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.ImpellerBackend"
+            android:value="opengles" />
+        <meta-data
+            android:name="android.app.lib_name"
+            android:value="flutter" />
+        <meta-data
+            android:name="android.graphics.DISPLAY_SIZE"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -35,6 +48,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Supabase OAuth deep-link callback for Google Sign-In -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="io.nexal.app" android:host="login-callback" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

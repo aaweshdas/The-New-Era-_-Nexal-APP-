@@ -10,11 +10,28 @@ import 'providers/user_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'providers/background_provider.dart';
 
-void main() {
+import 'services/supabase_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🚀 Ultra-Smooth Performance: Expand Image Cache & prevent rendering jank
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024; // 100 MB cache limit
+  PaintingBinding.instance.imageCache.maximumSize = 200;
+
+  await SupabaseService.initialize();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
   runApp(const NexalApp());
 }
 

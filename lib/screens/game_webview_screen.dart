@@ -10,7 +10,17 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 
 class GameWebViewScreen extends StatefulWidget {
-  const GameWebViewScreen({super.key});
+  /// When [gameUrl] is non-null the WebView loads this URL directly (no local
+  /// asset server is started). This is used for web-hosted games like OpenTTD.
+  final String? gameUrl;
+  /// Display name shown in loading overlay and help dialog.
+  final String gameTitle;
+
+  const GameWebViewScreen({
+    super.key,
+    this.gameUrl,
+    this.gameTitle = 'WORDL',
+  });
 
   @override
   State<GameWebViewScreen> createState() => _GameWebViewScreenState();
@@ -35,7 +45,12 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
     // Hide Status bar and Navigation bars
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    _startLocalServer();
+    if (widget.gameUrl != null) {
+      // URL-mode: skip local server, load URL directly in WebView
+      _startRemoteUrlGame(widget.gameUrl!);
+    } else {
+      _startLocalServer();
+    }
   }
 
   @override
@@ -51,6 +66,67 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     super.dispose();
+  }
+
+  /// Loads a remotely-hosted game URL directly in the WebView without
+  /// spinning up a local asset server. Used for OpenTTD and similar.
+  Future<void> _startRemoteUrlGame(String url) async {
+    // On desktop platforms, WebView isn't available — open in system browser.
+    if (!(Platform.isAndroid || Platform.isIOS)) {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      if (mounted) setState(() => _serverReady = true);
+      return;
+    }
+
+    try {
+      final controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(Colors.black)
+        // Use a desktop Chrome User-Agent so sites like play.openttd.org
+        // serve the full WebAssembly game instead of a mobile fallback page.
+        ..setUserAgent(
+          'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 '
+          '(KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36',
+        )
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onWebResourceError: (WebResourceError error) {
+              debugPrint('WebView remote error: ${error.description}');
+            },
+            onPageStarted: (_) {
+              if (mounted) setState(() => _isLoadingGame = true);
+            },
+            onPageFinished: (_) {
+              if (mounted) setState(() => _isLoadingGame = false);
+            },
+          ),
+        )
+        ..setOnConsoleMessage((JavaScriptConsoleMessage msg) {
+          debugPrint('JS [${msg.level}]: ${msg.message}');
+        });
+
+      await controller.loadRequest(Uri.parse(url));
+
+      if (mounted) {
+        setState(() {
+          _controller = controller;
+          _serverReady = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading remote game URL: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load game: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _startLocalServer() async {
@@ -263,7 +339,9 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        "INITIALIZING NEXAL ENGINE",
+                        widget.gameUrl != null
+                            ? 'CONNECTING TO CLOUD SERVER'
+                            : 'INITIALIZING NEXAL ENGINE',
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -273,7 +351,9 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Spawning Local Asset Server...",
+                        widget.gameUrl != null
+                            ? 'Streaming ${widget.gameTitle} from Render Cloud...'
+                            : 'Spawning Local Asset Server...',
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: Colors.white54,

@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
@@ -18,19 +17,20 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0F172A),
       body: SafeArea(
         child: Column(
           children: [
+            // Modern Header
             ClipRRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: Colors.white.withValues(alpha: 0.04),
                     border: Border(
-                      bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                      bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                     ),
                   ),
                   child: Row(
@@ -40,12 +40,13 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'PRIVACY CONTROLS',
-                        style: GoogleFonts.rye(
+                      const Text(
+                        'Privacy Controls',
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ],
@@ -56,30 +57,80 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
 
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 children: [
-                  SwitchListTile(
-                    activeColor: const Color(0xFF00E5FF),
-                    title: Text('Private Account', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-                    subtitle: Text('Only approved connections can view your posts and gallery', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
-                    value: _isPrivateAccount,
-                    onChanged: (v) => setState(() => _isPrivateAccount = v),
-                  ),
-                  const Divider(color: Colors.white10),
-                  SwitchListTile(
-                    activeColor: const Color(0xFF00E5FF),
-                    title: Text('Allow Direct Messages', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-                    subtitle: Text('Receive messages from anyone on Nexal', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
-                    value: _allowDirectMessages,
-                    onChanged: (v) => setState(() => _allowDirectMessages = v),
-                  ),
-                  const Divider(color: Colors.white10),
-                  SwitchListTile(
-                    activeColor: const Color(0xFF00E5FF),
-                    title: Text('Show Active Status', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-                    subtitle: Text('Let your connections see when you are online in Quantum Space', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
-                    value: _showOnlineStatus,
-                    onChanged: (v) => setState(() => _showOnlineStatus = v),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    ),
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          activeThumbColor: const Color(0xFF00E5FF),
+                          title: const Text(
+                            'Private Account',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Only approved connections can view your posts and gallery',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          value: _isPrivateAccount,
+                          onChanged: (v) => setState(() => _isPrivateAccount = v),
+                        ),
+                        const Divider(color: Colors.white10, height: 1),
+                        SwitchListTile(
+                          activeThumbColor: const Color(0xFF00E5FF),
+                          title: const Text(
+                            'Allow Direct Messages',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Receive messages from anyone on Nexal',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          value: _allowDirectMessages,
+                          onChanged: (v) => setState(() => _allowDirectMessages = v),
+                        ),
+                        const Divider(color: Colors.white10, height: 1),
+                        SwitchListTile(
+                          activeThumbColor: const Color(0xFF00E5FF),
+                          title: const Text(
+                            'Show Active Status',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Let your connections see when you are online in Quantum Space',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          value: _showOnlineStatus,
+                          onChanged: (v) => setState(() => _showOnlineStatus = v),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

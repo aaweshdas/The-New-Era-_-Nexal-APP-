@@ -2,10 +2,43 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'game_webview_screen.dart';
 import '../theme/app_theme.dart';
-import '../services/aria_config.dart';
+
+
+// ─── Arcade Game Model ───────────────────────────────────────────────────────
+
+class ArcadeGame {
+  final String id;
+  final String title;
+  final String category;
+  final String description;
+  final String? bannerAsset;
+  final String engine;
+  final String difficulty;
+  final bool isPlayable;
+  final IconData fallbackIcon;
+  final Color themeColor;
+  final String? gameUrl;
+
+  const ArcadeGame({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.description,
+    this.bannerAsset,
+    required this.engine,
+    required this.difficulty,
+    required this.isPlayable,
+    required this.fallbackIcon,
+    required this.themeColor,
+    this.gameUrl,
+  });
+}
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 class OpenWorldGamesView extends StatefulWidget {
   const OpenWorldGamesView({super.key});
@@ -17,6 +50,38 @@ class OpenWorldGamesView extends StatefulWidget {
 class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
   bool _isBackendOnline = false;
   bool _isCheckingBackend = true;
+  String _selectedCategory = 'ALL';
+
+  // Genuine playable games (Luanti Voxel Sandbox + WORDL 3D Sim)
+  final List<ArcadeGame> _arcadeGames = const [
+    // ─── VOXEL REALM 3D — Open World Voxel Sandbox ─────────────────────────────
+    ArcadeGame(
+      id: 'luanti',
+      title: 'VOXEL REALM 3D',
+      category: 'VOXEL WORLD',
+      description: 'Explore, build, and craft across infinite 3D voxel realms. Auto-synced with Aria AI backend — 100% of voxel physics & world generation runs on cloud servers so your phone runs smooth & cool.',
+      engine: 'C++ Voxel Engine',
+      difficulty: 'Open World',
+      isPlayable: true,
+      fallbackIcon: LucideIcons.box,
+      themeColor: Color(0xFF10B981), // Emerald Voxel Green
+      gameUrl: 'https://nexal-luanti.onrender.com/vnc.html?autoconnect=true&resize=scale&show_dot=true',
+    ),
+
+    // ─── WORDL — 3D Delivery Simulation ───────────────────────────────────────
+    ArcadeGame(
+      id: 'wordl',
+      title: 'WORDL',
+      category: '3D SIM',
+      description: 'Maneuver your delivery vehicle across a compact rotating 3D globe, collect packages, dodge obstacles, and beat the clock in real-time gravity physics simulation.',
+      bannerAsset: 'assets/wordl/assets/images/game_banner.png',
+      engine: 'Three.js / WebGL',
+      difficulty: 'Med',
+      isPlayable: true,
+      fallbackIcon: LucideIcons.globe,
+      themeColor: AppTheme.cyan500,
+    ),
+  ];
 
   @override
   void initState() {
@@ -25,622 +90,466 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
   }
 
   Future<void> _checkBackendHealth() async {
-    setState(() {
-      _isCheckingBackend = true;
-    });
     try {
-      final config = await AriaConfig.load();
-      final url = '${config.backendUrl}/health';
-      debugPrint("Checking backend health at: $url");
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 3));
-      if (response.statusCode == 200) {
+      final res = await http.get(Uri.parse('https://nexal-backend.onrender.com/health')).timeout(const Duration(seconds: 4));
+      if (mounted) {
         setState(() {
-          _isBackendOnline = true;
+          _isBackendOnline = res.statusCode == 200;
           _isCheckingBackend = false;
         });
-      } else {
+      }
+    } catch (_) {
+      if (mounted) {
         setState(() {
           _isBackendOnline = false;
           _isCheckingBackend = false;
         });
       }
-    } catch (e) {
-      debugPrint("Backend health check failed: $e");
-      setState(() {
-        _isBackendOnline = false;
-        _isCheckingBackend = false;
-      });
     }
+  }
+
+  void _launchGame(ArcadeGame game) {
+    if (!game.isPlayable) return;
+
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => GameWebViewScreen(
+          gameUrl: game.gameUrl,
+          gameTitle: game.title,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
+  }
+
+  List<ArcadeGame> get _filteredGames {
+    if (_selectedCategory == 'ALL') return _arcadeGames;
+    return _arcadeGames.where((g) => g.category == _selectedCategory).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Deep Space Background Gradient
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppTheme.deepSpaceGradient,
-                ),
+      body: Stack(
+        children: [
+          // Ambient Glow Backgrounds
+          Positioned(
+            top: -100,
+            left: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.purple500.withValues(alpha: 0.15),
               ),
-            ),
-            
-            // Decorative Nebulae Glow
-            Positioned(
-              top: -100,
-              right: -50,
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                child: Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTheme.cyan500.withValues(alpha: 0.15),
-                  ),
-                ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true))
+             .scale(duration: 4.seconds, begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2)),
+          ),
+          Positioned(
+            bottom: -50,
+            right: -50,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF10B981).withValues(alpha: 0.12),
               ),
-            ),
-            Positioned(
-              bottom: 100,
-              left: -50,
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                child: Container(
-                  width: 250,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTheme.purple500.withValues(alpha: 0.12),
-                  ),
-                ),
-              ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true))
+             .scale(duration: 5.seconds, begin: const Offset(1.1, 1.1), end: const Offset(0.9, 0.9)),
+          ),
 
-            // Scrollable Content
-            Positioned.fill(
-              child: Column(
-                children: [
-                  const SizedBox(height: 80), // Space for floating header
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          // Premium Title
-                          Text(
-                            "OPEN WORLD",
+          SafeArea(
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // ── Redesigned Header ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Back Navigation Row
+                        Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white12),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 20),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ),
+                            const Spacer(),
+                            // Server Status Badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: _isBackendOnline ? Colors.green.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: _isBackendOnline ? Colors.greenAccent.withValues(alpha: 0.4) : Colors.amber.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: _isBackendOnline ? Colors.greenAccent : Colors.amberAccent,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (_isBackendOnline ? Colors.greenAccent : Colors.amberAccent).withValues(alpha: 0.8),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _isCheckingBackend ? 'CHECKING GATEWAY...' : (_isBackendOnline ? 'CLOUD ENGINE ONLINE' : 'STANDALONE MODE'),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Year-Wise Timeline Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                blurRadius: 12,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            "EST. 2026 • HYPER CLOUD ENGINE v3.0",
                             style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4,
-                              color: AppTheme.cyan500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Featured Games",
-                            style: GoogleFonts.rye(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
                               letterSpacing: 2,
+                              color: Colors.black,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                        ),
+                        const SizedBox(height: 12),
 
-                          // Active Game: WORDL Messenger
-                          _buildFeaturedGameCard(
-                            context,
-                            title: "MESSENGER (WORDL)",
-                            subtitle: "3D Planet Delivery Simulator",
-                            description: "It's a small planet, but someone's gotta make the deliveries. Maneuver your delivery vehicle across a compact rotating 3D globe, collect packages, dodge obstacles, and beat the clock in real-time gravity simulation.",
-                            imageAsset: "assets/wordl/assets/images/game_banner.png",
-                            engine: "HTML5 WebGL / Three.js",
-                            difficulty: "Medium",
-                            isPlayable: true,
-                            onPlay: () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => const GameWebViewScreen(),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    return FadeTransition(opacity: animation, child: child);
-                                  },
-                                  transitionDuration: const Duration(milliseconds: 400),
+                        // Title with Rye Font and Shimmering Glow
+                        Text(
+                          "NEXAL ARCADE",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.rye(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 2,
+                            shadows: [
+                              Shadow(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.6),
+                                blurRadius: 20,
+                              ),
+                              Shadow(
+                                color: AppTheme.purple500.withValues(alpha: 0.4),
+                                blurRadius: 30,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        Text(
+                          "Next-generation open world games. Streamed directly from high-speed cloud clusters — zero phone processing load.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Category Pill Selector
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: ['ALL', 'VOXEL WORLD', '3D SIM'].map((cat) {
+                              final isSelected = _selectedCategory == cat;
+                              return GestureDetector(
+                                onTap: () => setState(() => _selectedCategory = cat),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 250),
+                                  margin: const EdgeInsets.only(right: 10),
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? const Color(0xFF10B981) : Colors.white.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected ? const Color(0xFF10B981) : Colors.white24,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                                              blurRadius: 12,
+                                            ),
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Text(
+                                    cat,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                      color: isSelected ? Colors.black : Colors.white70,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
                                 ),
                               );
-                            },
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          // Locked Game 1: Nebula Explorer
-                          Text(
-                            "Coming Soon",
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                              color: Colors.white70,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          _buildFeaturedGameCard(
-                            context,
-                            title: "NEBULA BOUND",
-                            subtitle: "Infinite Space Survival",
-                            description: "Command a starship in a fully open procedural galaxy. Gather raw minerals, evade cosmic anomalies, and establish trade routes between distant alien stations.",
-                            imageAsset: null, // Procedural look
-                            engine: "Unity WebGL / WASM",
-                            difficulty: "Hard",
-                            isPlayable: false,
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Locked Game 2: Cyber Run
-                          _buildFeaturedGameCard(
-                            context,
-                            title: "CYBERPULSE 2099",
-                            subtitle: "Neon City Racer",
-                            description: "Race through rain-soaked vertical highways in a towering cyberpunk megacity. Customize anti-gravity bikes and master drift mechanics in neon-lit environments.",
-                            imageAsset: null,
-                            engine: "PlayCanvas WebGL",
-                            difficulty: "Easy",
-                            isPlayable: false,
-                          ),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Premium Glassmorphic Header (decent and stylish)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                  child: Container(
-                    height: 70,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Left Section: Frosted Back Button
-                        GestureDetector(
-                          onTap: () {
-                            if (Navigator.canPop(context)) {
-                              Navigator.pop(context);
-                            }
-                          },
-                          child: Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.06),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
-                              ),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                LucideIcons.arrowLeft,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Center Section: Glowing Futuristic Title
-                        ShaderMask(
-                          shaderCallback: (bounds) {
-                            return const LinearGradient(
-                              colors: [
-                                AppTheme.cyan500,
-                                AppTheme.purple500,
-                              ],
-                            ).createShader(bounds);
-                          },
-                          blendMode: BlendMode.srcIn,
-                          child: Text(
-                            "NEXAL ARCADE",
-                            style: GoogleFonts.outfit(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 4,
-                              shadows: [
-                                Shadow(
-                                  color: AppTheme.cyan500.withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Right Section: Glowing Gamepad Status Badge
-                        GestureDetector(
-                          onTap: _checkBackendHealth,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _isCheckingBackend
-                                    ? Colors.white24
-                                    : (_isBackendOnline
-                                        ? Colors.greenAccent.withValues(alpha: 0.3)
-                                        : Colors.redAccent.withValues(alpha: 0.3)),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  LucideIcons.gamepad2,
-                                  color: _isCheckingBackend
-                                      ? Colors.white54
-                                      : (_isBackendOnline ? Colors.greenAccent : Colors.redAccent),
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _isCheckingBackend
-                                      ? "CHECKING..."
-                                      : (_isBackendOnline ? "BACKEND ONLINE" : "BACKEND OFFLINE"),
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: _isCheckingBackend
-                                        ? Colors.white54
-                                        : (_isBackendOnline ? Colors.greenAccent : Colors.redAccent),
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: _isCheckingBackend
-                                        ? Colors.orangeAccent
-                                        : (_isBackendOnline ? Colors.greenAccent : Colors.redAccent),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _isCheckingBackend
-                                            ? Colors.orangeAccent.withValues(alpha: 0.6)
-                                            : (_isBackendOnline
-                                                ? Colors.greenAccent.withValues(alpha: 0.8)
-                                                : Colors.redAccent.withValues(alpha: 0.8)),
-                                        blurRadius: 6,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                            }).toList(),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildFeaturedGameCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required String description,
-    required String? imageAsset,
-    required String engine,
-    required String difficulty,
-    required bool isPlayable,
-    VoidCallback? onPlay,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isPlayable
-              ? AppTheme.cyan500.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.1),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner/Visual Section
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: imageAsset != null
-                      ? Image.asset(
-                          imageAsset,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.indigo.shade900,
-                                Colors.black,
-                              ],
-                            ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              LucideIcons.gamepad2,
-                              size: 64,
-                              color: Colors.white24,
-                            ),
-                          ),
-                        ),
-                ),
-                // Premium Overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.8),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Badges
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isPlayable
-                          ? AppTheme.cyan500.withValues(alpha: 0.85)
-                          : Colors.black54,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      isPlayable ? "READY TO PLAY" : "COMING SOON",
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white12,
-                      ),
-                    ),
-                    child: Text(
-                      engine,
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        color: Colors.white70,
-                      ),
+                // ── Playable Games Cards ──
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final game = _filteredGames[index];
+                        return _buildGameCard(game);
+                      },
+                      childCount: _filteredGames.length,
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-          // Content info Section
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildGameCard(ArcadeGame game) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: game.themeColor.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: game.themeColor.withValues(alpha: 0.15),
+            blurRadius: 24,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Banner / Icon Header
+              Container(
+                height: 160,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      game.themeColor.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+                child: Stack(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: GoogleFonts.outfit(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
+                    if (game.bannerAsset != null)
+                      Positioned.fill(
+                        child: Image.asset(
+                          game.bannerAsset!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                        ),
+                      ),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.85),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              color: AppTheme.purple500,
-                              fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: game.themeColor.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: game.themeColor.withValues(alpha: 0.5)),
+                        ),
+                        child: Text(
+                          game.category,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: game.themeColor.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: game.themeColor.withValues(alpha: 0.6)),
+                            ),
+                            child: Icon(game.fallbackIcon, color: game.themeColor, size: 28),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  game.title,
+                                  style: GoogleFonts.rye(
+                                    fontSize: 22,
+                                    color: Colors.white,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  game.engine,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    // Difficulty badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(8),
+                  ],
+                ),
+              ),
+
+              // Description & Play Action
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      game.description,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: Colors.white70,
+                        height: 1.4,
                       ),
-                      child: Text(
-                        "Diff: $difficulty",
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          color: Colors.white54,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: game.themeColor,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 8,
+                          shadowColor: game.themeColor.withValues(alpha: 0.5),
+                        ),
+                        onPressed: () => _launchGame(game),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(LucideIcons.play, size: 20, color: Colors.black),
+                            const SizedBox(width: 8),
+                            Text(
+                              "LAUNCH ENGINE",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  description,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    color: Colors.white70,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                
-                // Play / Action Button
-                if (isPlayable)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: const LinearGradient(
-                          colors: [
-                            AppTheme.cyan500,
-                            AppTheme.purple500,
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.cyan500.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onPressed: onPlay,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              LucideIcons.play,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "LAUNCH INSTANT PLAY",
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.white.withValues(alpha: 0.05),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.05),
-                        ),
-                      ),
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              LucideIcons.lock,
-                              color: Colors.white38,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "LOCKED (DEVELOPMENT IN PROGRESS)",
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white38,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

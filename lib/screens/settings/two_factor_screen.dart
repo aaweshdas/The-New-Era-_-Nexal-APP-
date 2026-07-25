@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,14 +50,26 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
       await prefs.setBool('2fa_enabled', false);
       await prefs.remove('2fa_secret');
       setState(() { _is2FAEnabled = false; _isLoading = false; _setupComplete = false; _showSetup = false; _totpSecret = null; _totpUri = null; });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('2FA disabled', style: GoogleFonts.outfit()), backgroundColor: Colors.orange));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('2FA disabled', style: TextStyle(fontSize: 14)),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     }
   }
 
   Future<void> _verifyAndEnable() async {
     final code = _verifyCtrl.text.trim();
     if (code.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter the 6-digit code', style: GoogleFonts.outfit()), backgroundColor: Colors.red.shade800));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Enter the 6-digit code', style: TextStyle(fontSize: 14)),
+          backgroundColor: Colors.red.shade800,
+        ),
+      );
       return;
     }
     setState(() => _isLoading = true);
@@ -67,7 +78,14 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
     await prefs.setBool('2fa_enabled', true);
     await prefs.setString('2fa_secret', _totpSecret!);
     setState(() { _is2FAEnabled = true; _setupComplete = true; _isLoading = false; });
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('\u2705 2FA enabled successfully!', style: GoogleFonts.outfit()), backgroundColor: const Color(0xFF00E5FF)));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ 2FA enabled successfully!', style: TextStyle(fontSize: 14)),
+          backgroundColor: Color(0xFF00E5FF),
+        ),
+      );
+    }
   }
 
   @override
@@ -76,24 +94,44 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0F172A),
       body: SafeArea(
         child: Column(
           children: [
+            // Modern Header
             ClipRRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)))),
-                  child: Row(children: [
-                    IconButton(icon: const Icon(LucideIcons.arrowLeft, color: Colors.white70), onPressed: () => Navigator.of(context).pop()),
-                    const SizedBox(width: 8),
-                    Text('TWO-FACTOR AUTH (2FA)', style: GoogleFonts.rye(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  ]),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    border: Border(
+                      bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(LucideIcons.arrowLeft, color: Colors.white70),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Two-Factor Auth (2FA)',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -102,21 +140,51 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                     // Status card
                     Container(
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white10)),
-                      child: Column(children: [
-                        Icon(_is2FAEnabled ? LucideIcons.shieldCheck : LucideIcons.shield, color: _is2FAEnabled ? const Color(0xFF00E5FF) : Colors.white38, size: 48),
-                        const SizedBox(height: 16),
-                        Text('Quantum 2FA Protection', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                        const SizedBox(height: 8),
-                        Text(_is2FAEnabled ? 'Your account is protected with TOTP authentication.' : 'Enable 2FA with an authenticator app for maximum security.', textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13)),
-                        const SizedBox(height: 20),
-                        SwitchListTile(
-                          activeColor: const Color(0xFF00E5FF),
-                          title: Text(_is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA Protection', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-                          value: _is2FAEnabled,
-                          onChanged: _isLoading ? null : _toggle2FA,
-                        ),
-                      ]),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            _is2FAEnabled ? LucideIcons.shieldCheck : LucideIcons.shield,
+                            color: _is2FAEnabled ? const Color(0xFF00E5FF) : Colors.white38,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Two-Factor Authentication',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _is2FAEnabled
+                                ? 'Your account is protected with TOTP authentication.'
+                                : 'Enable 2FA with an authenticator app for maximum security.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white54, fontSize: 13),
+                          ),
+                          const SizedBox(height: 20),
+                          SwitchListTile(
+                            activeThumbColor: const Color(0xFF00E5FF),
+                            title: Text(
+                              _is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA Protection',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                            value: _is2FAEnabled,
+                            onChanged: _isLoading ? null : _toggle2FA,
+                          ),
+                        ],
+                      ),
                     ),
 
                     // Setup flow
@@ -124,60 +192,142 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3))),
-                        child: Column(children: [
-                          Text('Setup Authenticator', style: GoogleFonts.outfit(color: const Color(0xFF00E5FF), fontWeight: FontWeight.bold, fontSize: 16)),
-                          const SizedBox(height: 4),
-                          Text('Scan this QR code in Google Authenticator, Authy, or any TOTP app.', textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
-                          const SizedBox(height: 20),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                            child: QrImageView(data: _totpUri!, version: QrVersions.auto, size: 180, gapless: true),
-                          ),
-                          const SizedBox(height: 16),
-                          Text('Or enter manually:', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
-                          const SizedBox(height: 4),
-                          GestureDetector(
-                            onTap: () { Clipboard.setData(ClipboardData(text: _totpSecret!)); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Secret copied!', style: GoogleFonts.outfit()), backgroundColor: Colors.grey[900], duration: const Duration(seconds: 1))); },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white12)),
-                              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                Text(_totpSecret!, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10, letterSpacing: 2)),
-                                const SizedBox(width: 8),
-                                const Icon(LucideIcons.copy, color: Colors.white38, size: 14),
-                              ]),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3)),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Setup Authenticator',
+                              style: TextStyle(
+                                color: Color(0xFF00E5FF),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text('Enter the 6-digit code from your app to verify:', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _verifyCtrl,
-                            keyboardType: TextInputType.number,
-                            maxLength: 6,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 28, letterSpacing: 12, fontWeight: FontWeight.bold),
-                            decoration: InputDecoration(
-                              counterText: '',
-                              filled: true,
-                              fillColor: Colors.white.withValues(alpha: 0.05),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
-                              hintText: '000000',
-                              hintStyle: TextStyle(color: Colors.white12, letterSpacing: 12),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Scan this QR code in Google Authenticator, Authy, or any TOTP app.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white54, fontSize: 12),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity, height: 48,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF135BEC), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                              onPressed: _isLoading ? null : _verifyAndEnable,
-                              child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : Text('VERIFY & ENABLE 2FA', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: QrImageView(
+                                data: _totpUri!,
+                                version: QrVersions.auto,
+                                size: 180,
+                                gapless: true,
+                              ),
                             ),
-                          ),
-                        ]),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Or enter manually:',
+                              style: TextStyle(color: Colors.white38, fontSize: 11),
+                            ),
+                            const SizedBox(height: 6),
+                            GestureDetector(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: _totpSecret!));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Secret copied!', style: TextStyle(fontSize: 13)),
+                                    backgroundColor: Color(0xFF1E293B),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black45,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.white12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _totpSecret!,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                        letterSpacing: 2,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(LucideIcons.copy, color: Colors.white38, size: 14),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Enter the 6-digit code from your app to verify:',
+                              style: TextStyle(color: Colors.white54, fontSize: 12),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: _verifyCtrl,
+                              keyboardType: TextInputType.number,
+                              maxLength: 6,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                letterSpacing: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                counterText: '',
+                                filled: true,
+                                fillColor: Colors.white.withValues(alpha: 0.05),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                ),
+                                hintText: '000000',
+                                hintStyle: const TextStyle(color: Colors.white12, letterSpacing: 10),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF00E5FF),
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                onPressed: _isLoading ? null : _verifyAndEnable,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                                      )
+                                    : const Text(
+                                        'Verify & Enable 2FA',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
 
@@ -185,12 +335,23 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(color: const Color(0xFF00E5FF).withValues(alpha: 0.06), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3))),
-                        child: Row(children: [
-                          const Icon(LucideIcons.checkCircle2, color: Color(0xFF00E5FF), size: 28),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text('2FA is active. You will need your authenticator app to sign in.', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13))),
-                        ]),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(LucideIcons.checkCircle2, color: Color(0xFF00E5FF), size: 28),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                '2FA is active. You will need your authenticator app to sign in.',
+                                style: TextStyle(color: Colors.white70, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],

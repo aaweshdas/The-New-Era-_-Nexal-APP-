@@ -692,7 +692,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                         imageUrl: widget.post.image!,
                         fit: BoxFit.cover,
                         memCacheWidth: 600,
-                        placeholder: (_, __) => Container(color: Colors.white.withValues(alpha: 0.05)),
+                        placeholder: (ctx, _) => Container(color: Colors.white.withValues(alpha: 0.05)),
                       ),
                     ),
                     if (widget.post.isVideo)
@@ -732,7 +732,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                             if (_currentReaction == null)
                               Icon(_isLiked ? LucideIcons.heart : LucideIcons.heart, size: 20, color: _isLiked ? AppTheme.pink500 : Colors.grey),
                             const SizedBox(width: 6),
-                            Text('${_likeCount}', style: GoogleFonts.outfit(color: _isLiked ? AppTheme.pink500 : Colors.grey, fontSize: 13.5, fontWeight: _isLiked ? FontWeight.bold : FontWeight.normal)),
+                            Text('$_likeCount', style: GoogleFonts.outfit(color: _isLiked ? AppTheme.pink500 : Colors.grey, fontSize: 13.5, fontWeight: _isLiked ? FontWeight.bold : FontWeight.normal)),
                           ],
                         ),
                       ),
@@ -744,7 +744,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                           children: [
                             const Icon(LucideIcons.messageCircle, size: 20, color: Colors.grey),
                             const SizedBox(width: 6),
-                            Text('${_commentCount}', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
+                            Text('$_commentCount', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
                           ],
                         ),
                       ),
@@ -756,7 +756,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                           children: [
                             const Icon(LucideIcons.share2, size: 20, color: Colors.grey),
                             const SizedBox(width: 6),
-                            Text('${_shareCount}', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
+                            Text('$_shareCount', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
                           ],
                         ),
                       ),

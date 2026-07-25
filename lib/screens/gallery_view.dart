@@ -583,7 +583,7 @@ class _GalleryViewState extends State<GalleryView> {
 
             // Premium 4-Pod Floating Glass Header
             Positioned(
-              top: 16,
+              top: 24,
               left: 14,
               right: 14,
               child: Row(

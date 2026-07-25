@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 
 /// Manages ARIA AI backend configuration (API keys, server URL).
 /// All values are persisted via SharedPreferences and can be changed
@@ -18,7 +19,7 @@ class AriaConfig {
   static const _defaultLivekitUrl  = 'wss://friday-si6nqz7u.livekit.cloud';
   static const _defaultLivekitKey  = 'API6vNUPttbHXDd';
   static const _defaultLivekitSec  = 'xH4Ld1M8SQZ4XSXQTMYDmMttC8ii2i8nWO09adFSwHG';
-  static const _defaultBackendUrl  = 'https://nexal-backend.onrender.com';
+  static String get _defaultBackendUrl => AppConfig.gatewayUrl;
 
   // ─── Instance fields ────────────────────────────────────────────
   String groqApiKey;

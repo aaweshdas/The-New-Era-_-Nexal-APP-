@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,8 +8,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
 
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import 'chat_screen.dart'; // To use ChatScreen
+import 'story_viewer_screen.dart'; // To view stories
 
 class MessageItem {
   final String name, avatar, message, time;
@@ -46,6 +49,86 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
   bool _isSearching = false;
   String _filterMode = 'All'; // All, Unread, Online
   final TextEditingController _searchCtrl = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+
+  // Active Stories List
+  final List<StoryItem> _activeStories = [
+    StoryItem(
+      userName: 'Aria Storm',
+      userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+      imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800',
+      caption: '⚡ Quantum update live in the plaza!',
+      timeAgo: '12m ago',
+    ),
+    StoryItem(
+      userName: 'Kai Cyber',
+      userAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100',
+      imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800',
+      caption: '🚀 Shipping the new engine build today.',
+      timeAgo: '45m ago',
+    ),
+    StoryItem(
+      userName: 'Nova Glitch',
+      userAvatar: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=100',
+      imageUrl: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800',
+      caption: '🌌 Midnight vibes from the cyber grid.',
+      timeAgo: '2h ago',
+    ),
+  ];
+
+  Future<void> _uploadMyStory() async {
+    try {
+      final file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (file == null || !mounted) return;
+
+      final myStory = StoryItem(
+        userName: 'Your Story',
+        userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+        imageUrl: file.path,
+        caption: 'My story update ✨',
+        timeAgo: 'Just now',
+      );
+
+      setState(() {
+        _activeStories.insert(0, myStory);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Row(
+          children: [
+            Icon(LucideIcons.checkCircle, color: Colors.white, size: 16),
+            SizedBox(width: 8),
+            Text('Story uploaded successfully! ✨', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF059669),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+      ));
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Failed to pick story image', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
+    }
+  }
+
+  void _openStoryViewer(int index) {
+    if (_activeStories.isEmpty) return;
+    final targetIndex = index.clamp(0, _activeStories.length - 1);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StoryViewerScreen(
+          stories: _activeStories,
+          initialIndex: targetIndex,
+        ),
+      ),
+    );
+  }
 
   final List<MessageItem> _primary = [
     MessageItem(name: 'Aria Storm', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', message: 'Sent a photo', time: '2m ago', unreadCount: 2, isOnline: true, isMedia: true),
@@ -109,106 +192,180 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
     return list;
   }
 
+  List<RequestItem> get _filteredRequests {
+    var list = List<RequestItem>.from(_requests);
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      list = list.where((r) => r.name.toLowerCase().contains(q)).toList();
+    }
+    return list;
+  }
+
   void _showNewConversationSheet() {
+    final newSearchCtrl = TextEditingController();
+    String newSearchQuery = '';
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (_, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0d0d1a),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Column(
-                  children: [
-                    Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Text('New Message', style: GoogleFonts.rye(color: Colors.white, fontSize: 20)),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(LucideIcons.x, color: Colors.white54, size: 22),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                      ),
-                      child: TextField(
-                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Search contacts...',
-                          hintStyle: GoogleFonts.outfit(color: Colors.white30, fontSize: 14),
-                          border: InputBorder.none,
-                          prefixIcon: const Icon(LucideIcons.search, color: Colors.white38, size: 18),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+      builder: (modalCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final allContacts = [
+            ..._primary,
+            MessageItem(name: 'Orion Seeker', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', message: 'Suggested connection', time: 'Online', isOnline: true),
+            MessageItem(name: 'Sol Flare', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100', message: 'Suggested connection', time: 'Offline'),
+            MessageItem(name: 'Lyra Star', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', message: 'Suggested connection', time: 'Online', isOnline: true),
+            MessageItem(name: 'Cyber Pulse', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', message: 'New connection', time: 'Online', isOnline: true),
+          ];
+
+          final filtered = newSearchQuery.isEmpty
+              ? allContacts
+              : allContacts.where((c) => c.name.toLowerCase().contains(newSearchQuery.toLowerCase())).toList();
+
+          return DraggableScrollableSheet(
+            initialChildSize: 0.8,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (_, scrollController) => Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF0d0d1a),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: _primary.length,
-                  itemBuilder: (_, i) {
-                    final m = _primary[i];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _openChat(m);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Column(
+                      children: [
+                        Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+                        const SizedBox(height: 16),
+                        Row(
                           children: [
-                            Stack(
-                              children: [
-                                CircleAvatar(radius: 24, backgroundImage: NetworkImage(m.avatar)),
-                                if (m.isOnline)
-                                  Positioned(bottom: 0, right: 0, child: Container(
-                                    width: 12, height: 12,
-                                    decoration: BoxDecoration(color: const Color(0xFF22C55E), shape: BoxShape.circle, border: Border.all(color: const Color(0xFF0d0d1a), width: 2)),
-                                  )),
-                              ],
-                            ),
-                            const SizedBox(width: 14),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(m.name, style: GoogleFonts.outfit(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                                Text(m.isOnline ? 'Online' : 'Offline', style: GoogleFonts.outfit(
-                                  color: m.isOnline ? const Color(0xFF22C55E) : Colors.white38, fontSize: 12)),
-                              ],
+                            Text('New Message', style: GoogleFonts.rye(color: Colors.white, fontSize: 20)),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(modalCtx),
+                              child: const Icon(LucideIcons.x, color: Colors.white54, size: 22),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                ),
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                          ),
+                          child: TextField(
+                            controller: newSearchCtrl,
+                            autofocus: true,
+                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: 'Search contact name...',
+                              hintStyle: GoogleFonts.outfit(color: Colors.white30, fontSize: 14),
+                              border: InputBorder.none,
+                              prefixIcon: const Icon(LucideIcons.search, color: Colors.white38, size: 18),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onChanged: (v) => setModalState(() => newSearchQuery = v),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: filtered.isEmpty && newSearchQuery.isNotEmpty
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(LucideIcons.userPlus, color: Color(0xFFA855F7), size: 42),
+                              const SizedBox(height: 12),
+                              Text('Start chat with "$newSearchQuery"', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFA855F7),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                ),
+                                icon: const Icon(LucideIcons.send, size: 16, color: Colors.white),
+                                label: Text('Start Conversation', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                                onPressed: () {
+                                  Navigator.pop(modalCtx);
+                                  final newContact = MessageItem(
+                                    name: newSearchQuery,
+                                    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+                                    message: 'Started a new conversation',
+                                    time: 'Just now',
+                                    isOnline: true,
+                                  );
+                                  setState(() => _primary.insert(0, newContact));
+                                  _openChat(newContact);
+                                },
+                              ),
+                            ],
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                            itemCount: filtered.length,
+                            itemBuilder: (_, i) {
+                              final m = filtered[i];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(modalCtx);
+                                  if (!_primary.any((item) => item.name == m.name)) {
+                                    setState(() => _primary.insert(0, m));
+                                  }
+                                  _openChat(m);
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.03),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Stack(
+                                        children: [
+                                          CircleAvatar(radius: 24, backgroundImage: NetworkImage(m.avatar)),
+                                          if (m.isOnline)
+                                            Positioned(bottom: 0, right: 0, child: Container(
+                                              width: 12, height: 12,
+                                              decoration: BoxDecoration(color: const Color(0xFF22C55E), shape: BoxShape.circle, border: Border.all(color: const Color(0xFF0d0d1a), width: 2)),
+                                            )),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(m.name, style: GoogleFonts.outfit(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                                            const SizedBox(height: 2),
+                                            Text(m.message, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(LucideIcons.chevronRight, color: Colors.white30, size: 18),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -269,7 +426,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
                     ],
                   ),
                 ),
-              )).toList(),
+              )),
               const SizedBox(height: 8),
             ],
           ),
@@ -332,131 +489,201 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top row: back + action icons
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.maybePop(context),
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                                  ),
-                                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white70, size: 20),
-                                ),
-                              ),
-                              const Spacer(),
-                              // Search pill — now functional
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() => _isSearching = !_isSearching);
-                                  if (!_isSearching) {
-                                    _searchCtrl.clear();
-                                    _searchQuery = '';
-                                  }
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  padding: _isSearching
-                                      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
-                                      : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.04),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: _isSearching
-                                        ? const Color(0xFFA855F7).withValues(alpha: 0.4)
-                                        : Colors.white.withValues(alpha: 0.06)),
-                                  ),
-                                  child: _isSearching
-                                      ? SizedBox(
-                                          width: 140,
-                                          child: TextField(
-                                            controller: _searchCtrl,
-                                            autofocus: true,
-                                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
-                                            decoration: InputDecoration(
-                                              hintText: 'Search...',
-                                              hintStyle: GoogleFonts.outfit(color: Colors.white30, fontSize: 13),
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding: const EdgeInsets.symmetric(vertical: 6),
-                                              prefixIcon: Icon(LucideIcons.search, color: const Color(0xFFA855F7).withValues(alpha: 0.6), size: 16),
-                                            ),
-                                            onChanged: (v) => setState(() => _searchQuery = v),
-                                          ),
-                                        )
-                                      : Row(children: [
-                                          Icon(LucideIcons.search, color: AppTheme.cyan500.withValues(alpha: 0.6), size: 16),
-                                          const SizedBox(width: 8),
-                                          Text('Search chats', style: GoogleFonts.outfit(color: Colors.white24, fontSize: 13)),
-                                        ]),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              // Filter icon — now functional
-                              GestureDetector(
-                                onTap: _showFilterSheet,
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: _filterMode != 'All'
-                                        ? const Color(0xFFA855F7).withValues(alpha: 0.15)
-                                        : Colors.white.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: _filterMode != 'All'
-                                        ? const Color(0xFFA855F7).withValues(alpha: 0.4)
-                                        : Colors.white.withValues(alpha: 0.08)),
-                                  ),
-                                  child: Icon(LucideIcons.slidersHorizontal,
-                                      color: _filterMode != 'All' ? const Color(0xFFA855F7) : Colors.white70, size: 20),
-                                ),
-                              ),
-                            ],
-                          ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.15, end: 0),
-
-                          const SizedBox(height: 20),
-
-                          // Title row with gradient shimmer
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          // Top header row — switches smoothly into full-width search input when active
+                          _isSearching
+                              ? Row(
                                   children: [
-                                    Text('Messages', style: GoogleFonts.rye(fontSize: 28, color: Colors.white, height: 1.1))
-                                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                                        .shimmer(duration: 3.seconds, colors: [Colors.white, AppTheme.purple500, AppTheme.cyan500, AppTheme.pink500, Colors.white]),
-                                    const SizedBox(height: 6),
-                                    Text('Your conversations', style: GoogleFonts.outfit(color: Colors.white30, fontSize: 14, letterSpacing: 0.5)),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _isSearching = false;
+                                          _searchCtrl.clear();
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                        ),
+                                        child: const Icon(LucideIcons.arrowLeft, color: Colors.white70, size: 20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.06),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.4)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(LucideIcons.search, color: const Color(0xFFA855F7), size: 18),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: TextField(
+                                                controller: _searchCtrl,
+                                                autofocus: true,
+                                                style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                                                decoration: InputDecoration(
+                                                  hintText: 'Search chats or contacts...',
+                                                  hintStyle: GoogleFonts.outfit(color: Colors.white30, fontSize: 14),
+                                                  border: InputBorder.none,
+                                                  isDense: true,
+                                                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                                                ),
+                                                onChanged: (v) => setState(() => _searchQuery = v),
+                                              ),
+                                            ),
+                                            if (_searchQuery.isNotEmpty)
+                                              GestureDetector(
+                                                onTap: () {
+                                                  _searchCtrl.clear();
+                                                  setState(() => _searchQuery = '');
+                                                },
+                                                child: const Icon(LucideIcons.x, color: Colors.white54, size: 18),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    // Filter icon
+                                    GestureDetector(
+                                      onTap: _showFilterSheet,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: _filterMode != 'All'
+                                              ? const Color(0xFFA855F7).withValues(alpha: 0.15)
+                                              : Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: _filterMode != 'All'
+                                              ? const Color(0xFFA855F7).withValues(alpha: 0.4)
+                                              : Colors.white.withValues(alpha: 0.08)),
+                                        ),
+                                        child: Icon(LucideIcons.slidersHorizontal,
+                                            color: _filterMode != 'All' ? const Color(0xFFA855F7) : Colors.white70, size: 19),
+                                      ),
+                                    ),
                                   ],
-                                ),
-                              ),
-                              // Unread badge — large and eye-catching
-                              () {
-                                final unread = _primary.fold<int>(0, (sum, m) => sum + m.unreadCount);
-                                if (unread == 0) return const SizedBox.shrink();
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(colors: [AppTheme.purple500.withValues(alpha: 0.8), AppTheme.pink500.withValues(alpha: 0.6)]),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppTheme.purple500.withValues(alpha: 0.3)),
-                                    boxShadow: [BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.25), blurRadius: 16, spreadRadius: 2)],
-                                  ),
-                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                    const Icon(LucideIcons.messageCircle, color: Colors.white, size: 14),
-                                    const SizedBox(width: 6),
-                                    Text('$unread new', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
-                                  ]),
-                                ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(begin: 1.0, end: 1.06, duration: 1500.ms, curve: Curves.easeInOut);
-                              }(),
-                            ],
-                          ).animate().fadeIn(delay: 100.ms, duration: 500.ms).slideY(begin: 0.1, end: 0),
+                                ).animate().fadeIn(duration: 250.ms)
+                              : Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.maybePop(context),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                        ),
+                                        child: const Icon(LucideIcons.arrowLeft, color: Colors.white70, size: 20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    // Headline right next to back button with original Rye font & shimmer effect
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Messages',
+                                            style: GoogleFonts.rye(
+                                              fontSize: 24,
+                                              color: Colors.white,
+                                              height: 1.1,
+                                            ),
+                                          )
+                                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                                          .shimmer(
+                                            duration: 3.seconds,
+                                            colors: [
+                                              Colors.white,
+                                              AppTheme.purple500,
+                                              AppTheme.cyan500,
+                                              AppTheme.pink500,
+                                              Colors.white
+                                            ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Your conversations',
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white30,
+                                              fontSize: 12,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Unread badge chip if unread > 0
+                                    () {
+                                      final unread = _primary.fold<int>(0, (sum, m) => sum + m.unreadCount);
+                                      if (unread == 0) return const SizedBox.shrink();
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(colors: [AppTheme.purple500.withValues(alpha: 0.8), AppTheme.pink500.withValues(alpha: 0.6)]),
+                                          borderRadius: BorderRadius.circular(14),
+                                          boxShadow: [BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.25), blurRadius: 10)],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(LucideIcons.messageCircle, color: Colors.white, size: 12),
+                                            const SizedBox(width: 4),
+                                            Text('$unread', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                                          ],
+                                        ),
+                                      );
+                                    }(),
+                                    // Search trigger icon
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() => _isSearching = true);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                        ),
+                                        child: Icon(LucideIcons.search, color: AppTheme.cyan500.withValues(alpha: 0.8), size: 19),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Filter icon
+                                    GestureDetector(
+                                      onTap: _showFilterSheet,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: _filterMode != 'All'
+                                              ? const Color(0xFFA855F7).withValues(alpha: 0.15)
+                                              : Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: _filterMode != 'All'
+                                              ? const Color(0xFFA855F7).withValues(alpha: 0.4)
+                                              : Colors.white.withValues(alpha: 0.08)),
+                                        ),
+                                        child: Icon(LucideIcons.slidersHorizontal,
+                                            color: _filterMode != 'All' ? const Color(0xFFA855F7) : Colors.white70, size: 19),
+                                      ),
+                                    ),
+                                  ],
+                                ).animate().fadeIn(duration: 300.ms),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
 
                           // Decorative divider line
                           Container(
@@ -486,33 +713,41 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _primary.length + 1,
+                itemCount: _activeStories.length + 1,
                 itemBuilder: (ctx, i) {
                   if (i == 0) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFA855F7), width: 2, style: BorderStyle.solid), // Dashed simulated by border
-                            ),
-                            child: const CircleAvatar(radius: 28, backgroundColor: Colors.black, child: Icon(LucideIcons.plus, color: Color(0xFFA855F7))),
-                          ).animate(onPlay: (c) => c.repeat()).rotate(duration: 8.seconds), // Simplified dash animation
-                          const SizedBox(height: 6),
-                          Text('Your Story', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
-                        ],
+                      child: GestureDetector(
+                        onTap: _uploadMyStory,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFFA855F7), width: 2),
+                              ),
+                              child: const CircleAvatar(
+                                radius: 28,
+                                backgroundColor: Colors.black,
+                                child: Icon(LucideIcons.plus, color: Color(0xFFA855F7), size: 22),
+                              ),
+                            ).animate(onPlay: (c) => c.repeat()).rotate(duration: 10.seconds),
+                            const SizedBox(height: 6),
+                            Text('Your Story', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
+                          ],
+                        ),
                       ),
                     );
                   }
-                  final user = _primary[i - 1];
+                  final story = _activeStories[i - 1];
+                  final isFileImage = story.imageUrl.startsWith('/');
                   return Padding(
                     padding: const EdgeInsets.only(right: 16),
                     child: GestureDetector(
-                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Viewing ${user.name}\'s story'), backgroundColor: Colors.grey[900])),
+                      onTap: () => _openStoryViewer(i - 1),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -522,10 +757,15 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
                               shape: BoxShape.circle,
                               gradient: LinearGradient(colors: [Color(0xFFA855F7), Color(0xFF06B6D4)]),
                             ),
-                            child: CircleAvatar(radius: 28, backgroundImage: NetworkImage(user.avatar)),
-                          ).animate(target: user.isOnline ? 1 : 0, onPlay: (c) => c.repeat(reverse: true)).scaleXY(begin: 1.0, end: 1.05, duration: 1.seconds),
+                            child: CircleAvatar(
+                              radius: 28,
+                              backgroundImage: isFileImage
+                                  ? FileImage(File(story.imageUrl)) as ImageProvider
+                                  : NetworkImage(story.userAvatar),
+                            ),
+                          ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(begin: 1.0, end: 1.05, duration: 1.seconds),
                           const SizedBox(height: 6),
-                          Text(user.name.split(' ')[0], style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
+                          Text(story.userName.split(' ')[0], style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -704,11 +944,12 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
   }
 
   Widget _buildRequestsList() {
+    final requests = _filteredRequests;
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-      itemCount: _requests.length,
+      itemCount: requests.length,
       itemBuilder: (ctx, i) {
-        final req = _requests[i];
+        final req = requests[i];
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           child: GlassContainer(

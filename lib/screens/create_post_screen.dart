@@ -75,11 +75,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         setState(() { _locationLabel = 'Location permission denied'; _isFetchingLocation = false; });
         return;
       }
-      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+      final pos = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.low));
       final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-        final parts = [p.locality, p.administrativeArea, p.country].where((s) => s != null && s.isNotEmpty);
+        final parts = [p.locality, p.administrativeArea, p.country].whereType<String>().where((s) => s.isNotEmpty);
         setState(() => _locationLabel = parts.join(', '));
       } else {
         setState(() => _locationLabel = '${pos.latitude.toStringAsFixed(2)}°, ${pos.longitude.toStringAsFixed(2)}°');
@@ -111,6 +111,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     await Future.delayed(const Duration(milliseconds: 600));
 
     // Use real local file path when image was picked from gallery
+    // ignore: prefer_null_aware_operators
     final imageUrlOrPath = _selectedImage != null
         ? _selectedImage!.path  // real local file path
         : null;

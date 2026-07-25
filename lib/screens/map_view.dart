@@ -526,8 +526,8 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                 width: 90, height: 90,
                 decoration: BoxDecoration(
                   color: const Color(0xFF141420), shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.4), width: 2),
-                  boxShadow: [BoxShadow(color: const Color(0xFF8B5CF6).withOpacity(0.15), blurRadius: 24, spreadRadius: 4)],
+                  border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.4), width: 2),
+                  boxShadow: [BoxShadow(color: const Color(0xFF8B5CF6).withValues(alpha: 0.15), blurRadius: 24, spreadRadius: 4)],
                 ),
                 child: const Icon(Icons.location_off_rounded, color: Color(0xFF8B5CF6), size: 36),
               ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
@@ -609,7 +609,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                   radius: 1.3,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.42),
+                    Colors.black.withValues(alpha: 0.42),
                   ],
                 ),
               ),
@@ -629,7 +629,7 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    const Color(0xFF05050F).withOpacity(0.95),
+                    const Color(0xFF05050F).withValues(alpha: 0.95),
                     const Color(0xFF05050F),
                   ],
                   stops: const [0.0, 0.3, 1.0],
@@ -712,16 +712,16 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                             // Blinking dot indicator
                             AnimatedBuilder(
                               animation: _signalCtrl,
-                              builder: (_, __) => Container(
+                              builder: (ctx, val) => Container(
                                 width: 6, height: 6,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: const Color(0xFF67E8F9).withOpacity(
+                                  color: const Color(0xFF67E8F9).withValues(alpha: 
                                     0.4 + 0.6 * math.sin(_signalCtrl.value * math.pi * 2).abs(),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFF67E8F9).withOpacity(0.5),
+                                      color: const Color(0xFF67E8F9).withValues(alpha: 0.5),
                                       blurRadius: 6,
                                     ),
                                   ],
@@ -757,14 +757,14 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
                   // Coordinates placeholder (bound to active _signalCtrl)
                   AnimatedBuilder(
                     animation: _signalCtrl,
-                    builder: (_, __) {
+                    builder: (anim, _) {
                       // Simulated scanning coordinates
                       final lat = (17.0918 + math.sin(_signalCtrl.value * math.pi * 6) * 0.0003);
                       final lng = (82.0689 + math.cos(_signalCtrl.value * math.pi * 4) * 0.0003);
                       return Text(
                         '${lat.toStringAsFixed(4)}°N  ${lng.toStringAsFixed(4)}°E',
                         style: GoogleFonts.outfit(
-                          color: const Color(0xFF67E8F9).withOpacity(0.5),
+                          color: const Color(0xFF67E8F9).withValues(alpha: 0.5),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 2,
@@ -787,9 +787,9 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
                 ),
-                color: const Color(0xFF8B5CF6).withOpacity(0.08),
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
               ),
               child: Text(
                 'v2.0  LIVE',
@@ -855,7 +855,7 @@ class _SignalBars extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: signalCtrl,
-      builder: (_, __) {
+      builder: (anim, _) {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -880,11 +880,11 @@ class _SignalBars extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(2),
                   color: locked
-                    ? const Color(0xFF8B5CF6).withOpacity(shimmer)
+                    ? const Color(0xFF8B5CF6).withValues(alpha: shimmer)
                     : const Color(0xFF2A2A3E),
                   boxShadow: locked ? [
                     BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.4 * shimmer),
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.4 * shimmer),
                       blurRadius: 5,
                       spreadRadius: 1,
                     ),
@@ -911,7 +911,7 @@ class _AnimatedProgressTrack extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: signalCtrl,
-      builder: (_, __) {
+      builder: (anim, _) {
         final shimmer = 0.7 + 0.3 * math.sin(signalCtrl.value * math.pi * 4);
         return Column(
           children: [
@@ -921,7 +921,7 @@ class _AnimatedProgressTrack extends StatelessWidget {
                 tween: Tween(begin: 0.0, end: progress),
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeOut,
-                builder: (_, v, __) {
+                builder: (ctx, v, child) {
                   return Stack(
                     children: [
                       // Track
@@ -943,7 +943,7 @@ class _AnimatedProgressTrack extends StatelessWidget {
                                   const Color(0xFF8B5CF6),
                                   const Color(0xFF67E8F9),
                                   v,
-                                )!.withOpacity(shimmer),
+                                )!.withValues(alpha: shimmer),
                               ],
                             ),
                           ),
@@ -970,7 +970,7 @@ class _AnimatedProgressTrack extends StatelessWidget {
                 Text(
                   'INITIALIZING',
                   style: GoogleFonts.outfit(
-                    color: const Color(0xFF4B5563).withOpacity(0.8),
+                    color: const Color(0xFF4B5563).withValues(alpha: 0.8),
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2,
