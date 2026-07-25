@@ -71,7 +71,32 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
   /// Loads a remotely-hosted game URL directly in the WebView without
   /// spinning up a local asset server. Used for OpenTTD and similar.
   Future<void> _startRemoteUrlGame(String url) async {
-    // On desktop platforms, WebView isn't available — open in system browser.
+    // On Windows Desktop platform — launch native Voxel Game executable directly
+    if (Platform.isWindows) {
+      final exeFile = File('Backend/voxel_backend/bin/luanti.exe');
+      final fallbackExe = File('../VoxelEngine/bin/luanti.exe');
+      final absExe = File('S:/All Code/Antigravity/Nexal_App/Backend/voxel_backend/bin/luanti.exe');
+
+      try {
+        if (await exeFile.exists()) {
+          await Process.start(exeFile.path, ['--go', '--gameid', 'devtest'], workingDirectory: exeFile.parent.parent.path);
+          if (mounted) setState(() { _serverReady = true; _isLoadingGame = false; });
+          return;
+        } else if (await fallbackExe.exists()) {
+          await Process.start(fallbackExe.path, ['--go', '--gameid', 'devtest'], workingDirectory: fallbackExe.parent.parent.path);
+          if (mounted) setState(() { _serverReady = true; _isLoadingGame = false; });
+          return;
+        } else if (await absExe.exists()) {
+          await Process.start(absExe.path, ['--go', '--gameid', 'devtest'], workingDirectory: absExe.parent.parent.path);
+          if (mounted) setState(() { _serverReady = true; _isLoadingGame = false; });
+          return;
+        }
+      } catch (e) {
+        debugPrint('[GameWebViewScreen] Native launch exception: $e');
+      }
+    }
+
+    // On non-mobile platforms (macOS/Linux): open system browser
     if (!(Platform.isAndroid || Platform.isIOS)) {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
@@ -80,6 +105,7 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
       if (mounted) setState(() => _serverReady = true);
       return;
     }
+
 
     try {
       final controller = WebViewController()
