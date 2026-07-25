@@ -52,12 +52,12 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
   bool _isCheckingBackend = true;
   String _selectedCategory = 'ALL';
 
-  // Genuine playable games (Luanti Voxel Sandbox + WORDL 3D Sim)
+  // Genuine playable games (⛏️ Voxel Game + WORDL 3D Sim)
   final List<ArcadeGame> _arcadeGames = const [
-    // ─── VOXEL REALM 3D — Open World Voxel Sandbox ─────────────────────────────
+    // ─── ⛏️ VOXEL GAME — Open World Sandbox ────────────────────────────────────
     ArcadeGame(
-      id: 'luanti',
-      title: 'VOXEL REALM 3D',
+      id: 'voxel_game',
+      title: '⛏️ VOXEL GAME',
       category: 'VOXEL WORLD',
       description: 'Explore, build, and craft across infinite 3D voxel realms. Auto-synced with Aria AI backend — 100% of voxel physics & world generation runs on cloud servers so your phone runs smooth & cool.',
       engine: 'C++ Voxel Engine',
@@ -67,6 +67,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
       themeColor: Color(0xFF10B981), // Emerald Voxel Green
       gameUrl: 'https://nexal-luanti.onrender.com/vnc.html?autoconnect=true&resize=scale&show_dot=true',
     ),
+
 
     // ─── WORDL — 3D Delivery Simulation ───────────────────────────────────────
     ArcadeGame(
