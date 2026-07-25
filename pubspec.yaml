@@ -93,6 +93,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/voxel/
     - assets/nav_icons/
     - assets/map/
     - assets/map/assets/

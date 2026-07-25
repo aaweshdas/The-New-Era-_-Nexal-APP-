@@ -22,6 +22,7 @@ class ArcadeGame {
   final IconData fallbackIcon;
   final Color themeColor;
   final String? gameUrl;
+  final String? gameAssetFolder;
 
   const ArcadeGame({
     required this.id,
@@ -35,8 +36,10 @@ class ArcadeGame {
     required this.fallbackIcon,
     required this.themeColor,
     this.gameUrl,
+    this.gameAssetFolder,
   });
 }
+
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
@@ -59,15 +62,14 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
       id: 'voxel_game',
       title: '⛏️ VOXEL GAME',
       category: 'VOXEL WORLD',
-      description: 'Explore, build, and craft across infinite 3D voxel realms. Auto-synced with Aria AI backend — 100% of voxel physics & world generation runs on cloud servers so your phone runs smooth & cool.',
-      engine: 'C++ Voxel Engine',
+      description: 'Explore, build, and craft across infinite 3D voxel realms. Features procedural terrain, block destruction & placement, 60 FPS WebGL rendering, and full touch/keyboard controls.',
+      engine: 'Three.js / WebGL 3D',
       difficulty: 'Open World',
       isPlayable: true,
       fallbackIcon: LucideIcons.box,
       themeColor: Color(0xFF10B981), // Emerald Voxel Green
-      gameUrl: 'https://nexal-luanti.onrender.com/vnc.html?autoconnect=true&resize=scale&show_dot=true',
+      gameAssetFolder: 'assets/voxel',
     ),
-
 
     // ─── WORDL — 3D Delivery Simulation ───────────────────────────────────────
     ArcadeGame(
@@ -81,6 +83,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
       isPlayable: true,
       fallbackIcon: LucideIcons.globe,
       themeColor: AppTheme.cyan500,
+      gameAssetFolder: 'assets/wordl',
     ),
   ];
 
@@ -118,6 +121,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
         pageBuilder: (context, animation, secondaryAnimation) => GameWebViewScreen(
           gameUrl: game.gameUrl,
           gameTitle: game.title,
+          gameAssetFolder: game.gameAssetFolder ?? 'assets/voxel',
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
@@ -129,6 +133,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
       ),
     );
   }
+
 
   List<ArcadeGame> get _filteredGames {
     if (_selectedCategory == 'ALL') return _arcadeGames;

@@ -15,12 +15,16 @@ class GameWebViewScreen extends StatefulWidget {
   final String? gameUrl;
   /// Display name shown in loading overlay and help dialog.
   final String gameTitle;
+  /// Root asset folder for locally served games (default: 'assets/wordl' or 'assets/voxel').
+  final String gameAssetFolder;
 
   const GameWebViewScreen({
     super.key,
     this.gameUrl,
     this.gameTitle = 'WORDL',
+    this.gameAssetFolder = 'assets/wordl',
   });
+
 
   @override
   State<GameWebViewScreen> createState() => _GameWebViewScreenState();
@@ -187,7 +191,7 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
         }
 
         // Map request path to assets
-        final assetKey = 'assets/wordl$path';
+        final assetKey = '${widget.gameAssetFolder}$path';
         
         try {
           Uint8List buffer;
