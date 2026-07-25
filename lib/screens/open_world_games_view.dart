@@ -55,22 +55,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
   bool _isCheckingBackend = true;
   String _selectedCategory = 'ALL';
 
-  // Genuine playable games (⛏️ Voxel Game + WORDL 3D Sim)
+  // Genuine playable games (WORDL 3D Sim)
   final List<ArcadeGame> _arcadeGames = const [
-    // ─── ⛏️ VOXEL GAME — Open World Sandbox ────────────────────────────────────
-    ArcadeGame(
-      id: 'voxel_game',
-      title: '⛏️ VOXEL GAME',
-      category: 'VOXEL WORLD',
-      description: 'Explore, build, and craft across infinite 3D voxel realms. Features procedural terrain, block destruction & placement, 60 FPS WebGL rendering, and full touch/keyboard controls.',
-      engine: 'Three.js / WebGL 3D',
-      difficulty: 'Open World',
-      isPlayable: true,
-      fallbackIcon: LucideIcons.box,
-      themeColor: Color(0xFF10B981), // Emerald Voxel Green
-      gameAssetFolder: 'assets/voxel',
-    ),
-
     // ─── WORDL — 3D Delivery Simulation ───────────────────────────────────────
     ArcadeGame(
       id: 'wordl',
@@ -86,6 +72,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
       gameAssetFolder: 'assets/wordl',
     ),
   ];
+
 
   @override
   void initState() {
