@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,85 +10,29 @@ import '../home_screen.dart';
 import 'signup_screen.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Cyber Blue Background Painter (Metallic Ray Burst & Particles)
-// ──────────────────────────────────────────────────────────────────────────────
-class _CyberBackgroundPainter extends CustomPainter {
-  final double t; // 0..1 animation value
-
-  _CyberBackgroundPainter(this.t);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    // Deep space dark blue background base
-    paint.color = const Color(0xFF030712);
-    canvas.drawRect(Offset.zero & size, paint);
-
-    // Cyan/Blue light burst from center bottom
-    paint.shader = RadialGradient(
-      center: const Alignment(0.0, 0.6),
-      radius: 0.95,
-      colors: [
-        const Color(0xFF00B4D8).withValues(alpha: 0.28),
-        const Color(0xFF0077B6).withValues(alpha: 0.15),
-        const Color(0xFF030712).withValues(alpha: 0.95),
-      ],
-    ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, paint);
-
-    // Glowing electric blue light rays
-    final rayPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final center = Offset(size.width * 0.5, size.height * 0.7);
-    for (int i = 0; i < 16; i++) {
-      final angle = (i * math.pi / 8) + (math.sin(t * math.pi * 2) * 0.05);
-      final rayLength = size.width * (0.8 + 0.2 * math.sin(i + t * 5));
-      final endOffset = Offset(
-        center.dx + math.cos(angle) * rayLength,
-        center.dy - math.sin(angle) * rayLength,
-      );
-
-      rayPaint.shader = LinearGradient(
-        colors: [
-          const Color(0xFF00F0FF).withValues(alpha: 0.18),
-          const Color(0xFF0055FF).withValues(alpha: 0.05),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromPoints(center, endOffset));
-
-      canvas.drawLine(center, endOffset, rayPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_CyberBackgroundPainter old) => old.t != t;
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Chamfered Cyber Polygon Card Clipper & Painter
+// Chamfered Cyber Polygon Clipper & Border Painter (Exact Match to Reference UI)
 // ──────────────────────────────────────────────────────────────────────────────
 class _CyberCardClipper extends CustomClipper<Path> {
-  final double chamfer;
-  _CyberCardClipper({this.chamfer = 42.0});
+  final double topChamfer;
+  final double bottomChamfer;
+
+  _CyberCardClipper({this.topChamfer = 56.0, this.bottomChamfer = 56.0});
 
   @override
   Path getClip(Size size) {
     final path = Path();
-    // Top-Left
+    // Top-Left corner
     path.moveTo(0, 0);
-    // Top line to chamfer start
-    path.lineTo(size.width - chamfer, 0);
+    // Top edge to top-right chamfer
+    path.lineTo(size.width - topChamfer, 0);
     // Top-Right chamfer cut
-    path.lineTo(size.width, chamfer);
+    path.lineTo(size.width, topChamfer);
     // Right edge down
     path.lineTo(size.width, size.height);
-    // Bottom edge to chamfer start
-    path.lineTo(chamfer, size.height);
+    // Bottom edge to bottom-left chamfer
+    path.lineTo(bottomChamfer, size.height);
     // Bottom-Left chamfer cut
-    path.lineTo(0, size.height - chamfer);
+    path.lineTo(0, size.height - bottomChamfer);
     // Close back to top-left
     path.close();
     return path;
@@ -100,37 +43,42 @@ class _CyberCardClipper extends CustomClipper<Path> {
 }
 
 class _CyberCardBorderPainter extends CustomPainter {
-  final double chamfer;
-  final Color color;
+  final double topChamfer;
+  final double bottomChamfer;
+  final Color borderColor;
 
-  _CyberCardBorderPainter({this.chamfer = 42.0, required this.color});
+  _CyberCardBorderPainter({
+    this.topChamfer = 56.0,
+    this.bottomChamfer = 56.0,
+    required this.borderColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path()
       ..moveTo(0, 0)
-      ..lineTo(size.width - chamfer, 0)
-      ..lineTo(size.width, chamfer)
+      ..lineTo(size.width - topChamfer, 0)
+      ..lineTo(size.width, topChamfer)
       ..lineTo(size.width, size.height)
-      ..lineTo(chamfer, size.height)
-      ..lineTo(0, size.height - chamfer)
+      ..lineTo(bottomChamfer, size.height)
+      ..lineTo(0, size.height - bottomChamfer)
       ..close();
 
     final paint = Paint()
-      ..color = color
+      ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 1.2;
 
     canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(covariant _CyberCardBorderPainter oldDelegate) =>
-      oldDelegate.color != color;
+      oldDelegate.borderColor != borderColor;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Login Screen
+// Login Screen Component
 // ──────────────────────────────────────────────────────────────────────────────
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -139,14 +87,12 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
 
-  late AnimationController _bgCtrl;
   bool _isLoading = false;
   bool _isGoogleLoading = false;
   bool _obscureText = true;
@@ -156,18 +102,12 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
-    _bgCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
-
     _emailFocus.addListener(() => setState(() => _emailFocused = _emailFocus.hasFocus));
     _passFocus.addListener(() => setState(() => _passFocused = _passFocus.hasFocus));
   }
 
   @override
   void dispose() {
-    _bgCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _emailFocus.dispose();
@@ -293,61 +233,116 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF030712),
+      backgroundColor: Colors.black,
       resizeToAvoidBottomInset: true,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // ── Cyber Ray Background ──────────────────────────────────────────
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _bgCtrl,
-              builder: (_, _) => CustomPaint(
-                painter: _CyberBackgroundPainter(_bgCtrl.value),
+          // ── 3D Cyber Blue Radial Background ──────────────────────────────
+          Image.asset(
+            'assets/images/cyber_login_bg.png',
+            fit: BoxFit.cover,
+            errorBuilder: (ctx, err, stack) => Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.0, 0.5),
+                  radius: 0.9,
+                  colors: [Color(0xFF0088CC), Color(0xFF020914), Colors.black],
+                ),
               ),
             ),
           ),
 
-          // ── Content Container ─────────────────────────────────────────────
+          // ── Dark Edge Vignette Overlay ──────────────────────────────────
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.75),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Main Content Container ─────────────────────────────────────
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    // Left side metallic bracket tabs
-                    Positioned(
-                      left: 0,
-                      top: 40,
-                      child: Column(
-                        children: List.generate(
-                          3,
-                          (i) => Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            width: 8,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF00F0FF).withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF00F0FF).withValues(alpha: 0.5),
-                                  blurRadius: 8,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: SizedBox(
+                  width: 390,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Top-Left Metallic Bracket Tabs (3 Tabs)
+                      Positioned(
+                        left: -14,
+                        top: 48,
+                        child: Column(
+                          children: List.generate(
+                            3,
+                            (i) => Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              width: 14,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0E1A2A),
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  width: 1,
                                 ),
-                              ],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Main Cyber Chamfered Glass Card
-                    Padding(
-                      padding: const EdgeInsets.only(left: 18),
-                      child: _buildCyberGlassCard(),
-                    ),
-                  ],
+                      // Bottom-Right Metallic Bracket Tabs (3 Tabs)
+                      Positioned(
+                        right: -14,
+                        bottom: 60,
+                        child: Column(
+                          children: List.generate(
+                            3,
+                            (i) => Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              width: 14,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0E1A2A),
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Main Cyber Polygon Glass Card
+                      _buildCyberGlassCard(),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -358,26 +353,34 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildCyberGlassCard() {
-    const chamfer = 46.0;
-    final borderColor = const Color(0xFF00F0FF).withValues(alpha: 0.35);
+    const topChamfer = 56.0;
+    const bottomChamfer = 56.0;
+    final borderColor = Colors.white.withValues(alpha: 0.22);
 
     return CustomPaint(
-      foregroundPainter: _CyberCardBorderPainter(chamfer: chamfer, color: borderColor),
+      foregroundPainter: _CyberCardBorderPainter(
+        topChamfer: topChamfer,
+        bottomChamfer: bottomChamfer,
+        borderColor: borderColor,
+      ),
       child: ClipPath(
-        clipper: _CyberCardClipper(chamfer: chamfer),
+        clipper: _CyberCardClipper(
+          topChamfer: topChamfer,
+          bottomChamfer: bottomChamfer,
+        ),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(26, 28, 26, 32),
+            padding: const EdgeInsets.fromLTRB(28, 30, 28, 34),
             decoration: BoxDecoration(
-              color: const Color(0xFF0A1428).withValues(alpha: 0.70),
+              color: const Color(0xFF061122).withValues(alpha: 0.68),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF0F2B4A).withValues(alpha: 0.75),
+                  const Color(0xFF0B213D).withValues(alpha: 0.72),
                   const Color(0xFF06152B).withValues(alpha: 0.65),
-                  const Color(0xFF020914).withValues(alpha: 0.85),
+                  const Color(0xFF030B18).withValues(alpha: 0.85),
                 ],
               ),
             ),
@@ -385,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── Brand Header (INTECH / NEXAL) ───────────────────────────
+                // ── Brand Logo Header (INTECH) ─────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -393,22 +396,22 @@ class _LoginScreenState extends State<LoginScreen>
                       'INTECH',
                       style: GoogleFonts.orbitron(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 26,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 4,
+                        letterSpacing: 4.5,
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00F0FF).withValues(alpha: 0.12),
+                        color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF00F0FF).withValues(alpha: 0.3)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                       ),
                       child: Text(
                         'NEXAL v2.0',
                         style: GoogleFonts.shareTechMono(
-                          color: const Color(0xFF00F0FF),
+                          color: const Color(0xFF00E5FF),
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.5,
@@ -418,37 +421,37 @@ class _LoginScreenState extends State<LoginScreen>
                   ],
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 34),
 
-                // ── "Login with" Title & Subtitle ────────────────────────────
+                // ── Title & Subtitle ─────────────────────────────────────────
                 Text(
                   'Login with',
                   style: GoogleFonts.outfit(
                     color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Access the quantum network through your secure credentials.',
+                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore',
                   style: GoogleFonts.outfit(
-                    color: Colors.white.withValues(alpha: 0.55),
-                    fontSize: 12,
-                    height: 1.4,
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                    height: 1.45,
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                // ── Quick Option Pills (Option 1 / Option 2) ────────────────
+                // ── Option Pills Side-by-Side ────────────────────────────────
                 Row(
                   children: [
                     Expanded(
                       child: _buildOptionPill(
-                        label: 'Google',
-                        icon: LucideIcons.code2,
+                        label: 'Option 1',
+                        iconWidget: const Icon(LucideIcons.code2, size: 15, color: Colors.white),
                         isLoading: _isGoogleLoading,
                         onTap: (_isGoogleLoading || _isLoading) ? null : _handleGoogleLogin,
                       ),
@@ -456,8 +459,8 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(width: 14),
                     Expanded(
                       child: _buildOptionPill(
-                        label: 'Guest',
-                        icon: LucideIcons.zap,
+                        label: 'Option 2',
+                        iconWidget: const Icon(LucideIcons.code2, size: 15, color: Colors.white),
                         isLoading: false,
                         onTap: _isLoading ? null : _handleDemoLogin,
                       ),
@@ -467,18 +470,18 @@ class _LoginScreenState extends State<LoginScreen>
 
                 const SizedBox(height: 24),
 
-                // ── Translucent Divider Line ─────────────────────────────────
+                // ── Translucent Horizontal Divider ───────────────────────────
                 Divider(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: Colors.white.withValues(alpha: 0.15),
                   thickness: 1,
                 ),
 
                 const SizedBox(height: 24),
 
-                // ── Email Input Section ──────────────────────────────────────
+                // ── Email Input Field ────────────────────────────────────────
                 _buildFieldLabel('Email'),
                 const SizedBox(height: 8),
-                _buildPillTextField(
+                _buildPillInputField(
                   controller: _emailCtrl,
                   focusNode: _emailFocus,
                   isFocused: _emailFocused,
@@ -486,12 +489,12 @@ class _LoginScreenState extends State<LoginScreen>
                   keyboardType: TextInputType.emailAddress,
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // ── Password Input Section ───────────────────────────────────
+                // ── Password Input Field ─────────────────────────────────────
                 _buildFieldLabel('Password'),
                 const SizedBox(height: 8),
-                _buildPillTextField(
+                _buildPillInputField(
                   controller: _passCtrl,
                   focusNode: _passFocus,
                   isFocused: _passFocused,
@@ -502,7 +505,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                 const SizedBox(height: 10),
 
-                // Forgot Password link right aligned
+                // Forgot Password Link
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
@@ -510,9 +513,8 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Text(
                       'Forgot password?',
                       style: GoogleFonts.outfit(
-                        color: const Color(0xFF00F0FF).withValues(alpha: 0.8),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -520,7 +522,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                 const SizedBox(height: 28),
 
-                // ── Solid Bright White Primary Login CTA Button ──────────────
+                // ── Solid Bright White Primary CTA Button ────────────────────
                 _buildWhiteLoginButton(),
 
                 const SizedBox(height: 20),
@@ -561,7 +563,7 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Text(
                           'Sign Up',
                           style: GoogleFonts.outfit(
-                            color: const Color(0xFF00F0FF),
+                            color: const Color(0xFF00E5FF),
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
@@ -575,7 +577,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic);
+    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 
   Widget _buildFieldLabel(String label) {
@@ -585,14 +587,13 @@ class _LoginScreenState extends State<LoginScreen>
         color: Colors.white,
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.3,
       ),
     );
   }
 
   Widget _buildOptionPill({
     required String label,
-    required IconData icon,
+    required Widget iconWidget,
     required bool isLoading,
     required VoidCallback? onTap,
   }) {
@@ -601,12 +602,12 @@ class _LoginScreenState extends State<LoginScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           color: Colors.white.withValues(alpha: 0.04),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.20),
+            color: Colors.white.withValues(alpha: 0.22),
             width: 1,
           ),
         ),
@@ -619,11 +620,11 @@ class _LoginScreenState extends State<LoginScreen>
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white70,
+                  color: Colors.white,
                 ),
               )
             else ...[
-              Icon(icon, size: 16, color: Colors.white70),
+              iconWidget,
               const SizedBox(width: 8),
               Text(
                 label,
@@ -640,7 +641,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildPillTextField({
+  Widget _buildPillInputField({
     required TextEditingController controller,
     required FocusNode focusNode,
     required bool isFocused,
@@ -656,7 +657,7 @@ class _LoginScreenState extends State<LoginScreen>
         boxShadow: isFocused
             ? [
                 BoxShadow(
-                  color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                  color: const Color(0xFF00E5FF).withValues(alpha: 0.22),
                   blurRadius: 16,
                   spreadRadius: 1,
                 )
@@ -672,7 +673,7 @@ class _LoginScreenState extends State<LoginScreen>
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.outfit(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: Colors.white.withValues(alpha: 0.28),
             fontSize: 13,
           ),
           suffixIcon: onToggleObscure != null
@@ -687,8 +688,8 @@ class _LoginScreenState extends State<LoginScreen>
               : null,
           filled: true,
           fillColor: isFocused
-              ? const Color(0xFF00F0FF).withValues(alpha: 0.08)
-              : Colors.white.withValues(alpha: 0.05),
+              ? const Color(0xFF00E5FF).withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.06),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
@@ -699,7 +700,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Color(0xFF00F0FF), width: 1.5),
+            borderSide: const BorderSide(color: Color(0xFF00E5FF), width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
         ),
@@ -714,14 +715,14 @@ class _LoginScreenState extends State<LoginScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: double.infinity,
-        height: 50,
+        height: 48,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.35),
-              blurRadius: 20,
+              color: Colors.white.withValues(alpha: 0.3),
+              blurRadius: 18,
               offset: const Offset(0, 4),
             ),
           ],
@@ -732,17 +733,17 @@ class _LoginScreenState extends State<LoginScreen>
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                    color: Color(0xFF0A1428),
+                    color: Color(0xFF061122),
                     strokeWidth: 2.5,
                   ),
                 )
               : Text(
                   'Login',
                   style: GoogleFonts.outfit(
-                    color: const Color(0xFF0A1428),
+                    color: const Color(0xFF061122),
                     fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
                   ),
                 ),
         ),
