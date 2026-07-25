@@ -15,7 +15,7 @@ class GameWebViewScreen extends StatefulWidget {
   final String? gameUrl;
   /// Display name shown in loading overlay and help dialog.
   final String gameTitle;
-  /// Root asset folder for locally served games (default: 'assets/wordl' or 'assets/voxel').
+  /// Root asset folder for locally served games (default: 'assets/wordl').
   final String gameAssetFolder;
 
   const GameWebViewScreen({

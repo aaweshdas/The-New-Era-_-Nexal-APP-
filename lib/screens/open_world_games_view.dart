@@ -108,7 +108,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
         pageBuilder: (context, animation, secondaryAnimation) => GameWebViewScreen(
           gameUrl: game.gameUrl,
           gameTitle: game.title,
-          gameAssetFolder: game.gameAssetFolder ?? 'assets/voxel',
+          gameAssetFolder: game.gameAssetFolder ?? 'assets/wordl',
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
@@ -297,7 +297,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView> {
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
                           child: Row(
-                            children: ['ALL', 'VOXEL WORLD', '3D SIM'].map((cat) {
+                            children: ['ALL', '3D SIM'].map((cat) {
                               final isSelected = _selectedCategory == cat;
                               return GestureDetector(
                                 onTap: () => setState(() => _selectedCategory = cat),
