@@ -97,8 +97,6 @@ flutter:
     - assets/nav_icons/
     - assets/map/
     - assets/map/assets/
-    - assets/videos/Background.mp4
-    - assets/videos/startup.mp4
     - assets/videos/map_startup.mp4
     - assets/backgrounds/
     - assets/gallery/
