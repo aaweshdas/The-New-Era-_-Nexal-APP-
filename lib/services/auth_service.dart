@@ -224,6 +224,22 @@ class AuthService {
     }
   }
 
+  // ── Facebook OAuth Sign-In ────────────────────────────────────────────────
+  Future<bool> loginWithFacebook() async {
+    try {
+      final res = await _supabase.auth.signInWithOAuth(
+        OAuthProvider.facebook,
+        redirectTo: kIsWeb ? null : 'io.nexal.app://login-callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+      debugPrint('[AuthService] Facebook OAuth launch result: $res');
+      return res;
+    } catch (err) {
+      debugPrint('[AuthService] Facebook OAuth failed: $err');
+      return false;
+    }
+  }
+
   // ── Signup ────────────────────────────────────────────────────────────────
   Future<bool> signup(String name, String email, String password) async {
     try {

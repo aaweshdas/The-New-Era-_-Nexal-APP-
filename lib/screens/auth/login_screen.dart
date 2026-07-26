@@ -36,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen>
   late AnimationController _bgCtrl;
   bool _isLoading = false;
   bool _isGoogleLoading = false;
+  bool _isFacebookLoading = false;
   bool _obscureText = true;
   bool _obscureConfirmText = true;
 
@@ -199,6 +200,44 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _handleFacebookLogin() async {
+    HapticFeedback.lightImpact();
+    setState(() => _isFacebookLoading = true);
+
+    final success = await AuthService.instance.loginWithFacebook();
+    if (!mounted) return;
+
+    if (AuthService.instance.isLoggedIn) {
+      setState(() => _isFacebookLoading = false);
+      HapticFeedback.mediumImpact();
+      _navigateToHome();
+      return;
+    }
+
+    if (!success) {
+      setState(() => _isFacebookLoading = false);
+      _showSnackBar('Facebook Sign-In cancelled or unavailable.', isError: true);
+      return;
+    }
+
+    StreamSubscription? sub;
+    sub = AuthService.instance.authStateChanges.listen((session) {
+      if (!mounted) return;
+      if (session != null) {
+        sub?.cancel();
+        setState(() => _isFacebookLoading = false);
+        HapticFeedback.mediumImpact();
+        _navigateToHome();
+      }
+    });
+
+    await Future.delayed(const Duration(seconds: 45));
+    if (mounted && _isFacebookLoading) {
+      sub.cancel();
+      setState(() => _isFacebookLoading = false);
+    }
+  }
+
   void _showSnackBar(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -277,6 +316,11 @@ class _LoginScreenState extends State<LoginScreen>
 
                             // ── Google Sign-In ────────────────────────────────────
                             _buildGoogleButton(),
+
+                            const SizedBox(height: 12),
+
+                            // ── Facebook Sign-In ──────────────────────────────────
+                            _buildFacebookButton(),
 
                             const SizedBox(height: 12),
 
@@ -891,6 +935,114 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       ),
     ).animate().fadeIn(delay: 680.ms, duration: 500.ms);
+  }
+
+  Widget _buildFacebookButton() {
+    final busy = _isLoading || _isGoogleLoading || _isFacebookLoading;
+    return GestureDetector(
+      onTap: busy ? null : _handleFacebookLogin,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            width: double.infinity,
+            height: 54,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              color: Colors.black.withValues(alpha: busy ? 0.20 : 0.40),
+              border: Border.all(
+                color: const Color(0xFF1877F2).withValues(alpha: 0.60),
+                width: 1.4,
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1877F2).withValues(alpha: 0.25),
+                  Colors.black.withValues(alpha: 0.30),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1877F2).withValues(alpha: 0.20),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isFacebookLoading)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFF1877F2),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'f',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                height: 1.1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _isFacebookLoading ? 'Opening Facebook...' : 'Continue with Facebook',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 22,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.40),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ).animate().fadeIn(delay: 710.ms, duration: 500.ms);
   }
 
   Widget _buildGuestButton() {
