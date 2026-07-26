@@ -248,9 +248,9 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Brand Logo & Nexal Header (Positioned Top of Screen) ──────────────
+          // ── Brand Logo & Nexal Header (Positioned downwards from top edge) ──
           Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
+            top: MediaQuery.of(context).padding.top + 36,
             left: 0,
             right: 0,
             child: _buildBrandHeader(),
