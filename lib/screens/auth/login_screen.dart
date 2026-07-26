@@ -300,15 +300,17 @@ class _LoginScreenState extends State<LoginScreen>
   // ──────────────────────────────────────────────────────────────────────────
   // Brand Header (Black & White Glassmorphism Squircle Logo)
   // ──────────────────────────────────────────────────────────────────────────
+  // Brand Header (Black & White Glassmorphism Squircle Logo + Main Dashboard Font Headline)
+  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildBrandHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Enlarged Liquid Glass Squircle Logo Container ─────────────────
+        // ── Liquid Glass Squircle Logo Container (Left Side) ───────────────
         Container(
-          width: 88,
-          height: 88,
+          width: 84,
+          height: 84,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -349,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen>
                         width: 1.8,
                       ),
                     ),
-                    padding: const EdgeInsets.all(11),
+                    padding: const EdgeInsets.all(10),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Image.asset(
@@ -363,7 +365,7 @@ class _LoginScreenState extends State<LoginScreen>
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: 34,
+                    height: 32,
                     child: IgnorePointer(
                       child: Container(
                         decoration: BoxDecoration(
@@ -389,38 +391,39 @@ class _LoginScreenState extends State<LoginScreen>
             .fadeIn(duration: 700.ms)
             .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
 
-        const SizedBox(width: 20),
+        const SizedBox(width: 18),
 
-        // ── Headline Typography on the Right Side ────────────────────────
+        // ── Right Side Typography: Nexal (Big Main Font) & The New Era ─────
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Line 1: Nexal (Enlarged Prominent Headline)
+            // Line 1: Nexal (Big Main Dashboard Font - Outfit w900)
             ShaderMask(
               shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFFFFFFF), Color(0xFFF1F5F9), Color(0xFF94A3B8)],
+                colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFCBD5E1)],
               ).createShader(bounds),
               child: Text(
                 'Nexal',
                 style: GoogleFonts.outfit(
                   color: Colors.white,
-                  fontSize: 38,
+                  fontSize: 44,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
+                  letterSpacing: 1.5,
+                  height: 1.05,
                 ),
               ),
             ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
 
-            const SizedBox(height: 1),
+            const SizedBox(height: 2),
 
-            // Line 2: The New Era (Enlarged Sub-Headline)
+            // Line 2: The New Era (Sub-Headline in Main Dashboard Font)
             Text(
               'The New Era',
               style: GoogleFonts.outfit(
-                color: Colors.white70,
-                fontSize: 17,
-                letterSpacing: 3.5,
+                color: Colors.white.withValues(alpha: 0.82),
+                fontSize: 18,
+                letterSpacing: 2.8,
                 fontWeight: FontWeight.w600,
               ),
             ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
