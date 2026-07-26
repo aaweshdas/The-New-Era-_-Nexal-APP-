@@ -287,39 +287,60 @@ class _SettingsModalState extends State<SettingsModal> {
     setState(() => _startingAllBackends = true);
     HapticFeedback.heavyImpact();
 
-    final triggerUrls = [
-      'http://localhost:3007/start-all',
-      'http://localhost:3005/game/api/start-all',
-      'http://localhost:3008/settings/start-all',
-    ];
-    for (final url in triggerUrls) {
-      try {
-        await http.post(Uri.parse(url)).timeout(const Duration(seconds: 2));
-      } catch (_) {}
-    }
-
+    // ── Step 1: Try to launch the Gateway .bat via OS process ──────────────
+    // The Gateway (gateway.ts) itself spawns ALL sub-backends automatically.
+    // We open it in a new detached cmd window so the Flutter process doesn't block.
     if (!kIsWeb) {
-      try {
-        final candidatePaths = [
-          's:/All Code/Antigravity/Nexal_App/Backend/start_all_backends.bat',
-          '${Directory.current.path}/Backend/start_all_backends.bat',
-        ];
-        for (final p in candidatePaths) {
-          final f = File(p);
-          if (f.existsSync()) {
-            await Process.start('cmd.exe', ['/c', f.path], workingDirectory: f.parent.path);
+      // Candidate paths — first absolute known path, then relative to cwd
+      final candidatePaths = [
+        r's:\All Code\Antigravity\Nexal_App\Backend\start_all_backends.bat',
+        '${Directory.current.path}\\Backend\\start_all_backends.bat',
+        '${Directory.current.path}/Backend/start_all_backends.bat',
+      ];
+
+      bool launched = false;
+      for (final p in candidatePaths) {
+        final f = File(p);
+        if (f.existsSync()) {
+          try {
+            // /c → run cmd and exit (the .bat itself opens a new 'start' window)
+            await Process.start(
+              'cmd.exe',
+              ['/c', f.path],
+              workingDirectory: f.parent.path,
+              mode: ProcessStartMode.detached,
+            );
+            launched = true;
+            debugPrint('[Settings] Launched .bat from: ${f.path}');
             break;
+          } catch (e) {
+            debugPrint('[Settings] .bat launch error: $e');
           }
         }
-      } catch (e) {
-        debugPrint('[Settings] Batch launch error: $e');
+      }
+
+      if (!launched) {
+        // Fallback: try launching gateway.ts directly with npx tsx
+        try {
+          await Process.start(
+            'cmd.exe',
+            ['/c', 'start', '"Nexal Gateway"', 'cmd', '/k', 'npx tsx src/gateway.ts'],
+            workingDirectory: r's:\All Code\Antigravity\Nexal_App\Backend',
+            mode: ProcessStartMode.detached,
+          );
+          debugPrint('[Settings] Direct gateway.ts fallback launched');
+        } catch (e) {
+          debugPrint('[Settings] Fallback gateway launch error: $e');
+        }
       }
     }
 
-    for (int i = 0; i < 5; i++) {
-      await Future.delayed(const Duration(seconds: 2));
+    // ── Step 2: Poll for backends to come online (up to 30 s) ──────────────
+    for (int i = 0; i < 10; i++) {
+      await Future.delayed(const Duration(seconds: 3));
       await _checkAllBackendsHealth();
-      if (_backendHealth['Gateway (10000)'] == true) break;
+      final count = _backendHealth.values.where((v) => v).length;
+      if (count >= 6) break; // all main backends up
     }
 
     if (mounted) {
