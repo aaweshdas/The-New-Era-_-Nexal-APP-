@@ -800,11 +800,11 @@ class _AIAssistViewState extends State<AIAssistView>
         }
       }
       if (!launched) {
-        // Fallback: launch gateway.ts directly
+        // Fallback: launch gateway.ts directly with npx.cmd
         try {
           await Process.start(
-            'cmd.exe',
-            ['/c', 'start', '"Nexal Gateway"', 'cmd', '/k', 'npx tsx src/gateway.ts'],
+            'npx.cmd',
+            ['tsx', 'src/gateway.ts'],
             workingDirectory: r's:\All Code\Antigravity\Nexal_App\Backend',
             mode: ProcessStartMode.detached,
           );

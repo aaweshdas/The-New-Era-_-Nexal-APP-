@@ -320,11 +320,11 @@ class _SettingsModalState extends State<SettingsModal> {
       }
 
       if (!launched) {
-        // Fallback: try launching gateway.ts directly with npx tsx
+        // Fallback: try launching gateway.ts directly with npx.cmd
         try {
           await Process.start(
-            'cmd.exe',
-            ['/c', 'start', '"Nexal Gateway"', 'cmd', '/k', 'npx tsx src/gateway.ts'],
+            'npx.cmd',
+            ['tsx', 'src/gateway.ts'],
             workingDirectory: r's:\All Code\Antigravity\Nexal_App\Backend',
             mode: ProcessStartMode.detached,
           );
