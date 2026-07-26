@@ -72,7 +72,7 @@ class SettingsSubPageHeader extends StatelessWidget {
             ),
           ),
           // Optional trailing action
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );
