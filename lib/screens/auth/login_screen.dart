@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Contrast Vignette Overlay ──────────────────────────────────
+          // ── Adaptive Brightness Overlay (Lets background light shine through) ───
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -240,8 +240,8 @@ class _LoginScreenState extends State<LoginScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.20),
-                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.05),
+                    Colors.black.withValues(alpha: 0.25),
                   ],
                 ),
               ),
@@ -455,7 +455,7 @@ class _LoginScreenState extends State<LoginScreen>
           filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Stack(
             children: [
-              // Liquid Gel Gradient Fill
+              // Liquid Glass Adaptive Luminance Gradient Fill
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(38),
@@ -463,15 +463,15 @@ class _LoginScreenState extends State<LoginScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withValues(alpha: 0.22),
-                      const Color(0xFF311B92).withValues(alpha: 0.25),
-                      const Color(0xFF0D47A1).withValues(alpha: 0.20),
-                      Colors.white.withValues(alpha: 0.08),
+                      Colors.white.withValues(alpha: 0.28),
+                      const Color(0xFFA855F7).withValues(alpha: 0.15),
+                      const Color(0xFF00E5FF).withValues(alpha: 0.10),
+                      Colors.white.withValues(alpha: 0.12),
                     ],
-                    stops: const [0.0, 0.35, 0.70, 1.0],
+                    stops: const [0.0, 0.40, 0.75, 1.0],
                   ),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: Colors.white.withValues(alpha: 0.65),
                     width: 1.6,
                   ),
                 ),
