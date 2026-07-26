@@ -228,6 +228,9 @@ class _LoginScreenState extends State<LoginScreen>
             child: Image.asset(
               'assets/login BG.png',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              width: double.infinity,
+              height: double.infinity,
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
           ),
@@ -241,30 +244,31 @@ class _LoginScreenState extends State<LoginScreen>
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.black.withValues(alpha: 0.15),
-                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.35),
                   ],
                 ),
               ),
             ),
           ),
 
-          // ── Main Content (Logo & Auth Card shifted downwards together) ───
+          // ── Main Content (Vertically Centered & Full Screen Balanced) ─────
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  // ── Brand Logo & Nexal Header ────────────────────────────
-                  _buildBrandHeader(),
-
-                  const SizedBox(height: 24),
-
-                  // ── Black & White Glassmorphism Combined Auth Card ─────
-                  _buildAuthCard(),
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ── Brand Logo & Nexal Header ────────────────────────────
+                    _buildBrandHeader(),
 
                     const SizedBox(height: 20),
+
+                    // ── Black & White Glassmorphism Combined Auth Card ─────
+                    _buildAuthCard(),
+
+                    const SizedBox(height: 18),
 
                     // ── Google Sign-In ────────────────────────────────────
                     _buildGoogleButton(),
@@ -279,16 +283,15 @@ class _LoginScreenState extends State<LoginScreen>
                     // ── Guest Button ──────────────────────────────────────
                     _buildGuestButton(),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 22),
 
                     // ── Mode Switcher Link ─────────────────────────────────
                     _buildModeToggleLink(),
-
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
+          ),
           ],
         ),
       );
