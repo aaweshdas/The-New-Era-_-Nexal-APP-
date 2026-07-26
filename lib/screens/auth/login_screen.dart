@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passFocus = FocusNode();
   final _confirmPassFocus = FocusNode();
 
-  late AnimationController _bgCtrl;
+  // _bgCtrl removed — was unused (caused free vsync callbacks every frame)
   bool _isLoading = false;
   bool _isGoogleLoading = false;
   bool _obscureText = true;
@@ -49,17 +49,24 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
-    _bgCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    )..repeat();
+    // Note: _bgCtrl removed — was unused, caused unnecessary vsync callbacks
 
-    _nameFocus.addListener(() => setState(() => _nameFocused = _nameFocus.hasFocus));
-    _emailFocus.addListener(() => setState(() => _emailFocused = _emailFocus.hasFocus));
-    _passFocus.addListener(() => setState(() => _passFocused = _passFocus.hasFocus));
-    _confirmPassFocus.addListener(() => setState(() => _confirmPassFocused = _confirmPassFocus.hasFocus));
+    _nameFocus.addListener(_onFocusChange);
+    _emailFocus.addListener(_onFocusChange);
+    _passFocus.addListener(_onFocusChange);
+    _confirmPassFocus.addListener(_onFocusChange);
 
     _passCtrl.addListener(_evaluateStrength);
+  }
+
+  void _onFocusChange() {
+    if (!mounted) return;
+    setState(() {
+      _nameFocused        = _nameFocus.hasFocus;
+      _emailFocused       = _emailFocus.hasFocus;
+      _passFocused        = _passFocus.hasFocus;
+      _confirmPassFocused = _confirmPassFocus.hasFocus;
+    });
   }
 
   void _evaluateStrength() {
@@ -74,11 +81,15 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   void dispose() {
-    _bgCtrl.dispose();
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _confirmPassCtrl.dispose();
+
+    _nameFocus.removeListener(_onFocusChange);
+    _emailFocus.removeListener(_onFocusChange);
+    _passFocus.removeListener(_onFocusChange);
+    _confirmPassFocus.removeListener(_onFocusChange);
 
     _nameFocus.dispose();
     _emailFocus.dispose();
@@ -449,10 +460,11 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ],
       ),
-      child: ClipRRect(
+      child: RepaintBoundary(
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(38),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Stack(
             children: [
               // Black & White Glassmorphism Gradient Fill
@@ -618,6 +630,7 @@ class _LoginScreenState extends State<LoginScreen>
             ],
           ),
         ),
+      ),
       ),
     )
         .animate()
@@ -814,9 +827,7 @@ class _LoginScreenState extends State<LoginScreen>
       onTap: busy ? null : _handleGoogleLogin,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
+        child: Container(
             width: double.infinity,
             height: 54,
             decoration: BoxDecoration(
@@ -917,7 +928,6 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ),
-      ),
     ).animate().fadeIn(delay: 680.ms, duration: 500.ms);
   }
 
@@ -963,7 +973,6 @@ class _LoginScreenState extends State<LoginScreen>
               ],
             ),
           ),
-        ),
       ),
     ).animate().fadeIn(delay: 750.ms, duration: 500.ms);
   }
@@ -1009,9 +1018,7 @@ class _LoginScreenState extends State<LoginScreen>
   }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: AnimatedContainer(
+      child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
@@ -1098,7 +1105,6 @@ class _LoginScreenState extends State<LoginScreen>
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -1114,9 +1120,7 @@ class _LoginScreenState extends State<LoginScreen>
       onTap: onPressed,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: AnimatedContainer(
+        child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             width: double.infinity,
             height: 56,
@@ -1195,7 +1199,6 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ),
-      ),
     );
   }
 }
