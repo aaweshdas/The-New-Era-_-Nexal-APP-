@@ -1922,7 +1922,7 @@ class _SettingsModalState extends State<SettingsModal> {
         ...[
           (LucideIcons.helpCircle, 'Help Center',
               'Documentation, FAQs, tutorials',      null),
-          (LucideIcons.code2, 'Source Repository',
+          (LucideIcons.code, 'Source Repository',
               'View source code',                    null),
           (LucideIcons.mail, 'Send Feedback',
               'Report bugs, suggest features',       'New'),

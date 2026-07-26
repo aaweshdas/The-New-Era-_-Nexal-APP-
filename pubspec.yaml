@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2
   google_fonts: ^8.0.0
+  lucide_icons: ^0.257.0
+  lucide_icons_flutter: ^1.1.0
   provider: ^6.1.5+1
   glassmorphism_ui: ^0.3.0
   sensors_plus: ^7.0.0
@@ -67,8 +69,6 @@ dependencies:
   qr_flutter: ^4.1.0
   supabase_flutter: ^2.8.0
   google_sign_in: ^6.2.1
-  lucide_icons_flutter: ^3.1.15
-  lucide_icons: ^0.257.0
 
 
 
@@ -98,7 +98,7 @@ flutter:
     - assets/nav_icons/
     - assets/map/
     - assets/map/assets/
-    - assets/videos/map_startup.mp4
+    - assets/videos/
     - assets/backgrounds/
     - assets/gallery/
     - assets/images/
@@ -108,6 +108,7 @@ flutter:
     - assets/search_background.png
     - assets/normal_bg.png
     - assets/Arcade BG.png
+    - assets/login BG.png
     - assets/saved_icon.png
     - assets/3d_map.png
     - assets/wordl/

@@ -25,14 +25,12 @@ class _SplashRouterState extends State<SplashRouter> {
     if (!mounted) return;
 
     // ── Routing logic ────────────────────────────────────────────────────────
-    // ALWAYS check the live Supabase session to decide auth state.
     final supabase = Supabase.instance.client;
     final session = supabase.auth.currentSession;
 
     final bool hasValidSession = session != null &&
         !_isSessionExpired(session);
 
-    // Direct routing: No slides, no onboarding delay, no video player before login
     final Widget nextScreen = hasValidSession ? const HomeScreen() : const LoginScreen();
 
     if (!mounted) return;
@@ -42,7 +40,7 @@ class _SplashRouterState extends State<SplashRouter> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 200),
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }
