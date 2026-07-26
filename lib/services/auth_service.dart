@@ -174,9 +174,15 @@ class AuthService {
     // 1. Try native Google Sign-In with configured Client ID
     try {
       final googleSignIn = GoogleSignIn(
+        clientId: googleClientId,
         serverClientId: googleClientId,
         scopes: ['email', 'profile'],
       );
+
+      // Clear previous account state to ensure fresh account selection prompt
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {}
 
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
