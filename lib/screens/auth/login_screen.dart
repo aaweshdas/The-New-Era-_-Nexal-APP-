@@ -302,38 +302,40 @@ class _LoginScreenState extends State<LoginScreen>
   // Brand Header (Black & White Glassmorphism Squircle Logo)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildBrandHeader() {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Black & White Glassmorphism Squircle Container
+        // ── Liquid Glass Squircle Logo Container ─────────────────────────
         Container(
-          width: 96,
-          height: 96,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: Colors.white.withValues(alpha: 0.25),
-                blurRadius: 36,
+                blurRadius: 28,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
               ),
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.80),
-                blurRadius: 40,
+                blurRadius: 36,
                 spreadRadius: 2,
-                offset: const Offset(0, 10),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(20),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
               child: Stack(
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(26),
+                      borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -345,12 +347,12 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.75),
-                        width: 1.6,
+                        width: 1.5,
                       ),
                     ),
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(10),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.asset(
                         'assets/nexal_logo.png',
                         fit: BoxFit.cover,
@@ -362,11 +364,11 @@ class _LoginScreenState extends State<LoginScreen>
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: 38,
+                    height: 28,
                     child: IgnorePointer(
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -385,44 +387,46 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         )
             .animate()
-            .fadeIn(duration: 800.ms)
-            .scale(begin: const Offset(0.75, 0.75), curve: Curves.elasticOut, duration: 900.ms),
+            .fadeIn(duration: 700.ms)
+            .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
 
-        const SizedBox(height: 18),
+        const SizedBox(width: 18),
 
-        // Brand Title in Pure Metallic Silver/White Shader
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: ShaderMask(
+        // ── Brand Text on the Right Side ─────────────────────────────────
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Line 1: Nexal
+            ShaderMask(
               shaderCallback: (bounds) => const LinearGradient(
                 colors: [Color(0xFFFFFFFF), Color(0xFFE2E8F0), Color(0xFF94A3B8)],
               ).createShader(bounds),
               child: Text(
-                'NEXAL THE NEW ERA',
-                style: GoogleFonts.rye(
+                'Nexal',
+                style: GoogleFonts.outfit(
                   color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 3,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
                 ),
               ),
-            ),
-          ),
-        ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
+            ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
 
-        const SizedBox(height: 6),
+            const SizedBox(height: 2),
 
-        Text(
-          'Liquid Glass Quantum Portal',
-          style: GoogleFonts.outfit(
-            color: Colors.white70,
-            fontSize: 12,
-            letterSpacing: 2.5,
-            fontWeight: FontWeight.w500,
-          ),
-        ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+            // Line 2: The New Era
+            Text(
+              'The New Era',
+              style: GoogleFonts.outfit(
+                color: Colors.white70,
+                fontSize: 15,
+                letterSpacing: 3,
+                fontWeight: FontWeight.w600,
+              ),
+            ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
+          ],
+        ),
       ],
     );
   }
