@@ -387,9 +387,9 @@ class _LoginScreenState extends State<LoginScreen>
 
               const SizedBox(height: 4),
 
-              // Line 2: The New Era (Indented Right under Nexal, size 22)
+              // Line 2: The New Era (Indented further Right under NEXAL, size 22)
               Padding(
-                padding: const EdgeInsets.only(left: 36.0),
+                padding: const EdgeInsets.only(left: 48.0),
                 child: Text(
                   'The New Era',
                   style: GoogleFonts.rye(
