@@ -248,15 +248,15 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Brand Logo & Nexal Header (Positioned downwards from top edge) ──
+          // ── Brand Logo & Nexal Header (Shifted downwards) ───────────────
           Positioned(
-            top: MediaQuery.of(context).padding.top + 36,
+            top: MediaQuery.of(context).padding.top + 64,
             left: 0,
             right: 0,
             child: _buildBrandHeader(),
           ),
 
-          // ── Main Content (Login box remains in its exact position) ───────
+          // ── Main Content (Shifted downwards in sync) ──────────────────────
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -265,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 70),
+                    const SizedBox(height: 110),
 
                     // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
