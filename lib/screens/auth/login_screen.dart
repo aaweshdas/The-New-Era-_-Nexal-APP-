@@ -251,47 +251,60 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Main Content (Vertically Centered & Full Screen Balanced) ─────
+          // ── Main Content (Logo Centered in Top Space Above Auth Card) ──────
           SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 24),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
+                        child: Column(
+                          children: [
+                            // ── Logo Header (Centered in middle space between top of screen & auth card) ──
+                            Expanded(
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  child: _buildBrandHeader(),
+                                ),
+                              ),
+                            ),
 
-                    // ── Brand Logo & Nexal Header (Positioned in middle of top & sign-in panel) ──
-                    _buildBrandHeader(),
+                            // ── Black & White Glassmorphism Combined Auth Card ─────
+                            _buildAuthCard(),
 
-                    const SizedBox(height: 28),
+                            const SizedBox(height: 18),
 
-                    // ── Black & White Glassmorphism Combined Auth Card ─────
-                    _buildAuthCard(),
+                            // ── Google Sign-In ────────────────────────────────────
+                            _buildGoogleButton(),
 
-                    const SizedBox(height: 18),
+                            const SizedBox(height: 12),
 
-                    // ── Google Sign-In ────────────────────────────────────
-                    _buildGoogleButton(),
+                            // ── Divider ───────────────────────────────────────────
+                            _buildDivider(),
 
-                    const SizedBox(height: 12),
+                            const SizedBox(height: 12),
 
-                    // ── Divider ───────────────────────────────────────────
-                    _buildDivider(),
+                            // ── Guest Button ──────────────────────────────────────
+                            _buildGuestButton(),
 
-                    const SizedBox(height: 12),
+                            const SizedBox(height: 20),
 
-                    // ── Guest Button ──────────────────────────────────────
-                    _buildGuestButton(),
+                            // ── Mode Switcher Link ─────────────────────────────────
+                            _buildModeToggleLink(),
 
-                    const SizedBox(height: 22),
-
-                    // ── Mode Switcher Link ─────────────────────────────────
-                    _buildModeToggleLink(),
-                  ],
-                ),
-              ),
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           ],
