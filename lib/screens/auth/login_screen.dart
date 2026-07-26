@@ -838,27 +838,20 @@ class _LoginScreenState extends State<LoginScreen>
                         )
                       else
                         Container(
-                          width: 24,
-                          height: 24,
+                          width: 26,
+                          height: 26,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
+                                color: Colors.black.withValues(alpha: 0.25),
                                 blurRadius: 6,
                               ),
                             ],
                           ),
-                          child: Center(
-                            child: Text(
-                              'G',
-                              style: GoogleFonts.outfit(
-                                color: const Color(0xFF4285F4),
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          child: const Center(
+                            child: GoogleGIcon(size: 16),
                           ),
                         ),
                       const SizedBox(width: 12),
@@ -1177,4 +1170,67 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Custom 4-Color Official Google 'G' Logo Painter (Blue, Red, Yellow, Green)
+// ──────────────────────────────────────────────────────────────────────────────
+class GoogleGIcon extends StatelessWidget {
+  final double size;
+  const GoogleGIcon({super.key, this.size = 18});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _GoogleGLogoPainter(),
+    );
+  }
+}
+
+class _GoogleGLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+    final double cx = w / 2;
+    final double cy = h / 2;
+    final double radius = w * 0.42;
+    final double strokeWidth = w * 0.22;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: radius);
+
+    // 1. Red Top Arc (#EA4335)
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, -1.95, 1.9, false, paint);
+
+    // 2. Yellow Left Arc (#FBBC05)
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, -0.05, 1.15, false, paint);
+
+    // 3. Green Bottom Arc (#34A853)
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, 1.1, 1.25, false, paint);
+
+    // 4. Blue Right Arc (#4285F4)
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, -0.7, 0.75, false, paint);
+
+    // Horizontal crossbar of 'G' (#4285F4)
+    final barPaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTRB(cx - strokeWidth * 0.1, cy - strokeWidth / 2, cx + radius + strokeWidth * 0.4, cy + strokeWidth / 2),
+      barPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
