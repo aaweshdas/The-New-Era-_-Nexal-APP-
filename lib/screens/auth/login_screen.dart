@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen>
           Positioned.fill(
             child: Image.asset(
               'assets/login BG.png',
-              fit: BoxFit.cover,
+              fit: BoxFit.fill,
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
           ),
