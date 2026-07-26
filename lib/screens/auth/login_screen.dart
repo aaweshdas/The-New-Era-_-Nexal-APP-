@@ -260,10 +260,12 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ── Brand Logo & Nexal Header ────────────────────────────
+                    const SizedBox(height: 24),
+
+                    // ── Brand Logo & Nexal Header (Positioned in middle of top & sign-in panel) ──
                     _buildBrandHeader(),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
 
                     // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
