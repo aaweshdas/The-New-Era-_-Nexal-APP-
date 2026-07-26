@@ -262,9 +262,9 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     const SizedBox(height: 16),
 
-                    // ── Brand Logo Header (Shifted 20% upwards without moving login panel) ──
+                    // ── Brand Logo Header (Shifted upwards without moving login panel) ──
                     Transform.translate(
-                      offset: const Offset(0, -22.0),
+                      offset: const Offset(0, -45.0),
                       child: _buildBrandHeader(),
                     ),
 
