@@ -362,14 +362,14 @@ class _LoginScreenState extends State<LoginScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Line 1: Nexal (Enlarged Rye Font - size 56)
+              // Line 1: NEXAL (Uppercase Rye Font - size 56)
               Text(
-                'Nexal',
+                'NEXAL',
                 style: GoogleFonts.rye(
                   color: Colors.white,
                   fontSize: 56,
                   height: 1.05,
-                  letterSpacing: 1.5,
+                  letterSpacing: 2.0,
                 ),
               )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
