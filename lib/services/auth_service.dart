@@ -174,14 +174,13 @@ class AuthService {
     // 1. Try native Google Sign-In with configured Client ID
     try {
       final googleSignIn = GoogleSignIn(
-        clientId: googleClientId,
         serverClientId: googleClientId,
         scopes: ['email', 'profile'],
       );
 
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        // User explicitly cancelled the Google prompt
+        debugPrint('[AuthService] Google Sign-In cancelled by user.');
         return false;
       }
 
@@ -196,20 +195,22 @@ class AuthService {
           accessToken: accessToken,
         );
         if (res.session != null) {
+          debugPrint('[AuthService] Native Google Sign-In successful!');
           return true;
         }
       }
     } catch (e) {
-      debugPrint('[AuthService] Native Google Sign-In not supported or error: $e. Using Supabase OAuth fallback...');
+      debugPrint('[AuthService] Native Google Sign-In notice: $e. Falling back to Supabase OAuth browser flow...');
     }
 
     // 2. Fallback to Supabase OAuth browser flow (Desktop / Web / Unsupported native)
     try {
       final res = await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'io.nexal.app://login-callback',
+        redirectTo: kIsWeb ? null : 'io.nexal.app://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
+      debugPrint('[AuthService] Supabase OAuth browser launch result: $res');
       return res;
     } catch (err) {
       debugPrint('[AuthService] Google OAuth fallback failed: $err');
