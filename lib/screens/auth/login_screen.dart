@@ -248,27 +248,21 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Brand Logo & Nexal Header (Shifted downwards) ───────────────
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 64,
-            left: 0,
-            right: 0,
-            child: _buildBrandHeader(),
-          ),
-
-          // ── Main Content (Shifted downwards in sync) ──────────────────────
+          // ── Main Content (Logo & Auth Card shifted downwards together) ───
           SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 110),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(26, 140, 26, 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  // ── Brand Logo & Nexal Header ────────────────────────────
+                  _buildBrandHeader(),
 
-                    // ── Black & White Glassmorphism Combined Auth Card ─────
-                    _buildAuthCard(),
+                  const SizedBox(height: 24),
+
+                  // ── Black & White Glassmorphism Combined Auth Card ─────
+                  _buildAuthCard(),
 
                     const SizedBox(height: 20),
 
@@ -295,10 +289,9 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
