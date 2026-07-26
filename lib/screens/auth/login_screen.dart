@@ -322,83 +322,26 @@ class _LoginScreenState extends State<LoginScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Liquid Glass Squircle Logo Container (Left Side) ───────────────
+        // ── Clean Logo Container (No Outline or Border) ───────────────────
         Container(
           width: 84,
           height: 84,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.30),
-                blurRadius: 32,
-                spreadRadius: 3,
-                offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.85),
-                blurRadius: 40,
+                color: Colors.black.withValues(alpha: 0.65),
+                blurRadius: 28,
                 spreadRadius: 2,
-                offset: const Offset(0, 10),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.40),
-                          Colors.black.withValues(alpha: 0.50),
-                          Colors.white.withValues(alpha: 0.14),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.80),
-                        width: 1.8,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(10),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        'assets/nexal_logo.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  // Upper Specular Chrome Lens Highlight Arc
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 32,
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.65),
-                              Colors.white.withValues(alpha: 0.0),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            borderRadius: BorderRadius.circular(22),
+            child: Image.asset(
+              'assets/nexal_logo.png',
+              fit: BoxFit.cover,
             ),
           ),
         )
