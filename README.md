@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="assets/nexal_logo.png" width="120" alt="Nexal Logo" />
 </p>
 
@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>One app. Everything you need.</strong><br/>
-  <sub>A unified super app — social, AI, maps, gaming, and messaging in a single install.</sub>
+  <sub>A unified super app — social feed, AI assistant, self-hosted navigation, 3D gaming, real-time messaging, and smart camera in a single install.</sub>
 </p>
 
 <p align="center">
@@ -14,85 +14,99 @@
   <img src="https://img.shields.io/badge/Dart-3.10+-0175C2?style=flat-square&logo=dart&logoColor=white" />
   <img src="https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js&logoColor=white" />
   <img src="https://img.shields.io/badge/TypeScript-5.4+-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-Supported-3ECF8E?style=flat-square&logo=supabase&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-EC4899?style=flat-square" />
 </p>
 
 ---
 
-## Overview
+## 📌 Overview
 
-Nexal is a Flutter-based super app that consolidates five separate applications — social feed, AI assistant, navigation, 3D gaming, and real-time messaging — into a single lightweight install. The motivation is simple: users should not need to download and maintain multiple heavy apps when everything can be in one place.
+**Nexal** is a Flutter-based super app that consolidates six core digital experiences into a single lightweight application powered by a unified Node.js microservices gateway:
 
-The backend is a unified Node.js gateway that routes requests to four independent microservices, all accessible through a single public port.
-
----
-
-## Features
-
-| Module | Description |
-|---|---|
-| **Social Feed** | Posts, short video reels, stories, bookmarks, and follow system |
-| **ARIA AI Assistant** | Voice-to-voice AI using Deepgram STT + Groq LLM + Deepgram TTS |
-| **Navigation** | Self-hosted MapLibre GL maps with turn-by-turn routing (no API cost) |
-| **3D Game** | Embedded WebGL open-world game rendered via Flutter WebView |
-| **Messaging** | Real-time Socket.IO chat with image attachments and reply threads |
-| **Camera** | Live preview with color filters, face detection, flash, and zoom |
-| **Gallery** | 360° dome view, timeline browser, full-screen viewer with sharing |
-| **Security** | TOTP-based 2FA setup with QR code generation and verification |
+1. **Social Feed & Short Video Reels ("Feels")**: Posts, short video reels, stories, comments, bookmarks, and user engagement tracking.
+2. **ARIA Voice AI Assistant**: Low-latency voice-to-voice interaction powered by Deepgram STT, Groq LLM, and Deepgram TTS over WebSockets.
+3. **Self-Hosted Navigation**: MapLibre GL engine with turn-by-turn routing using Nominatim and OSRM (zero external API fees).
+4. **3D Open-World Gaming**: Embedded WebGL game client and Luanti engine rendered via Flutter WebViews.
+5. **Real-time Messaging**: Socket.IO powered messaging with media attachments, reply threads, and voice bubbles.
+6. **Smart Camera & Immersive Gallery**: Real-time camera preview with Google ML Kit Face Detection, live color filters, 360° Dome View, River of Time, and timeline galleries.
 
 ---
 
-## Architecture
+## 🚀 Key Features & Modules
+
+| Module | Description | Key Technologies |
+|---|---|---|
+| **Social Feed & Reels** | Infinite scroll feed, short video reels ("Feels"), story viewer, comments, and post creation | `provider`, `video_player`, `cached_network_image` |
+| **ARIA AI Assistant** | Low-latency voice-to-voice conversational AI engine | Deepgram STT/TTS, Groq LLM, `record`, `audioplayers`, WebSockets |
+| **Navigation & Maps** | Interactive vector maps, turn-by-turn routing, search, and preloading | MapLibre GL, Nominatim, OSRM, `geolocator`, `geocoding` |
+| **3D Gaming** | WebGL 3D open-world game server integration & Luanti engine | Flutter `webview_flutter`, Node.js game server |
+| **Real-time Messaging** | Direct & group chats, voice messages, image uploads, reply threads | `socket_io_client`, Express, `emoji_picker_flutter` |
+| **Smart Camera** | Live camera preview, color filters, face detection overlay, zoom/exposure gestures | `camera`, `google_mlkit_face_detection`, Node.js camera backend |
+| **Immersive Gallery** | 360° Dome View, River of Time, monthly timeline, and full-screen viewer | `sensors_plus`, `gal`, `share_plus` |
+| **Security & Auth** | Supabase authentication, Google Sign-In, and TOTP 2FA with QR generator | `supabase_flutter`, `google_sign_in`, `qr_flutter` |
+| **Design System** | Glassmorphism UI, Particle backgrounds, Gyro Parallax, and Quantum Arc Radial Menu | `glassmorphism_ui`, `flutter_animate`, `lucide_icons_flutter` |
+
+---
+
+## 🏗️ Architecture
 
 ```
-Flutter Client
-      │
-      ▼
-Gateway  (Port 10000)
-      │
-      ├── /api/*   →  Search API        (Port 3004)
-      ├── /map/*   →  Map Engine        (Port 3006)
-      ├── /game/*  →  Game File Server  (Port 3005)
-      └── /*       →  ARIA AI Engine    (Port 3003)
+                                Flutter Client
+                                      │
+                                      ▼
+                          Unified Gateway (Port 10000)
+                                      │
+       ┌──────────────┬───────────────┼───────────────┬───────────────┬──────────────┐
+       │              │               │               │               │              │
+       ▼              ▼               ▼               ▼               ▼              ▼
+  /aria/*        /api/*          /map/*          /game/*        /camera/*      /settings/*
+ ARIA Engine    Search API      Map Engine     Game Server    Camera Server   Settings API
+(Port 3003)    (Port 3004)     (Port 3006)     (Port 3005)     (Port 3007)    (Port 3008)
 ```
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 Nexal_App/
 ├── lib/
-│   ├── main.dart
-│   ├── theme/            # Design tokens, colors, and typography
-│   ├── models/           # Data models
-│   ├── providers/        # State management (FeedProvider, UserProvider)
-│   ├── services/         # HTTP and Socket.IO clients
-│   ├── screens/          # All app screens
-│   └── widgets/          # Reusable UI components
+│   ├── main.dart                  # App entry point & multi-provider configuration
+│   ├── config/                    # Global app configuration & API URLs
+│   ├── models/                    # Data models (User, Post)
+│   ├── providers/                 # State management (Auth, Feed, User, Notifications, Background)
+│   ├── services/                  # Network, Socket.IO, Supabase & ARIA service clients
+│   ├── theme/                     # App tokens, dark theme, and styling
+│   ├── screens/                   # App screens (Social, ARIA AI, Map, Game, Camera, Gallery, Settings)
+│   └── widgets/                   # Reusable UI widgets (Quantum Arc Menu, Glass Cards, Particles)
 │
-├── android/
-│   └── build.gradle.kts  # Gradle build configuration
+├── Backend/
+│   ├── src/
+│   │   └── gateway.ts             # Gateway reverse proxy & child process manager (Port 10000)
+│   ├── aria_backend/              # ARIA AI voice backend (Port 3003)
+│   ├── search_backend/            # Search & feed REST API (Port 3004)
+│   ├── game_backend/              # WebGL static game server (Port 3005)
+│   ├── Map_Backend/               # OpenStreetMap tile proxy, Nominatim & OSRM (Port 3006)
+│   ├── camera_backend/            # Camera uploads & asset storage API (Port 3007)
+│   └── Setting Backend/           # User settings sync backend (Port 3008)
 │
-└── Backend/
-    ├── src/gateway.ts    # Unified gateway router
-    ├── aria_backend/     # Groq + Deepgram AI service
-    ├── search_backend/   # Search REST API
-    ├── game_backend/     # WebGL static file server
-    └── Map_Backend/      # Nominatim + OSRM map proxy
+├── android/                       # Android native configuration
+├── ios/                           # iOS native configuration
+└── assets/                        # Icons, maps, static graphics, and audio assets
 ```
 
 ---
 
-## Getting Started
+## 🛠️ Getting Started
 
 ### Prerequisites
 
-- Flutter SDK `>=3.10.7`
-- Node.js `>=20.x` and npm `>=10.x`
-- A physical device is recommended for camera, GPS, and microphone features
+- **Flutter SDK**: `>=3.10.7`
+- **Node.js**: `>=20.x` and `npm >=10.x`
+- **Device**: Physical Android or iOS device recommended for Camera, GPS, Gyroscope, and Microphone features.
 
-### Mobile App
+### 1. Mobile App Setup
 
 ```bash
 git clone https://github.com/aaweshdas/The-New-Era-_-Nexal-APP-.git
@@ -101,19 +115,19 @@ flutter pub get
 flutter run
 ```
 
-### Backend
+### 2. Backend Services Setup
 
 ```bash
 cd Backend
 npm install
 cp aria_backend/.env.example aria_backend/.env
-# Add your API keys to aria_backend/.env
+# Configure your API keys in aria_backend/.env
 npm run dev
 ```
 
 ---
 
-## Environment Variables
+## 🔐 Environment Variables
 
 Create `Backend/aria_backend/.env`:
 
@@ -123,36 +137,38 @@ DEEPGRAM_API_KEY=your_deepgram_api_key
 PORT=3003
 ```
 
-- **Groq API Key** — free at [console.groq.com](https://console.groq.com)
-- **Deepgram API Key** — free at [console.deepgram.com](https://console.deepgram.com)
+- **Groq API Key**: Obtain for free at [console.groq.com](https://console.groq.com)
+- **Deepgram API Key**: Obtain for free at [console.deepgram.com](https://console.deepgram.com)
 
 ---
 
-## Platform Support
+## 🌐 Platform Support
 
-| Platform | Status | Notes |
+| Platform | Status | Features / Notes |
 |---|---|---|
-| Android | ✅ Supported | All hardware features available |
-| iOS | ✅ Supported | Requires `Info.plist` permission entries |
-| Web | ⚠️ Partial | Microphone requires HTTPS |
-| Desktop | ⚠️ Partial | Camera support is limited |
+| Android | ✅ Supported | Full feature support (Camera, ML Kit, GPS, Sensors, Microservices) |
+| iOS | ✅ Supported | Full support (requires iOS permissions in `Info.plist`) |
+| Web | ⚠️ Partial | WebGL game & maps work; microphone requires HTTPS context |
+| Desktop | ⚠️ Partial | Navigation & backend work; hardware camera capabilities limited |
 
 ---
 
-## Tech Stack
+## 🧰 Tech Stack
 
-**Flutter**
-`flutter_animate` · `google_fonts` · `camera` · `geolocator` · `webview_flutter` · `socket_io_client` · `record` · `audioplayers` · `google_mlkit_face_detection` · `share_plus` · `image_gallery_saver`
-
-**Backend**
-Node.js · TypeScript · Express · Socket.IO · Groq SDK · Deepgram SDK
+* **Frontend**: Flutter, Dart, Material 3, Glassmorphism UI
+* **State Management**: Provider
+* **Backend**: Node.js, TypeScript, Express, Socket.IO, `http-proxy` Gateway
+* **AI & Voice**: Groq API (LLM), Deepgram API (STT & TTS), WebSockets
+* **Maps & Navigation**: MapLibre GL, Nominatim (Geocoding), OSRM (Routing)
+* **Camera & ML**: `camera`, Google ML Kit Face Detection
+* **Database & Auth**: Supabase, Google Sign-In, TOTP 2FA
 
 ---
 
-## Author
+## 👤 Author
 
 **Aawesh Das** — [@aaweshdas](https://github.com/aaweshdas)
 
 ---
 
-<p align="center"><sub>Built with Flutter · Node.js · 2026</sub></p>
+<p align="center"><sub>Built with Flutter & Node.js · 2026</sub></p>
