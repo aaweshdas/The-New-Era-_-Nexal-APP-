@@ -169,19 +169,14 @@ class _LoginScreenState extends State<LoginScreen>
     final success = await AuthService.instance.loginWithGoogle();
     if (!mounted) return;
 
-    if (AuthService.instance.isLoggedIn) {
+    if (success || AuthService.instance.isLoggedIn) {
       setState(() => _isGoogleLoading = false);
       HapticFeedback.mediumImpact();
       _navigateToHome();
       return;
     }
 
-    if (!success) {
-      setState(() => _isGoogleLoading = false);
-      _showSnackBar('Google Sign-In cancelled or unavailable.', isError: true);
-      return;
-    }
-
+    // Attach stream listener if browser redirect is still pending
     StreamSubscription? sub;
     sub = AuthService.instance.authStateChanges.listen((session) {
       if (!mounted) return;
@@ -193,10 +188,13 @@ class _LoginScreenState extends State<LoginScreen>
       }
     });
 
-    await Future.delayed(const Duration(seconds: 45));
+    await Future.delayed(const Duration(seconds: 15));
     if (mounted && _isGoogleLoading) {
       sub.cancel();
       setState(() => _isGoogleLoading = false);
+      if (!AuthService.instance.isLoggedIn) {
+        _showSnackBar('Google Sign-In cancelled or timed out.', isError: true);
+      }
     }
   }
 
@@ -207,16 +205,10 @@ class _LoginScreenState extends State<LoginScreen>
     final success = await AuthService.instance.loginWithFacebook();
     if (!mounted) return;
 
-    if (AuthService.instance.isLoggedIn) {
+    if (success || AuthService.instance.isLoggedIn) {
       setState(() => _isFacebookLoading = false);
       HapticFeedback.mediumImpact();
       _navigateToHome();
-      return;
-    }
-
-    if (!success) {
-      setState(() => _isFacebookLoading = false);
-      _showSnackBar('Facebook Sign-In cancelled or unavailable.', isError: true);
       return;
     }
 
@@ -231,10 +223,13 @@ class _LoginScreenState extends State<LoginScreen>
       }
     });
 
-    await Future.delayed(const Duration(seconds: 45));
+    await Future.delayed(const Duration(seconds: 15));
     if (mounted && _isFacebookLoading) {
       sub.cancel();
       setState(() => _isFacebookLoading = false);
+      if (!AuthService.instance.isLoggedIn) {
+        _showSnackBar('Facebook Sign-In cancelled or timed out.', isError: true);
+      }
     }
   }
 

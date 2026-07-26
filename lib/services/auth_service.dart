@@ -200,8 +200,26 @@ class AuthService {
           idToken: idToken,
           accessToken: accessToken,
         );
-        if (res.session != null || res.user != null) {
-          debugPrint('[AuthService] Native Google Sign-In successful!');
+        final u = res.session?.user ?? res.user;
+        if (u != null) {
+          final meta = u.userMetadata ?? {};
+          _currentUser = UserSession(
+            uid: u.id,
+            name: (meta['full_name'] ?? meta['name'] ?? u.email?.split('@').first ?? 'Nexal User') as String,
+            email: u.email ?? '',
+            username: (meta['user_name'] ?? u.email!.split('@').first.toLowerCase()) as String,
+            avatarUrl: (meta['avatar_url'] ?? meta['picture'] ??
+                'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200') as String,
+          );
+          final p = await SharedPreferences.getInstance();
+          await p.setBool('is_logged_in', true);
+          await p.setString('user_uid', _currentUser!.uid);
+          await p.setString('profileName', _currentUser!.name);
+          await p.setString('user_email', _currentUser!.email);
+          await p.setString('user_username', _currentUser!.username);
+          await p.setString('user_avatar', _currentUser!.avatarUrl);
+          _authStateController.add(_currentUser);
+          debugPrint('[AuthService] Native Google Sign-In successful for ${_currentUser!.email}!');
           return true;
         }
       }
