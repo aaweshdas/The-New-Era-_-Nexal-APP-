@@ -7,14 +7,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../services/auth_service.dart';
 import '../home_screen.dart';
-import 'signup_screen.dart';
-
-
-
-
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Login Screen
+// Unified Auth Screen (Sign In & Sign Up Combined)
 // ──────────────────────────────────────────────────────────────────────────────
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,17 +20,31 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
+  // Mode toggle: false = Sign In, true = Sign Up
+  bool _isSignUpMode = false;
+
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _confirmPassCtrl = TextEditingController();
+
+  final _nameFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
+  final _confirmPassFocus = FocusNode();
 
   late AnimationController _bgCtrl;
   bool _isLoading = false;
   bool _isGoogleLoading = false;
   bool _obscureText = true;
+  bool _obscureConfirmText = true;
+
+  bool _nameFocused = false;
   bool _emailFocused = false;
   bool _passFocused = false;
+  bool _confirmPassFocused = false;
+
+  int _passStrength = 0;
 
   @override
   void initState() {
@@ -45,56 +54,94 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(seconds: 12),
     )..repeat();
 
+    _nameFocus.addListener(() => setState(() => _nameFocused = _nameFocus.hasFocus));
     _emailFocus.addListener(() => setState(() => _emailFocused = _emailFocus.hasFocus));
     _passFocus.addListener(() => setState(() => _passFocused = _passFocus.hasFocus));
+    _confirmPassFocus.addListener(() => setState(() => _confirmPassFocused = _confirmPassFocus.hasFocus));
+
+    _passCtrl.addListener(_evaluateStrength);
+  }
+
+  void _evaluateStrength() {
+    final pass = _passCtrl.text;
+    int score = 0;
+    if (pass.length >= 6) score++;
+    if (pass.length >= 10) score++;
+    if (RegExp(r'[A-Z]').hasMatch(pass)) score++;
+    if (RegExp(r'[0-9!@#\$%^&*]').hasMatch(pass)) score++;
+    setState(() => _passStrength = score);
   }
 
   @override
   void dispose() {
     _bgCtrl.dispose();
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _confirmPassCtrl.dispose();
+
+    _nameFocus.dispose();
     _emailFocus.dispose();
     _passFocus.dispose();
+    _confirmPassFocus.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleAuth() async {
     final email = _emailCtrl.text.trim();
     final pass = _passCtrl.text.trim();
 
-    if (email.isEmpty || pass.isEmpty) {
-      _showSnackBar('Please enter your email and password', isError: true);
-      return;
-    }
+    if (_isSignUpMode) {
+      final name = _nameCtrl.text.trim();
+      final confirm = _confirmPassCtrl.text.trim();
 
-    HapticFeedback.lightImpact();
-    setState(() => _isLoading = true);
-    final success = await AuthService.instance.login(email, pass);
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
+        _showSnackBar('Please fill in all required fields', isError: true);
+        return;
+      }
+      if (pass.length < 6) {
+        _showSnackBar('Password must be at least 6 characters', isError: true);
+        return;
+      }
+      if (pass != confirm) {
+        _showSnackBar('Passwords do not match', isError: true);
+        return;
+      }
 
-    if (success) {
-      HapticFeedback.mediumImpact();
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, _) => const HomeScreen(),
-          transitionsBuilder: (context, animation, _, child) =>
-              FadeTransition(opacity: animation, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
-      );
+      HapticFeedback.lightImpact();
+      setState(() => _isLoading = true);
+      final success = await AuthService.instance.signup(name, email, pass);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (success) {
+        HapticFeedback.mediumImpact();
+        _navigateToHome();
+      } else {
+        _showSnackBar('Signup failed. Please try again.', isError: true);
+      }
     } else {
-      _showSnackBar('Invalid credentials. Please try again.', isError: true);
+      if (email.isEmpty || pass.isEmpty) {
+        _showSnackBar('Please enter your email and password', isError: true);
+        return;
+      }
+
+      HapticFeedback.lightImpact();
+      setState(() => _isLoading = true);
+      final success = await AuthService.instance.login(email, pass);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (success) {
+        HapticFeedback.mediumImpact();
+        _navigateToHome();
+      } else {
+        _showSnackBar('Invalid credentials. Please try again.', isError: true);
+      }
     }
   }
 
-  Future<void> _handleDemoLogin() async {
-    HapticFeedback.lightImpact();
-    setState(() => _isLoading = true);
-    await AuthService.instance.login('guest@nexal.space', 'demo1234');
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+  void _navigateToHome() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, _) => const HomeScreen(),
@@ -105,6 +152,15 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  Future<void> _handleDemoLogin() async {
+    HapticFeedback.lightImpact();
+    setState(() => _isLoading = true);
+    await AuthService.instance.login('guest@nexal.space', 'demo1234');
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    _navigateToHome();
+  }
+
   Future<void> _handleGoogleLogin() async {
     HapticFeedback.lightImpact();
     setState(() => _isGoogleLoading = true);
@@ -112,18 +168,10 @@ class _LoginScreenState extends State<LoginScreen>
     final success = await AuthService.instance.loginWithGoogle();
     if (!mounted) return;
 
-    // Check if user is already logged in (native ID token flow)
     if (AuthService.instance.isLoggedIn) {
       setState(() => _isGoogleLoading = false);
       HapticFeedback.mediumImpact();
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, _) => const HomeScreen(),
-          transitionsBuilder: (context, animation, _, child) =>
-              FadeTransition(opacity: animation, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
-      );
+      _navigateToHome();
       return;
     }
 
@@ -133,7 +181,6 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
-    // Subscribe to auth state changes for browser OAuth redirect flow
     StreamSubscription? sub;
     sub = AuthService.instance.authStateChanges.listen((session) {
       if (!mounted) return;
@@ -141,18 +188,10 @@ class _LoginScreenState extends State<LoginScreen>
         sub?.cancel();
         setState(() => _isGoogleLoading = false);
         HapticFeedback.mediumImpact();
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, _) => const HomeScreen(),
-            transitionsBuilder: (context, animation, _, child) =>
-                FadeTransition(opacity: animation, child: child),
-            transitionDuration: const Duration(milliseconds: 500),
-          ),
-        );
+        _navigateToHome();
       }
     });
 
-    // Safety timeout
     await Future.delayed(const Duration(seconds: 45));
     if (mounted && _isGoogleLoading) {
       sub.cancel();
@@ -168,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen>
           style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
         ),
         backgroundColor: isError
-            ? const Color(0xFF7C3AED)
+            ? const Color(0xFFEC4899)
             : const Color(0xFF06B6D4),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
@@ -184,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen>
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── Full-Screen Background Image (assets/login BG.png) ───────────
+          // ── Background Image (assets/login BG.png) ─────────────────────
           Positioned.fill(
             child: Image.asset(
               'assets/login BG.png',
@@ -193,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Subtle dark vignette overlay for optimal contrast ─────────────
+          // ── Contrast Vignette Overlay ──────────────────────────────────
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -218,15 +257,15 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
 
-                    // ── Logo / Brand ──────────────────────────────────────
+                    // ── Brand Header (Square / Squircle Liquid Logo) ───────
                     _buildBrandHeader(),
 
-                    const SizedBox(height: 44),
+                    const SizedBox(height: 32),
 
-                    // ── Glass Login Card ──────────────────────────────────
-                    _buildLoginCard(),
+                    // ── 3D Liquid Glass Combined Auth Card ─────────────────
+                    _buildAuthCard(),
 
                     const SizedBox(height: 20),
 
@@ -243,12 +282,12 @@ class _LoginScreenState extends State<LoginScreen>
                     // ── Guest Button ──────────────────────────────────────
                     _buildGuestButton(),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
-                    // ── Sign Up Link ──────────────────────────────────────
-                    _buildSignupLink(),
+                    // ── Mode Switcher Link ─────────────────────────────────
+                    _buildModeToggleLink(),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -259,89 +298,95 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Brand Header (Sleek Liquid Glass Squircle / Square Logo)
+  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildBrandHeader() {
     return Column(
       children: [
-        // Liquid glass orb logo container
+        // Modern Liquid Glass Squircle (Rounded Square) Logo Container
         Container(
-          width: 104,
-          height: 104,
+          width: 96,
+          height: 96,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(26), // Squircle shape!
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFA855F7).withValues(alpha: 0.50),
                 blurRadius: 36,
                 spreadRadius: 4,
+                offset: const Offset(0, 8),
               ),
               BoxShadow(
                 color: const Color(0xFF00E5FF).withValues(alpha: 0.35),
-                blurRadius: 50,
+                blurRadius: 48,
                 spreadRadius: 2,
+                offset: const Offset(-4, -4),
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              // Gel blur backing
-              ClipOval(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                  child: Container(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Stack(
+                children: [
+                  Container(
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(26),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
                           Colors.white.withValues(alpha: 0.35),
-                          const Color(0xFFA855F7).withValues(alpha: 0.20),
+                          const Color(0xFFA855F7).withValues(alpha: 0.22),
                           const Color(0xFF00E5FF).withValues(alpha: 0.15),
                         ],
                       ),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.65),
-                        width: 1.5,
+                        width: 1.6,
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/nexal_logo.png',
-                          fit: BoxFit.cover,
+                    padding: const EdgeInsets.all(12),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/nexal_logo.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  // Upper specular liquid highlight lens
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 36,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.55),
+                              Colors.white.withValues(alpha: 0.0),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-              // Upper specular liquid highlight lens
-              Positioned(
-                top: 2,
-                left: 12,
-                right: 12,
-                height: 38,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.55),
-                        Colors.white.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         )
             .animate()
             .fadeIn(duration: 800.ms)
-            .scale(begin: const Offset(0.7, 0.7), curve: Curves.elasticOut, duration: 900.ms),
+            .scale(begin: const Offset(0.75, 0.75), curve: Curves.elasticOut, duration: 900.ms),
 
         const SizedBox(height: 18),
 
@@ -367,7 +412,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         Text(
           'Liquid Glass Quantum Portal',
@@ -383,9 +428,9 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3D Liquid Glass Panel Container
+  // Combined 3D Liquid Glass Auth Card
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildLoginCard() {
+  Widget _buildAuthCard() {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(38),
@@ -430,53 +475,34 @@ class _LoginScreenState extends State<LoginScreen>
                     width: 1.6,
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        // Glowing Gel Dot Indicator
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF00E5FF),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF00E5FF).withValues(alpha: 0.8),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Sign In',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 22),
-                      child: Text(
-                        'Welcome to the liquid glass era',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white70,
-                          fontSize: 13,
+                    // ── Segmented Liquid Glass Tab Controller ──────────────
+                    _buildSegmentedTabBar(),
+
+                    const SizedBox(height: 24),
+
+                    // Full Name (Only when in Sign Up Mode)
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 300),
+                      crossFadeState: _isSignUpMode
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildTextField(
+                          controller: _nameCtrl,
+                          focusNode: _nameFocus,
+                          isFocused: _nameFocused,
+                          hint: 'Full Name',
+                          icon: LucideIcons.user,
+                          accentColor: const Color(0xFFEC4899),
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 28),
 
                     // Email Field
                     _buildTextField(
@@ -489,57 +515,88 @@ class _LoginScreenState extends State<LoginScreen>
                       accentColor: const Color(0xFF00E5FF),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
 
                     // Password Field
                     _buildTextField(
                       controller: _passCtrl,
                       focusNode: _passFocus,
                       isFocused: _passFocused,
-                      hint: 'Password',
+                      hint: _isSignUpMode ? 'Password (min 6 chars)' : 'Password',
                       icon: LucideIcons.lock,
                       obscure: _obscureText,
                       accentColor: const Color(0xFFA855F7),
                       onToggleObscure: () => setState(() => _obscureText = !_obscureText),
                     ),
 
-                    const SizedBox(height: 12),
+                    // Password Strength bar (Sign Up Mode)
+                    if (_isSignUpMode && _passCtrl.text.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _buildStrengthBar(),
+                    ],
 
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () {},
-                        child: Text(
-                          'Forgot password?',
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFF67E8F9),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
+                    // Confirm Password Field (Only when in Sign Up Mode)
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 300),
+                      crossFadeState: _isSignUpMode
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildTextField(
+                          controller: _confirmPassCtrl,
+                          focusNode: _confirmPassFocus,
+                          isFocused: _confirmPassFocused,
+                          hint: 'Confirm Password',
+                          icon: LucideIcons.shieldCheck,
+                          obscure: _obscureConfirmText,
+                          accentColor: const Color(0xFF3B82F6),
+                          onToggleObscure: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 26),
+                    // Forgot Password (Sign In Mode)
+                    if (!_isSignUpMode) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () {},
+                          child: Text(
+                            'Forgot password?',
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF67E8F9),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
 
-                    // 3D Liquid Gem Login Button
+                    const SizedBox(height: 24),
+
+                    // Primary Auth Button
                     _buildPrimaryButton(
-                      label: 'LOGIN',
-                      onPressed: _isLoading ? null : _handleLogin,
+                      label: _isSignUpMode ? 'CREATE ACCOUNT' : 'SIGN IN',
+                      onPressed: _isLoading ? null : _handleAuth,
                       isLoading: _isLoading,
-                      colors: const [Color(0xFFA855F7), Color(0xFF3B82F6), Color(0xFF00E5FF)],
+                      colors: _isSignUpMode
+                          ? const [Color(0xFFEC4899), Color(0xFFA855F7), Color(0xFF3B82F6)]
+                          : const [Color(0xFFA855F7), Color(0xFF3B82F6), Color(0xFF00E5FF)],
                     ),
                   ],
                 ),
               ),
 
-              // Upper Specular Gel Lens Arc (Top Glass Specular Highlight)
+              // Upper Specular Gel Lens Arc
               Positioned(
                 top: 0,
                 left: 0,
@@ -569,6 +626,144 @@ class _LoginScreenState extends State<LoginScreen>
         .animate()
         .fadeIn(delay: 400.ms, duration: 700.ms)
         .slideY(begin: 0.06, curve: Curves.easeOutCubic);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Segmented Liquid Glass Tab Bar [ Sign In | Sign Up ]
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildSegmentedTabBar() {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.30),
+          width: 1.2,
+        ),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTabItem(
+              title: 'Sign In',
+              isSelected: !_isSignUpMode,
+              onTap: () {
+                if (_isSignUpMode) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _isSignUpMode = false);
+                }
+              },
+            ),
+          ),
+          Expanded(
+            child: _buildTabItem(
+              title: 'Sign Up',
+              isSelected: _isSignUpMode,
+              onTap: () {
+                if (!_isSignUpMode) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _isSignUpMode = true);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.30),
+                    const Color(0xFFA855F7).withValues(alpha: 0.35),
+                  ],
+                )
+              : null,
+          border: isSelected
+              ? Border.all(color: Colors.white.withValues(alpha: 0.60), width: 1.2)
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFA855F7).withValues(alpha: 0.30),
+                    blurRadius: 12,
+                  ),
+                ]
+              : [],
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: GoogleFonts.outfit(
+              color: isSelected ? Colors.white : Colors.white54,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStrengthBar() {
+    const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+    const colors = [
+      Color(0xFFEF4444),
+      Color(0xFFF97316),
+      Color(0xFFEAB308),
+      Color(0xFF22C55E),
+    ];
+    final idx = (_passStrength - 1).clamp(0, 3);
+    return Row(
+      children: [
+        ...List.generate(4, (i) {
+          final filled = i < _passStrength;
+          return Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              height: 4,
+              margin: EdgeInsets.only(right: i < 3 ? 4 : 0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                color: filled
+                    ? colors[idx]
+                    : Colors.white.withValues(alpha: 0.15),
+              ),
+            ),
+          );
+        }),
+        const SizedBox(width: 10),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Text(
+            _passStrength > 0 ? labels[idx] : '',
+            key: ValueKey(_passStrength),
+            style: GoogleFonts.outfit(
+              color: _passStrength > 0 ? colors[idx] : Colors.transparent,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildDivider() {
@@ -616,9 +811,6 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate().fadeIn(delay: 650.ms);
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Liquid Glass Pill Buttons
-  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildGoogleButton() {
     final busy = _isGoogleLoading || _isLoading;
     return GestureDetector(
@@ -705,7 +897,6 @@ class _LoginScreenState extends State<LoginScreen>
                     ],
                   ),
                 ),
-                // Top Gloss Reflection Highlight
                 Positioned(
                   top: 0,
                   left: 0,
@@ -780,40 +971,25 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate().fadeIn(delay: 750.ms, duration: 500.ms);
   }
 
-  Widget _buildSignupLink() {
+  Widget _buildModeToggleLink() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          "Don't have an account?  ",
+          _isSignUpMode ? 'Already have an account?  ' : "Don't have an account?  ",
           style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
         ),
         GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, _) => const SignupScreen(),
-                transitionsBuilder: (context, animation, _, child) => SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(1.0, 0),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  )),
-                  child: child,
-                ),
-                transitionDuration: const Duration(milliseconds: 400),
-              ),
-            );
+            setState(() => _isSignUpMode = !_isSignUpMode);
           },
           child: ShaderMask(
             shaderCallback: (bounds) => const LinearGradient(
               colors: [Color(0xFF67E8F9), Color(0xFFD8B4FE)],
             ).createShader(bounds),
             child: Text(
-              'Sign Up',
+              _isSignUpMode ? 'Sign In' : 'Sign Up',
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontSize: 15,
@@ -826,9 +1002,6 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate().fadeIn(delay: 800.ms);
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Liquid Bubble TextField Pill
-  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildTextField({
     required TextEditingController controller,
     required FocusNode focusNode,
@@ -907,7 +1080,6 @@ class _LoginScreenState extends State<LoginScreen>
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 ),
               ),
-              // Top Glass Specular Arc Highlight
               Positioned(
                 top: 0,
                 left: 0,
@@ -936,9 +1108,6 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // 3D Liquid Gem CTA Button
-  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildPrimaryButton({
     required String label,
     required VoidCallback? onPressed,
@@ -1007,7 +1176,6 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ),
                 ),
-                // Top Gloss Gel Specular Arc
                 Positioned(
                   top: 0,
                   left: 0,
