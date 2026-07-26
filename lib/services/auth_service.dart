@@ -200,7 +200,7 @@ class AuthService {
           idToken: idToken,
           accessToken: accessToken,
         );
-        if (res.session != null) {
+        if (res.session != null || res.user != null) {
           debugPrint('[AuthService] Native Google Sign-In successful!');
           return true;
         }
