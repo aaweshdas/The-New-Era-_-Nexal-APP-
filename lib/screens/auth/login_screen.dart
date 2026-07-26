@@ -318,76 +318,79 @@ class _LoginScreenState extends State<LoginScreen>
   // Brand Header (Black & White Glassmorphism Squircle Logo + Main Dashboard Font Headline)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildBrandHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // ── Clean Logo Container (No Outline or Border) ───────────────────
-        Container(
-          width: 84,
-          height: 84,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.65),
-                blurRadius: 28,
-                spreadRadius: 2,
-                offset: const Offset(0, 8),
+    return Padding(
+      padding: const EdgeInsets.only(right: 28.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ── Clean Logo Container (No Outline or Border) ───────────────────
+          Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  blurRadius: 28,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: Image.asset(
+                'assets/nexal_logo.png',
+                fit: BoxFit.cover,
               ),
+            ),
+          )
+              .animate()
+              .fadeIn(duration: 700.ms)
+              .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
+
+          const SizedBox(width: 18),
+
+          // ── Right Side Typography: Nexal (Big Main Font) & The New Era ─────
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Line 1: Nexal (Big Main Dashboard Font - Outfit w900)
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFCBD5E1)],
+                ).createShader(bounds),
+                child: Text(
+                  'Nexal',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 44,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                    height: 1.05,
+                  ),
+                ),
+              ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
+
+              const SizedBox(height: 2),
+
+              // Line 2: The New Era (Sub-Headline in Main Dashboard Font)
+              Text(
+                'The New Era',
+                style: GoogleFonts.outfit(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  fontSize: 18,
+                  letterSpacing: 2.8,
+                  fontWeight: FontWeight.w600,
+                ),
+              ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: Image.asset(
-              'assets/nexal_logo.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-        )
-            .animate()
-            .fadeIn(duration: 700.ms)
-            .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
-
-        const SizedBox(width: 18),
-
-        // ── Right Side Typography: Nexal (Big Main Font) & The New Era ─────
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Line 1: Nexal (Big Main Dashboard Font - Outfit w900)
-            ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFCBD5E1)],
-              ).createShader(bounds),
-              child: Text(
-                'Nexal',
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  height: 1.05,
-                ),
-              ),
-            ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
-
-            const SizedBox(height: 2),
-
-            // Line 2: The New Era (Sub-Headline in Main Dashboard Font)
-            Text(
-              'The New Era',
-              style: GoogleFonts.outfit(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 18,
-                letterSpacing: 2.8,
-                fontWeight: FontWeight.w600,
-              ),
-            ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
