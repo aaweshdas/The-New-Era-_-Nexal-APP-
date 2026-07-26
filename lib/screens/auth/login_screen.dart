@@ -257,12 +257,10 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 10),
-
-                    // ── Brand Header (Black & White Glass Squircle Logo) ───
+                    // ── Brand Headline Banner (Shifted Upward) ───────────────
                     _buildBrandHeader(),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 26),
 
                     // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
@@ -306,53 +304,53 @@ class _LoginScreenState extends State<LoginScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Liquid Glass Squircle Logo Container ─────────────────────────
+        // ── Enlarged Liquid Glass Squircle Logo Container ─────────────────
         Container(
-          width: 72,
-          height: 72,
+          width: 88,
+          height: 88,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.25),
-                blurRadius: 28,
-                spreadRadius: 2,
-                offset: const Offset(0, 4),
+                color: Colors.white.withValues(alpha: 0.30),
+                blurRadius: 32,
+                spreadRadius: 3,
+                offset: const Offset(0, 6),
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.80),
-                blurRadius: 36,
+                color: Colors.black.withValues(alpha: 0.85),
+                blurRadius: 40,
                 spreadRadius: 2,
-                offset: const Offset(0, 8),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Stack(
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.38),
+                          Colors.white.withValues(alpha: 0.40),
                           Colors.black.withValues(alpha: 0.50),
-                          Colors.white.withValues(alpha: 0.12),
+                          Colors.white.withValues(alpha: 0.14),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.75),
-                        width: 1.5,
+                        color: Colors.white.withValues(alpha: 0.80),
+                        width: 1.8,
                       ),
                     ),
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(11),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       child: Image.asset(
                         'assets/nexal_logo.png',
                         fit: BoxFit.cover,
@@ -364,16 +362,16 @@ class _LoginScreenState extends State<LoginScreen>
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: 28,
+                    height: 34,
                     child: IgnorePointer(
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.white.withValues(alpha: 0.60),
+                              Colors.white.withValues(alpha: 0.65),
                               Colors.white.withValues(alpha: 0.0),
                             ],
                           ),
@@ -390,38 +388,38 @@ class _LoginScreenState extends State<LoginScreen>
             .fadeIn(duration: 700.ms)
             .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
 
-        const SizedBox(width: 18),
+        const SizedBox(width: 20),
 
-        // ── Brand Text on the Right Side ─────────────────────────────────
+        // ── Headline Typography on the Right Side ────────────────────────
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Line 1: Nexal
+            // Line 1: Nexal (Enlarged Prominent Headline)
             ShaderMask(
               shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFFFFFFF), Color(0xFFE2E8F0), Color(0xFF94A3B8)],
+                colors: [Color(0xFFFFFFFF), Color(0xFFF1F5F9), Color(0xFF94A3B8)],
               ).createShader(bounds),
               child: Text(
                 'Nexal',
                 style: GoogleFonts.outfit(
                   color: Colors.white,
-                  fontSize: 32,
+                  fontSize: 38,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
                 ),
               ),
             ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
 
-            const SizedBox(height: 2),
+            const SizedBox(height: 1),
 
-            // Line 2: The New Era
+            // Line 2: The New Era (Enlarged Sub-Headline)
             Text(
               'The New Era',
               style: GoogleFonts.outfit(
                 color: Colors.white70,
-                fontSize: 15,
-                letterSpacing: 3,
+                fontSize: 17,
+                letterSpacing: 3.5,
                 fontWeight: FontWeight.w600,
               ),
             ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
