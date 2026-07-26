@@ -174,7 +174,7 @@ class AuthService {
     // 1. Try native Google Sign-In with configured Client ID
     try {
       final googleSignIn = GoogleSignIn(
-        clientId: googleClientId,
+        clientId: kIsWeb ? googleClientId : null,
         serverClientId: googleClientId,
         scopes: ['email', 'profile'],
       );
