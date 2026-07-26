@@ -9,7 +9,7 @@ import '../../services/auth_service.dart';
 import '../home_screen.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Unified Auth Screen (Sign In & Sign Up Combined)
+// Unified Auth Screen - Monochrome Black & White Glassmorphism
 // ──────────────────────────────────────────────────────────────────────────────
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -207,8 +207,8 @@ class _LoginScreenState extends State<LoginScreen>
           style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
         ),
         backgroundColor: isError
-            ? const Color(0xFFEC4899)
-            : const Color(0xFF06B6D4),
+            ? const Color(0xFFEF4444)
+            : const Color(0xFF38BDF8),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Adaptive Brightness Overlay (Lets background light shine through) ───
+          // ── Black & White Glass Vignette Overlay ────────────────────────
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -240,8 +240,8 @@ class _LoginScreenState extends State<LoginScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.05),
-                    Colors.black.withValues(alpha: 0.25),
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.black.withValues(alpha: 0.45),
                   ],
                 ),
               ),
@@ -259,12 +259,12 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     const SizedBox(height: 10),
 
-                    // ── Brand Header (Square / Squircle Liquid Logo) ───────
+                    // ── Brand Header (Black & White Glass Squircle Logo) ───
                     _buildBrandHeader(),
 
                     const SizedBox(height: 32),
 
-                    // ── 3D Liquid Glass Combined Auth Card ─────────────────
+                    // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
 
                     const SizedBox(height: 20),
@@ -299,36 +299,36 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Brand Header (Sleek Liquid Glass Squircle / Square Logo)
+  // Brand Header (Black & White Glassmorphism Squircle Logo)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildBrandHeader() {
     return Column(
       children: [
-        // Modern Liquid Glass Squircle (Rounded Square) Logo Container
+        // Black & White Glassmorphism Squircle Container
         Container(
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26), // Squircle shape!
+            borderRadius: BorderRadius.circular(26),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFA855F7).withValues(alpha: 0.50),
+                color: Colors.white.withValues(alpha: 0.25),
                 blurRadius: 36,
-                spreadRadius: 4,
-                offset: const Offset(0, 8),
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
               ),
               BoxShadow(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.35),
-                blurRadius: 48,
+                color: Colors.black.withValues(alpha: 0.80),
+                blurRadius: 40,
                 spreadRadius: 2,
-                offset: const Offset(-4, -4),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(26),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Stack(
                 children: [
                   Container(
@@ -338,13 +338,13 @@ class _LoginScreenState extends State<LoginScreen>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.35),
-                          const Color(0xFFA855F7).withValues(alpha: 0.22),
-                          const Color(0xFF00E5FF).withValues(alpha: 0.15),
+                          Colors.white.withValues(alpha: 0.38),
+                          Colors.black.withValues(alpha: 0.50),
+                          Colors.white.withValues(alpha: 0.12),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.65),
+                        color: Colors.white.withValues(alpha: 0.75),
                         width: 1.6,
                       ),
                     ),
@@ -357,12 +357,12 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ),
                   ),
-                  // Upper specular liquid highlight lens
+                  // Upper Specular Chrome Lens Highlight Arc
                   Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: 36,
+                    height: 38,
                     child: IgnorePointer(
                       child: Container(
                         decoration: BoxDecoration(
@@ -371,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen>
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.white.withValues(alpha: 0.55),
+                              Colors.white.withValues(alpha: 0.60),
                               Colors.white.withValues(alpha: 0.0),
                             ],
                           ),
@@ -390,14 +390,14 @@ class _LoginScreenState extends State<LoginScreen>
 
         const SizedBox(height: 18),
 
-        // Brand Title
+        // Brand Title in Pure Metallic Silver/White Shader
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: ShaderMask(
               shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFFFFFFF), Color(0xFFD8B4FE), Color(0xFF67E8F9)],
+                colors: [Color(0xFFFFFFFF), Color(0xFFE2E8F0), Color(0xFF94A3B8)],
               ).createShader(bounds),
               child: Text(
                 'NEXAL THE NEW ERA',
@@ -417,7 +417,7 @@ class _LoginScreenState extends State<LoginScreen>
         Text(
           'Liquid Glass Quantum Portal',
           style: GoogleFonts.outfit(
-            color: const Color(0xFF67E8F9).withValues(alpha: 0.75),
+            color: Colors.white70,
             fontSize: 12,
             letterSpacing: 2.5,
             fontWeight: FontWeight.w500,
@@ -428,7 +428,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Combined 3D Liquid Glass Auth Card
+  // Black & White Glassmorphism Auth Card Body
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildAuthCard() {
     return Container(
@@ -436,16 +436,16 @@ class _LoginScreenState extends State<LoginScreen>
         borderRadius: BorderRadius.circular(38),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFA855F7).withValues(alpha: 0.25),
-            blurRadius: 40,
+            color: Colors.white.withValues(alpha: 0.20),
+            blurRadius: 36,
             spreadRadius: 2,
-            offset: const Offset(0, 12),
+            offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: const Color(0xFF00E5FF).withValues(alpha: 0.20),
+            color: Colors.black.withValues(alpha: 0.80),
             blurRadius: 50,
-            spreadRadius: 1,
-            offset: const Offset(-6, -6),
+            spreadRadius: 2,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
@@ -455,7 +455,7 @@ class _LoginScreenState extends State<LoginScreen>
           filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Stack(
             children: [
-              // Liquid Glass Adaptive Luminance Gradient Fill
+              // Black & White Glassmorphism Gradient Fill
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(38),
@@ -463,10 +463,10 @@ class _LoginScreenState extends State<LoginScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withValues(alpha: 0.28),
-                      const Color(0xFFA855F7).withValues(alpha: 0.15),
-                      const Color(0xFF00E5FF).withValues(alpha: 0.10),
-                      Colors.white.withValues(alpha: 0.12),
+                      Colors.white.withValues(alpha: 0.22),
+                      Colors.black.withValues(alpha: 0.50),
+                      Colors.white.withValues(alpha: 0.10),
+                      Colors.black.withValues(alpha: 0.40),
                     ],
                     stops: const [0.0, 0.40, 0.75, 1.0],
                   ),
@@ -479,12 +479,12 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Segmented Liquid Glass Tab Controller ──────────────
+                    // ── Segmented Black & White Tab Controller ──────────────
                     _buildSegmentedTabBar(),
 
                     const SizedBox(height: 24),
 
-                    // Full Name (Only when in Sign Up Mode)
+                    // Full Name (Sign Up Mode)
                     AnimatedCrossFade(
                       duration: const Duration(milliseconds: 300),
                       crossFadeState: _isSignUpMode
@@ -499,7 +499,7 @@ class _LoginScreenState extends State<LoginScreen>
                           isFocused: _nameFocused,
                           hint: 'Full Name',
                           icon: LucideIcons.user,
-                          accentColor: const Color(0xFFEC4899),
+                          accentColor: Colors.white,
                         ),
                       ),
                     ),
@@ -512,7 +512,7 @@ class _LoginScreenState extends State<LoginScreen>
                       hint: 'Email address',
                       icon: LucideIcons.mail,
                       keyboardType: TextInputType.emailAddress,
-                      accentColor: const Color(0xFF00E5FF),
+                      accentColor: Colors.white,
                     ),
 
                     const SizedBox(height: 16),
@@ -525,7 +525,7 @@ class _LoginScreenState extends State<LoginScreen>
                       hint: _isSignUpMode ? 'Password (min 6 chars)' : 'Password',
                       icon: LucideIcons.lock,
                       obscure: _obscureText,
-                      accentColor: const Color(0xFFA855F7),
+                      accentColor: Colors.white,
                       onToggleObscure: () => setState(() => _obscureText = !_obscureText),
                     ),
 
@@ -535,7 +535,7 @@ class _LoginScreenState extends State<LoginScreen>
                       _buildStrengthBar(),
                     ],
 
-                    // Confirm Password Field (Only when in Sign Up Mode)
+                    // Confirm Password Field (Sign Up Mode)
                     AnimatedCrossFade(
                       duration: const Duration(milliseconds: 300),
                       crossFadeState: _isSignUpMode
@@ -551,7 +551,7 @@ class _LoginScreenState extends State<LoginScreen>
                           hint: 'Confirm Password',
                           icon: LucideIcons.shieldCheck,
                           obscure: _obscureConfirmText,
-                          accentColor: const Color(0xFF3B82F6),
+                          accentColor: Colors.white,
                           onToggleObscure: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
                         ),
                       ),
@@ -572,7 +572,7 @@ class _LoginScreenState extends State<LoginScreen>
                           child: Text(
                             'Forgot password?',
                             style: GoogleFonts.outfit(
-                              color: const Color(0xFF67E8F9),
+                              color: Colors.white70,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -583,20 +583,17 @@ class _LoginScreenState extends State<LoginScreen>
 
                     const SizedBox(height: 24),
 
-                    // Primary Auth Button
+                    // Black & White High-Contrast Liquid Primary CTA Button
                     _buildPrimaryButton(
                       label: _isSignUpMode ? 'CREATE ACCOUNT' : 'SIGN IN',
                       onPressed: _isLoading ? null : _handleAuth,
                       isLoading: _isLoading,
-                      colors: _isSignUpMode
-                          ? const [Color(0xFFEC4899), Color(0xFFA855F7), Color(0xFF3B82F6)]
-                          : const [Color(0xFFA855F7), Color(0xFF3B82F6), Color(0xFF00E5FF)],
                     ),
                   ],
                 ),
               ),
 
-              // Upper Specular Gel Lens Arc
+              // Upper Specular Lens Arc Highlight (Reflective Gloss)
               Positioned(
                 top: 0,
                 left: 0,
@@ -610,7 +607,7 @@ class _LoginScreenState extends State<LoginScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withValues(alpha: 0.40),
+                          Colors.white.withValues(alpha: 0.50),
                           Colors.white.withValues(alpha: 0.0),
                         ],
                       ),
@@ -629,16 +626,16 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Segmented Liquid Glass Tab Bar [ Sign In | Sign Up ]
+  // Segmented Black & White Liquid Glass Tab Bar [ Sign In | Sign Up ]
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildSegmentedTabBar() {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: Colors.black.withValues(alpha: 0.40),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.30),
+          color: Colors.white.withValues(alpha: 0.35),
           width: 1.2,
         ),
       ),
@@ -691,18 +688,18 @@ class _LoginScreenState extends State<LoginScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white.withValues(alpha: 0.30),
-                    const Color(0xFFA855F7).withValues(alpha: 0.35),
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.80),
                   ],
                 )
               : null,
           border: isSelected
-              ? Border.all(color: Colors.white.withValues(alpha: 0.60), width: 1.2)
+              ? Border.all(color: Colors.white, width: 1.2)
               : null,
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFFA855F7).withValues(alpha: 0.30),
+                    color: Colors.white.withValues(alpha: 0.35),
                     blurRadius: 12,
                   ),
                 ]
@@ -712,7 +709,7 @@ class _LoginScreenState extends State<LoginScreen>
           child: Text(
             title,
             style: GoogleFonts.outfit(
-              color: isSelected ? Colors.white : Colors.white54,
+              color: isSelected ? const Color(0xFF0F172A) : Colors.white60,
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             ),
@@ -824,7 +821,7 @@ class _LoginScreenState extends State<LoginScreen>
             height: 54,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              color: Colors.white.withValues(alpha: busy ? 0.06 : 0.14),
+              color: Colors.black.withValues(alpha: busy ? 0.20 : 0.40),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.50),
                 width: 1.4,
@@ -833,13 +830,13 @@ class _LoginScreenState extends State<LoginScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withValues(alpha: 0.25),
-                  Colors.white.withValues(alpha: 0.05),
+                  Colors.white.withValues(alpha: 0.20),
+                  Colors.black.withValues(alpha: 0.30),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withValues(alpha: 0.30),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -935,30 +932,30 @@ class _LoginScreenState extends State<LoginScreen>
             width: double.infinity,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
+              color: Colors.black.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.40),
+                color: Colors.white.withValues(alpha: 0.45),
                 width: 1.2,
               ),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF00E5FF).withValues(alpha: 0.15),
-                  Colors.white.withValues(alpha: 0.04),
+                  Colors.white.withValues(alpha: 0.15),
+                  Colors.black.withValues(alpha: 0.25),
                 ],
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(LucideIcons.zap, size: 16, color: Color(0xFF67E8F9)),
+                const Icon(LucideIcons.zap, size: 16, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
                   'Continue as Guest',
                   style: GoogleFonts.outfit(
-                    color: Colors.white70,
+                    color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -984,17 +981,14 @@ class _LoginScreenState extends State<LoginScreen>
             HapticFeedback.selectionClick();
             setState(() => _isSignUpMode = !_isSignUpMode);
           },
-          child: ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [Color(0xFF67E8F9), Color(0xFFD8B4FE)],
-            ).createShader(bounds),
-            child: Text(
-              _isSignUpMode ? 'Sign In' : 'Sign Up',
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+          child: Text(
+            _isSignUpMode ? 'Sign In' : 'Sign Up',
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.white70,
             ),
           ),
         ),
@@ -1010,7 +1004,7 @@ class _LoginScreenState extends State<LoginScreen>
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     bool? obscure,
-    Color accentColor = const Color(0xFF00E5FF),
+    Color accentColor = Colors.white,
     VoidCallback? onToggleObscure,
   }) {
     return ClipRRect(
@@ -1022,19 +1016,19 @@ class _LoginScreenState extends State<LoginScreen>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             color: isFocused
-                ? accentColor.withValues(alpha: 0.16)
-                : Colors.white.withValues(alpha: 0.10),
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.black.withValues(alpha: 0.40),
             border: Border.all(
               color: isFocused
-                  ? accentColor.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.40),
+                  ? Colors.white.withValues(alpha: 0.90)
+                  : Colors.white.withValues(alpha: 0.35),
               width: isFocused ? 1.8 : 1.2,
             ),
             boxShadow: isFocused
                 ? [
                     BoxShadow(
-                      color: accentColor.withValues(alpha: 0.35),
-                      blurRadius: 20,
+                      color: Colors.white.withValues(alpha: 0.25),
+                      blurRadius: 18,
                       spreadRadius: 1,
                     )
                   ]
@@ -1054,7 +1048,7 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Icon(
                       icon,
                       size: 19,
-                      color: isFocused ? accentColor : Colors.white70,
+                      color: isFocused ? Colors.white : Colors.white70,
                     ),
                   ),
                   prefixIconConstraints: const BoxConstraints(minWidth: 54),
@@ -1108,11 +1102,13 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Black & White Glassmorphism Liquid Primary CTA Button
+  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildPrimaryButton({
     required String label,
     required VoidCallback? onPressed,
     required bool isLoading,
-    required List<Color> colors,
   }) {
     return GestureDetector(
       onTap: onPressed,
@@ -1127,27 +1123,27 @@ class _LoginScreenState extends State<LoginScreen>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
               gradient: onPressed != null
-                  ? LinearGradient(
-                      colors: colors,
+                  ? const LinearGradient(
+                      colors: [Color(0xFFFFFFFF), Color(0xFFF1F5F9), Color(0xFFCBD5E1)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
                   : const LinearGradient(
-                      colors: [Color(0xFF2D2D3A), Color(0xFF1A1A28)],
+                      colors: [Color(0xFF334155), Color(0xFF1E293B)],
                     ),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.65),
+                color: Colors.white,
                 width: 1.5,
               ),
               boxShadow: onPressed != null
                   ? [
                       BoxShadow(
-                        color: colors.first.withValues(alpha: 0.50),
+                        color: Colors.white.withValues(alpha: 0.40),
                         blurRadius: 24,
                         offset: const Offset(0, 6),
                       ),
                       BoxShadow(
-                        color: colors.last.withValues(alpha: 0.35),
+                        color: Colors.black.withValues(alpha: 0.40),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       ),
@@ -1162,16 +1158,16 @@ class _LoginScreenState extends State<LoginScreen>
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                            color: Color(0xFF0F172A),
+                            strokeWidth: 2.5,
                           ),
                         )
                       : Text(
                           label,
                           style: GoogleFonts.outfit(
-                            color: Colors.white,
+                            color: const Color(0xFF0F172A), // Obsidian text on liquid white glass
                             fontSize: 15,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w900,
                             letterSpacing: 2.5,
                           ),
                         ),
@@ -1188,7 +1184,7 @@ class _LoginScreenState extends State<LoginScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withValues(alpha: 0.50),
+                          Colors.white.withValues(alpha: 0.70),
                           Colors.white.withValues(alpha: 0.0),
                         ],
                       ),
