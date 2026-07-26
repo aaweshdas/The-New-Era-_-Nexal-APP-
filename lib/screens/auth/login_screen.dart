@@ -252,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen>
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(26, 140, 26, 20),
+              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
