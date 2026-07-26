@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:ui';
 import 'dart:convert';
 import 'package:http/http.dart' as http_pkg;
@@ -757,20 +758,66 @@ class _AIAssistViewState extends State<AIAssistView>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // SERVER WAKE / PAUSE CONTROL
-  // ---------------------------------------------------------------------------
-
-  /// HTTP ping to wake up the sleeping Render service, then reconnect socket.
+  /// Wake up the backend — handles two cases:
+  ///   • Local dev  → launches start_all_backends.bat in a detached window
+  ///   • Remote prod → HTTP ping to wake the Render.com dyno
+  /// Then reconnects the Socket.IO connection in both cases.
   Future<void> _wakeRenderServer() async {
-    if (_isWakingServer || _isBackendConnected) return;
+    if (_isWakingServer) return;
     HapticFeedback.mediumImpact();
     setState(() => _isWakingServer = true);
-    _showSnack('Waking backend server on Render...', LucideIcons.server, _amber);
 
-    // Fire-and-forget HTTP ping — just kicks the Render dyno awake.
-    // We do NOT await it; the socket reconnect runs in parallel.
-    AriaConfig.load().then((config) {
+    final config = await AriaConfig.load();
+    final isLocal = config.backendUrl.contains('localhost') ||
+        config.backendUrl.contains('10.0.2.2') ||
+        config.backendUrl.contains('127.0.0.1');
+
+    if (isLocal && !kIsWeb) {
+      // ── LOCAL: launch the gateway via .bat ──────────────────────
+      _showSnack('Launching local backend servers...', LucideIcons.server, _amber);
+      final candidatePaths = [
+        r's:\All Code\Antigravity\Nexal_App\Backend\start_all_backends.bat',
+        '${Directory.current.path}\\Backend\\start_all_backends.bat',
+        '${Directory.current.path}/Backend/start_all_backends.bat',
+      ];
+      bool launched = false;
+      for (final p in candidatePaths) {
+        final f = File(p);
+        if (f.existsSync()) {
+          try {
+            await Process.start(
+              'cmd.exe',
+              ['/c', f.path],
+              workingDirectory: f.parent.path,
+              mode: ProcessStartMode.detached,
+            );
+            launched = true;
+            debugPrint('[ARIA] Launched .bat: ${f.path}');
+            break;
+          } catch (e) {
+            debugPrint('[ARIA] .bat launch error: $e');
+          }
+        }
+      }
+      if (!launched) {
+        // Fallback: launch gateway.ts directly
+        try {
+          await Process.start(
+            'cmd.exe',
+            ['/c', 'start', '"Nexal Gateway"', 'cmd', '/k', 'npx tsx src/gateway.ts'],
+            workingDirectory: r's:\All Code\Antigravity\Nexal_App\Backend',
+            mode: ProcessStartMode.detached,
+          );
+          debugPrint('[ARIA] Direct gateway.ts fallback launched');
+        } catch (e) {
+          debugPrint('[ARIA] Gateway fallback error: $e');
+        }
+      }
+      // Give the gateway ~3s head-start before connecting socket
+      await Future.delayed(const Duration(seconds: 3));
+    } else {
+      // ── REMOTE (Render.com): HTTP ping to wake the dyno ─────────
+      _showSnack('Waking backend server...', LucideIcons.server, _amber);
       final baseUrl = config.backendUrl
           .replaceFirst('wss://', 'https://')
           .replaceFirst('ws://', 'http://');
@@ -778,18 +825,16 @@ class _AIAssistViewState extends State<AIAssistView>
           .get(Uri.parse('$baseUrl/health'))
           .timeout(const Duration(seconds: 90))
           .catchError((_) => http_pkg.Response('', 200));
-    });
+    }
 
-    // Reconnect socket immediately — it retries every 2s automatically.
-    // _isWakingServer is cleared by the onConnected listener the moment the
-    // socket establishes a connection (no need to wait for HTTP response).
+    // ── Reconnect socket (retries every 2 s automatically) ──────────
     await AriaService.instance.reconnect();
 
-    // Safety: if still waking after 90s, give up and show an error.
-    Future.delayed(const Duration(seconds: 90), () {
+    // Safety timeout — if still waking after 60s, give up
+    Future.delayed(const Duration(seconds: 60), () {
       if (mounted && _isWakingServer) {
         setState(() => _isWakingServer = false);
-        _showSnack('Server not responding. Try again.', LucideIcons.alertTriangle, _pink);
+        _showSnack('Server not responding. Check that backends are running.', LucideIcons.alertTriangle, _pink);
       }
     });
   }
