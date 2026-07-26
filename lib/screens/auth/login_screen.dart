@@ -353,38 +353,43 @@ class _LoginScreenState extends State<LoginScreen>
 
           const SizedBox(width: 20),
 
-          // ── Right Side Typography: Nexal (Enlarged Main Font) & The New Era ─
+          // ── Right Side Typography: Nexal & The New Era (Rye Font from Messages Page) ─
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Line 1: Nexal (Enlarged Main Dashboard Font - Outfit w900, size 52)
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFCBD5E1)],
-                ).createShader(bounds),
-                child: Text(
-                  'Nexal',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 52,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
-                    height: 1.05,
-                  ),
+              // Line 1: Nexal (Headline Font from Messages Page - GoogleFonts.rye)
+              Text(
+                'Nexal',
+                style: GoogleFonts.rye(
+                  color: Colors.white,
+                  fontSize: 48,
+                  height: 1.05,
+                  letterSpacing: 1.5,
                 ),
-              ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
+              )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .shimmer(
+                    duration: 3.seconds,
+                    colors: const [
+                      Colors.white,
+                      Color(0xFFA855F7),
+                      Color(0xFF06B6D4),
+                      Color(0xFFEC4899),
+                      Colors.white,
+                    ],
+                  )
+                  .fadeIn(delay: 200.ms, duration: 600.ms),
 
               const SizedBox(height: 2),
 
-              // Line 2: The New Era (Enlarged Sub-Headline, size 21)
+              // Line 2: The New Era (Sub-Headline in Rye Font)
               Text(
                 'The New Era',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.rye(
                   color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 21,
-                  letterSpacing: 3.2,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  letterSpacing: 2.0,
                 ),
               ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
             ],
