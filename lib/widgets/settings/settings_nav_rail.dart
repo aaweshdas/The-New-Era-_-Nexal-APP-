@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SettingsNavItem {
@@ -9,12 +11,12 @@ class SettingsNavItem {
 }
 
 const List<SettingsNavItem> kSettingsNavItems = [
-  SettingsNavItem(icon: LucideIcons.cpu,        label: 'System'),
-  SettingsNavItem(icon: LucideIcons.palette,    label: 'Visuals'),
-  SettingsNavItem(icon: LucideIcons.shieldCheck,label: 'Security'),
-  SettingsNavItem(icon: LucideIcons.activity,   label: 'Diagn.'),
-  SettingsNavItem(icon: LucideIcons.bell,       label: 'Notifs'),
-  SettingsNavItem(icon: LucideIcons.info,       label: 'About'),
+  SettingsNavItem(icon: LucideIcons.cpu,         label: 'System'),
+  SettingsNavItem(icon: LucideIcons.palette,     label: 'Visuals'),
+  SettingsNavItem(icon: LucideIcons.shieldCheck, label: 'Security'),
+  SettingsNavItem(icon: LucideIcons.activity,    label: 'Diagn.'),
+  SettingsNavItem(icon: LucideIcons.bell,        label: 'Notifs'),
+  SettingsNavItem(icon: LucideIcons.info,        label: 'About'),
 ];
 
 class SettingsNavRail extends StatelessWidget {
@@ -35,123 +37,149 @@ class SettingsNavRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 100,
-      decoration: BoxDecoration(
-        color: const Color(0xFF080C18),
-        border: Border(
-          right: BorderSide(color: Colors.white.withValues(alpha: 0.07)),
-        ),
-      ),
-      child: Column(
-        children: [
-          // Avatar section
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 28, 0, 24),
-            child: Column(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [accentColor, accentColor.withValues(alpha: 0.5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withValues(alpha: 0.35),
-                        blurRadius: 14,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      username.isNotEmpty ? username[0].toUpperCase() : 'U',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  username.length > 9
-                      ? '${username.substring(0, 8)}…'
-                      : username,
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-
-          Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-          const SizedBox(height: 10),
-
-          // Nav items
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              itemCount: kSettingsNavItems.length,
-              itemBuilder: (context, i) {
-                final item = kSettingsNavItems[i];
-                final isActive = selectedIndex == i;
-                return _NavRailItem(
-                  icon: item.icon,
-                  label: item.label,
-                  isActive: isActive,
-                  accentColor: accentColor,
-                  onTap: () => onDestinationSelected(i),
-                );
-              },
-            ),
-          ),
-
-          // Logout Button at bottom of rail
-          if (onLogoutTap != null) ...[
-            Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              child: GestureDetector(
-                onTap: onLogoutTap,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.redAccent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
-                  ),
-                  child: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(LucideIcons.logOut, size: 18, color: Colors.redAccent),
-                      SizedBox(height: 4),
-                      Text(
-                        'Logout',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: 98,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            border: Border(
+              right: BorderSide(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1.2,
               ),
             ),
-          ],
-        ],
+          ),
+          child: Column(
+            children: [
+              // User Avatar Section
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 24, 0, 20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            accentColor,
+                            accentColor.withValues(alpha: 0.4),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          width: 1.4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.45),
+                            blurRadius: 16,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          username.isNotEmpty ? username[0].toUpperCase() : 'N',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      username.length > 9
+                          ? '${username.substring(0, 8)}…'
+                          : username,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                height: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                color: Colors.white.withValues(alpha: 0.12),
+              ),
+              const SizedBox(height: 10),
+
+              // Navigation Rail Items
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  itemCount: kSettingsNavItems.length,
+                  itemBuilder: (context, i) {
+                    final item = kSettingsNavItems[i];
+                    final isActive = selectedIndex == i;
+                    return _NavRailItem(
+                      icon: item.icon,
+                      label: item.label,
+                      isActive: isActive,
+                      accentColor: accentColor,
+                      onTap: () => onDestinationSelected(i),
+                    );
+                  },
+                ),
+              ),
+
+              // Logout Button at Bottom of Rail
+              if (onLogoutTap != null) ...[
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                  child: GestureDetector(
+                    onTap: onLogoutTap,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.45),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(LucideIcons.logOut, size: 18, color: Color(0xFFEF4444)),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Logout',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFEF4444),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -177,39 +205,49 @@ class _NavRailItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isActive ? accentColor.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          border: Border(
-            left: BorderSide(
-              color: isActive ? accentColor : Colors.transparent,
-              width: 3,
-            ),
+          color: isActive
+              ? accentColor.withValues(alpha: 0.20)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isActive
+                ? accentColor.withValues(alpha: 0.70)
+                : Colors.transparent,
+            width: 1.2,
           ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.30),
+                    blurRadius: 12,
+                  ),
+                ]
+              : [],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedScale(
-              scale: isActive ? 1.1 : 1.0,
+              scale: isActive ? 1.12 : 1.0,
               duration: const Duration(milliseconds: 200),
               child: Icon(
                 icon,
-                size: 22,
-                color: isActive ? accentColor : Colors.white30,
+                size: 21,
+                color: isActive ? Colors.white : Colors.white54,
               ),
             ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 6),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                color: isActive ? Colors.white : Colors.white30,
-                letterSpacing: 0.1,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? Colors.white : Colors.white54,
               ),
               textAlign: TextAlign.center,
             ),

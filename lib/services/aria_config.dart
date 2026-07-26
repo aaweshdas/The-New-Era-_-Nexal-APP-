@@ -29,6 +29,15 @@ class AriaConfig {
   String livekitApiSecret;
   String backendUrl;
 
+  AriaConfig({
+    required this.groqApiKey,
+    required this.deepgramApiKey,
+    required this.livekitUrl,
+    required this.livekitApiKey,
+    required this.livekitApiSecret,
+    required this.backendUrl,
+  });
+
   AriaConfig._({
     required this.groqApiKey,
     required this.deepgramApiKey,

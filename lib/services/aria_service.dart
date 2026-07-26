@@ -42,6 +42,12 @@ class AriaService {
   Stream<void>      get onTtsEnd          => _onTtsEndCtrl.stream;
   Stream<void>      get onSttReady        => _onSttReadyCtrl.stream;
 
+  // ─── Update Config & Reconnect ──────────────────────────────
+  void updateConfig(AriaConfig config) {
+    _config = config;
+    connect();
+  }
+
   // ─── Connect ────────────────────────────────────────────────────
   Future<void> connect() async {
     _config = await AriaConfig.load();
