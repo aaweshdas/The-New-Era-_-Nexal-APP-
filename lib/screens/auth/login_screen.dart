@@ -260,12 +260,12 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
 
                     // ── Brand Logo Header ───────────────────────────────
                     _buildBrandHeader(),
 
-                    const SizedBox(height: 24), // 20% expanded breathing room between logo & login panel
+                    const SizedBox(height: 12), // Compact gap between logo & login panel
 
                     // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
