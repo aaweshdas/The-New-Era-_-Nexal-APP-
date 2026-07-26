@@ -251,31 +251,24 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Main Content (Logo Centered in Top Space Above Auth Card) ──────
+          // ── Main Content (Compact & Centered Screen Flow) ──────────────────
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
-                        child: Column(
-                          children: [
-                            // ── Logo Header (Centered in middle space between top of screen & auth card) ──
-                            Expanded(
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 20),
-                                  child: _buildBrandHeader(),
-                                ),
-                              ),
-                            ),
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 16),
 
-                            // ── Black & White Glassmorphism Combined Auth Card ─────
-                            _buildAuthCard(),
+                    // ── Brand Logo Header ───────────────────────────────
+                    _buildBrandHeader(),
+
+                    const SizedBox(height: 12), // Compact gap between logo & login panel
+
+                    // ── Black & White Glassmorphism Combined Auth Card ─────
+                    _buildAuthCard(),
 
                             const SizedBox(height: 18),
 
@@ -296,20 +289,14 @@ class _LoginScreenState extends State<LoginScreen>
 
                             // ── Mode Switcher Link ─────────────────────────────────
                             _buildModeToggleLink(),
-
-                            const SizedBox(height: 12),
                           ],
                         ),
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          ],
-        ),
-      );
+                ],
+              ),
+            );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
