@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/gallery/premium_timeline_gallery.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class GalleryView extends StatefulWidget {
   const GalleryView({super.key});

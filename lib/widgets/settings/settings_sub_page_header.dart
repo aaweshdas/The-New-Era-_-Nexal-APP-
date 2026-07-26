@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Reusable header for all settings sub-screens.
 /// Provides a consistent back-arrow + title + optional trailing action.

@@ -4,7 +4,7 @@ import 'dart:async' as dart_async;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show WriteBuffer;
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';

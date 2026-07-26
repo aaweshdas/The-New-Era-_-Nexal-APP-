@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:ui';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -162,13 +162,13 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                       },
                     ),
                     _ShareOption(
-                      icon: LucideIcons.instagram,
+                      icon: LucideIcons.camera,
                       label: 'Stories',
                       onTap: () {
                         Navigator.pop(context);
                         _showSnackBar(
                           'Sharing to Stories...',
-                          icon: LucideIcons.instagram,
+                          icon: LucideIcons.camera,
                         );
                       },
                     ),

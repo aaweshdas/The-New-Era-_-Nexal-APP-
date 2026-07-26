@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1922,7 +1922,7 @@ class _SettingsModalState extends State<SettingsModal> {
         ...[
           (LucideIcons.helpCircle, 'Help Center',
               'Documentation, FAQs, tutorials',      null),
-          (LucideIcons.github, 'Source Repository',
+          (LucideIcons.code2, 'Source Repository',
               'View source code',                    null),
           (LucideIcons.mail, 'Send Feedback',
               'Report bugs, suggest features',       'New'),
