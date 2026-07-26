@@ -383,7 +383,7 @@ class _SettingsModalState extends State<SettingsModal> {
           msg,
           style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
         ),
-        backgroundColor: Colors.black.withValues(alpha: 0.90),
+        backgroundColor: Colors.black.withValues(alpha: 0.92),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
@@ -396,6 +396,9 @@ class _SettingsModalState extends State<SettingsModal> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isMobile = mediaQuery.size.width < 650;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -417,79 +420,84 @@ class _SettingsModalState extends State<SettingsModal> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.40),
-                    Colors.black.withValues(alpha: 0.75),
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.80),
                   ],
                 ),
               ),
             ),
           ),
 
-          // Main 3D Liquid Glass Shell Container
+          // Responsive Main Shell
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(isMobile ? 6 : 14),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(36),
+                borderRadius: BorderRadius.circular(isMobile ? 24 : 36),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(36),
+                      borderRadius: BorderRadius.circular(isMobile ? 24 : 36),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
                           Colors.white.withValues(alpha: 0.20),
-                          Colors.black.withValues(alpha: 0.65),
+                          Colors.black.withValues(alpha: 0.70),
                           Colors.white.withValues(alpha: 0.08),
                         ],
                       ),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.65),
-                        width: 1.5,
+                        width: 1.4,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: _accent.glow,
-                          blurRadius: 48,
+                          blurRadius: 40,
                           spreadRadius: 2,
                         ),
                       ],
                     ),
                     child: Column(
                       children: [
-                        // Top Command Bar
-                        _buildTopCommandBar(),
+                        // Responsive Top Command Bar
+                        _buildTopCommandBar(isMobile: isMobile),
 
-                        // Main Navigation & Sub-Page Layout
+                        // If Mobile, render horizontal liquid tab bar below top bar
+                        if (isMobile) _buildMobileTabBar(),
+
+                        // Main Navigation & Content Body
                         Expanded(
-                          child: Row(
-                            children: [
-                              SettingsNavRail(
-                                selectedIndex: _activeTab,
-                                accentColor: _accent.primary,
-                                username: _username,
-                                onDestinationSelected: (idx) => setState(() => _activeTab = idx),
-                                onLogoutTap: () async {
-                                  final navigator = Navigator.of(context);
-                                  await AuthService.instance.logout();
-                                  navigator.pushAndRemoveUntil(
-                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                    (route) => false,
-                                  );
-                                },
-                              ),
+                          child: isMobile
+                              ? (_loading
+                                  ? Center(child: CircularProgressIndicator(color: _accent.primary))
+                                  : _buildActiveTabContent(isMobile: true))
+                              : Row(
+                                  children: [
+                                    SettingsNavRail(
+                                      selectedIndex: _activeTab,
+                                      accentColor: _accent.primary,
+                                      username: _username,
+                                      onDestinationSelected: (idx) => setState(() => _activeTab = idx),
+                                      onLogoutTap: () async {
+                                        final navigator = Navigator.of(context);
+                                        await AuthService.instance.logout();
+                                        navigator.pushAndRemoveUntil(
+                                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                          (route) => false,
+                                        );
+                                      },
+                                    ),
 
-                              Expanded(
-                                child: _loading
-                                    ? Center(
-                                        child: CircularProgressIndicator(color: _accent.primary),
-                                      )
-                                    : _buildActiveTabContent(),
-                              ),
-                            ],
-                          ),
+                                    Expanded(
+                                      child: _loading
+                                          ? Center(child: CircularProgressIndicator(color: _accent.primary))
+                                          : _buildActiveTabContent(isMobile: false),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ],
                     ),
@@ -504,15 +512,15 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Top Command Console Header Bar
+  // Top Command Console Header Bar (Responsive)
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildTopCommandBar() {
+  Widget _buildTopCommandBar({required bool isMobile}) {
     final activeCount = _backendHealth.values.where((v) => v).length;
     return Container(
-      height: 76,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      height: isMobile ? 64 : 76,
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.40),
+        color: Colors.black.withValues(alpha: 0.45),
         border: Border(
           bottom: BorderSide(
             color: Colors.white.withValues(alpha: 0.16),
@@ -522,90 +530,93 @@ class _SettingsModalState extends State<SettingsModal> {
       ),
       child: Row(
         children: [
-          // Logo Squircle Badge
+          // Logo Badge
           Container(
-            width: 46,
-            height: 46,
+            width: isMobile ? 38 : 46,
+            height: isMobile ? 38 : 46,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
               gradient: LinearGradient(
                 colors: [_accent.primary, _accent.secondary],
               ),
               boxShadow: [
                 BoxShadow(
                   color: _accent.glow,
-                  blurRadius: 18,
+                  blurRadius: 14,
                 ),
               ],
             ),
             padding: const EdgeInsets.all(3),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(isMobile ? 9 : 13),
               child: Image.asset('assets/nexal_logo.png', fit: BoxFit.cover),
             ),
           ),
 
-          const SizedBox(width: 14),
+          SizedBox(width: isMobile ? 10 : 14),
 
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'NEXAL COMMAND CENTER',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.6,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _accent.primary.withValues(alpha: 0.20),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _accent.primary.withValues(alpha: 0.60), width: 1),
-                    ),
-                    child: Text(
-                      'PRO SUITE',
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      isMobile ? 'SETTINGS' : 'NEXAL COMMAND CENTER',
                       style: GoogleFonts.outfit(
-                        color: _accent.primary,
-                        fontSize: 9.5,
+                        color: Colors.white,
+                        fontSize: isMobile ? 15 : 16,
                         fontWeight: FontWeight.w900,
+                        letterSpacing: isMobile ? 1.0 : 1.6,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '⚡ Gateway: ${_connectionPing ?? 14}ms • $activeCount/7 Services Active',
-                style: GoogleFonts.outfit(
-                  color: Colors.white70,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: _accent.primary.withValues(alpha: 0.20),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: _accent.primary.withValues(alpha: 0.60), width: 1),
+                      ),
+                      child: Text(
+                        'PRO',
+                        style: GoogleFonts.outfit(
+                          color: _accent.primary,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 1),
+                Text(
+                  '⚡ $activeCount/7 Active • ${_connectionPing ?? 14}ms',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          const Spacer(),
-
-          // Save Sync Liquid Gem Pill
+          // Save Sync Liquid Pill
           GestureDetector(
             onTap: _saving ? null : _saveAllSettings,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(20),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 12 : 18,
+                    vertical: isMobile ? 8 : 10,
+                  ),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(
                       colors: [
                         _accent.primary.withValues(alpha: 0.90),
@@ -614,35 +625,30 @@ class _SettingsModalState extends State<SettingsModal> {
                     ),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.70),
-                      width: 1.3,
+                      width: 1.2,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _accent.glow,
-                        blurRadius: 14,
-                      ),
-                    ],
                   ),
                   child: Row(
                     children: [
                       if (_saving)
                         const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.2),
+                          width: 13,
+                          height: 13,
+                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
                         )
                       else
-                        Icon(_saved ? LucideIcons.check : LucideIcons.save, size: 15, color: Colors.black),
-                      const SizedBox(width: 8),
-                      Text(
-                        _saved ? 'SYNCHRONIZED' : 'SYNC SETTINGS',
-                        style: GoogleFonts.outfit(
-                          color: Colors.black,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
+                        Icon(_saved ? LucideIcons.check : LucideIcons.save, size: 14, color: Colors.black),
+                      if (!isMobile) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          _saved ? 'SYNCHRONIZED' : 'SYNC SETTINGS',
+                          style: GoogleFonts.outfit(
+                            color: Colors.black,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -650,19 +656,19 @@ class _SettingsModalState extends State<SettingsModal> {
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
           // Close Button
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: Container(
-              padding: const EdgeInsets.all(7),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.12),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
               ),
-              child: const Icon(LucideIcons.x, color: Colors.white, size: 18),
+              child: const Icon(LucideIcons.x, color: Colors.white, size: 17),
             ),
           ),
         ],
@@ -671,32 +677,89 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Mobile Horizontal Liquid Tab Bar
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildMobileTabBar() {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.35),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withValues(alpha: 0.12),
+            width: 1,
+          ),
+        ),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: kSettingsNavItems.length,
+        itemBuilder: (context, i) {
+          final item = kSettingsNavItems[i];
+          final isActive = _activeTab == i;
+          return GestureDetector(
+            onTap: () => setState(() => _activeTab = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: isActive ? _accent.primary.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isActive ? _accent.primary.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.15),
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(item.icon, size: 15, color: isActive ? _accent.primary : Colors.white60),
+                  const SizedBox(width: 6),
+                  Text(
+                    item.label,
+                    style: GoogleFonts.outfit(
+                      color: isActive ? Colors.white : Colors.white60,
+                      fontSize: 12,
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
   // Sub-Tab Content Switcher
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildActiveTabContent() {
+  Widget _buildActiveTabContent({bool isMobile = false}) {
     switch (_activeTab) {
       case 0:
-        return _buildSystemTab();
+        return _buildSystemTab(isMobile: isMobile);
       case 1:
-        return _buildVisualsTab();
+        return _buildVisualsTab(isMobile: isMobile);
       case 2:
-        return _buildSecurityTab();
+        return _buildSecurityTab(isMobile: isMobile);
       case 3:
-        return _buildDiagnosticsTab();
+        return _buildDiagnosticsTab(isMobile: isMobile);
       case 4:
-        return _buildNotificationsTab();
+        return _buildNotificationsTab(isMobile: isMobile);
       case 5:
-        return _buildAboutTab();
+        return _buildAboutTab(isMobile: isMobile);
       default:
-        return _buildSystemTab();
+        return _buildSystemTab(isMobile: isMobile);
     }
   }
 
   // ── Tab 0: System (Backend Orchestrator & API Config) ──────────────────────
-  Widget _buildSystemTab() {
+  Widget _buildSystemTab({bool isMobile = false}) {
     final activeCount = _backendHealth.values.where((v) => v).length;
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 14 : 24),
       children: [
         SettingsSectionLabel(
           text: 'Backend Suite Orchestrator',
@@ -707,7 +770,7 @@ class _SettingsModalState extends State<SettingsModal> {
         // Hero Master Launch Console Banner
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
               colors: [
                 _accent.primary.withValues(alpha: 0.28),
@@ -716,78 +779,76 @@ class _SettingsModalState extends State<SettingsModal> {
             ),
             border: Border.all(
               color: _accent.primary.withValues(alpha: 0.65),
-              width: 1.5,
+              width: 1.4,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: _accent.glow,
-                blurRadius: 20,
-              ),
-            ],
           ),
-          padding: const EdgeInsets.all(20),
-          child: Row(
+          padding: EdgeInsets.all(isMobile ? 14 : 20),
+          child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _accent.primary.withValues(alpha: 0.22),
-                  border: Border.all(color: _accent.primary.withValues(alpha: 0.5)),
-                ),
-                child: Icon(LucideIcons.zap, color: _accent.primary, size: 26),
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Master Microservices Controller',
-                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _accent.primary.withValues(alpha: 0.22),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '$activeCount of 7 Services Online & Reporting Health',
-                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.5),
+                    child: Icon(LucideIcons.zap, color: _accent.primary, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Master Microservices',
+                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900),
+                        ),
+                        Text(
+                          '$activeCount/7 Services Online',
+                          style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              ElevatedButton.icon(
-                onPressed: _startingAllBackends ? null : _turnOnAllBackends,
-                icon: _startingAllBackends
-                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.2))
-                    : const Icon(LucideIcons.power, size: 17, color: Colors.black),
-                label: Text(
-                  _startingAllBackends ? 'LAUNCHING...' : 'RUN ALL BACKENDS',
-                  style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 12.5),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent.primary,
-                  elevation: 8,
-                  shadowColor: _accent.primary.withValues(alpha: 0.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _startingAllBackends ? null : _turnOnAllBackends,
+                  icon: _startingAllBackends
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                      : const Icon(LucideIcons.power, size: 16, color: Colors.black),
+                  label: Text(
+                    _startingAllBackends ? 'LAUNCHING...' : 'RUN ALL BACKENDS',
+                    style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 12.5),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // Health Status Grid
+        // Health Status Responsive Grid
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 10,
+          runSpacing: 10,
           children: _backendHealth.entries.map((e) {
             final isOnline = e.value;
             return Container(
-              width: 170,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              width: isMobile ? double.infinity : 170,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 color: isOnline ? const Color(0xFF10B981).withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.06),
                 border: Border.all(
                   color: isOnline ? const Color(0xFF10B981).withValues(alpha: 0.50) : Colors.white.withValues(alpha: 0.16),
@@ -802,20 +863,13 @@ class _SettingsModalState extends State<SettingsModal> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isOnline ? const Color(0xFF10B981).withValues(alpha: 0.6) : const Color(0xFFEF4444).withValues(alpha: 0.6),
-                          blurRadius: 8,
-                        ),
-                      ],
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       e.key,
-                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -824,7 +878,7 @@ class _SettingsModalState extends State<SettingsModal> {
           }).toList(),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
 
         SettingsSectionLabel(
           text: 'AI & Gateway Credentials',
@@ -838,7 +892,7 @@ class _SettingsModalState extends State<SettingsModal> {
           hint: 'http://localhost:10000',
           icon: LucideIcons.server,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassTextField(
           controller: _groqKeyCtrl,
           label: 'GROQ LLM API Key',
@@ -847,7 +901,7 @@ class _SettingsModalState extends State<SettingsModal> {
           obscure: _obscureGroq,
           onToggleObscure: () => setState(() => _obscureGroq = !_obscureGroq),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassTextField(
           controller: _deepgramKeyCtrl,
           label: 'Deepgram Speech Engine Key',
@@ -856,14 +910,14 @@ class _SettingsModalState extends State<SettingsModal> {
           obscure: _obscureDeepgram,
           onToggleObscure: () => setState(() => _obscureDeepgram = !_obscureDeepgram),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassTextField(
           controller: _livekitUrlCtrl,
           label: 'LiveKit Voice WebSocket URL',
           hint: 'wss://livekit...',
           icon: LucideIcons.radio,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassTextField(
           controller: _livekitSecCtrl,
           label: 'LiveKit Secret Key',
@@ -877,9 +931,9 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ── Tab 1: Visuals & Theme Spectrum ───────────────────────────────────────
-  Widget _buildVisualsTab() {
+  Widget _buildVisualsTab({bool isMobile = false}) {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 14 : 24),
       children: [
         SettingsSectionLabel(
           text: '5 High-Glow Accent Orbs',
@@ -888,8 +942,10 @@ class _SettingsModalState extends State<SettingsModal> {
         ),
 
         // Live Accent Orb Selectors
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          alignment: WrapAlignment.spaceEvenly,
           children: List.generate(_accents.length, (i) {
             final acc = _accents[i];
             final selected = _selectedAccent == i;
@@ -899,8 +955,8 @@ class _SettingsModalState extends State<SettingsModal> {
                 children: [
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
-                    width: 62,
-                    height: 62,
+                    width: isMobile ? 54 : 62,
+                    height: isMobile ? 54 : 62,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(colors: [acc.primary, acc.secondary]),
@@ -911,18 +967,17 @@ class _SettingsModalState extends State<SettingsModal> {
                       boxShadow: [
                         BoxShadow(
                           color: acc.glow,
-                          blurRadius: selected ? 24 : 8,
-                          spreadRadius: selected ? 3 : 0,
+                          blurRadius: selected ? 20 : 6,
                         ),
                       ],
                     ),
                     child: Center(
                       child: selected
-                          ? const Icon(LucideIcons.check, color: Colors.white, size: 24)
+                          ? const Icon(LucideIcons.check, color: Colors.white, size: 22)
                           : const SizedBox.shrink(),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     acc.name,
                     style: GoogleFonts.outfit(
@@ -937,7 +992,7 @@ class _SettingsModalState extends State<SettingsModal> {
           }),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
 
         SettingsSectionLabel(
           text: 'Liquid Glass Mode & Lighting',
@@ -947,21 +1002,21 @@ class _SettingsModalState extends State<SettingsModal> {
 
         _buildGlassSwitchTile(
           title: 'Obsidian OLED Dark Mode',
-          subtitle: 'Deep midnight OLED backdrop with specular neon reflections',
+          subtitle: 'Deep midnight OLED backdrop',
           value: _darkMode,
           onChanged: (v) => setState(() => _darkMode = v),
           icon: LucideIcons.moon,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
           title: 'Realtime Toast Notifications',
-          subtitle: 'Enable interactive glass alert overlays for incoming signals',
+          subtitle: 'Interactive glass alert overlays',
           value: _notifications,
           onChanged: (v) => setState(() => _notifications = v),
           icon: LucideIcons.bellRing,
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
 
         SettingsSectionLabel(
           text: 'System Language',
@@ -970,9 +1025,9 @@ class _SettingsModalState extends State<SettingsModal> {
         ),
 
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             color: Colors.white.withValues(alpha: 0.08),
             border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
           ),
@@ -996,9 +1051,9 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ── Tab 2: Security & Quantum Vault ────────────────────────────────────────
-  Widget _buildSecurityTab() {
+  Widget _buildSecurityTab({bool isMobile = false}) {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 14 : 24),
       children: [
         SettingsSectionLabel(
           text: 'Quantum Vault Controls',
@@ -1007,29 +1062,29 @@ class _SettingsModalState extends State<SettingsModal> {
         ),
 
         _buildGlassSwitchTile(
-          title: 'Biometric Lock (FaceID / Fingerprint)',
-          subtitle: 'Require biometric key verification upon app launch',
+          title: 'Biometric Lock (FaceID)',
+          subtitle: 'Require biometric key verification',
           value: _biometricsEnabled,
           onChanged: (v) => setState(() => _biometricsEnabled = v),
           icon: LucideIcons.scanFace,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
-          title: 'End-to-End Encrypted Cloud Sync',
-          subtitle: 'Encrypt payload before sending to backend gateway',
+          title: 'End-to-End Encrypted Sync',
+          subtitle: 'Encrypt payload before sending',
           value: _encryptSync,
           onChanged: (v) => setState(() => _encryptSync = v),
           icon: LucideIcons.lock,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
           title: 'Privacy Mask Shield',
-          subtitle: 'Blur sensitive keys and security credentials in UI',
+          subtitle: 'Blur sensitive keys in UI',
           value: _privacyShield,
           onChanged: (v) => setState(() => _privacyShield = v),
           icon: LucideIcons.eyeOff,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
           title: 'App Lock Security PIN',
           subtitle: 'Enforce 4-digit PIN lock when inactive',
@@ -1042,9 +1097,9 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ── Tab 3: Diagnostics & Storage Console ────────────────────────────────────
-  Widget _buildDiagnosticsTab() {
+  Widget _buildDiagnosticsTab({bool isMobile = false}) {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 14 : 24),
       children: [
         SettingsSectionLabel(
           text: 'Network Latency Gauge',
@@ -1053,84 +1108,94 @@ class _SettingsModalState extends State<SettingsModal> {
         ),
 
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             color: Colors.white.withValues(alpha: 0.08),
             border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(LucideIcons.radio, color: _accent.primary, size: 24),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Gateway Connection Health', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(
-                      _connectionPing != null ? '$_connectionPing ms response time • $_connectionStatus' : _connectionStatus,
-                      style: GoogleFonts.outfit(
-                        color: _connectionPing != null ? const Color(0xFF10B981) : Colors.white60,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+              Row(
+                children: [
+                  Icon(LucideIcons.radio, color: _accent.primary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Gateway Health', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _connectionPing != null ? '$_connectionPing ms response • $_connectionStatus' : _connectionStatus,
+                style: GoogleFonts.outfit(
+                  color: _connectionPing != null ? const Color(0xFF10B981) : Colors.white60,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              ElevatedButton(
-                onPressed: _testingConnection ? null : _testLatency,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _testingConnection ? null : _testLatency,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: _testingConnection
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                      : Text('TEST LATENCY', style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 11)),
                 ),
-                child: _testingConnection
-                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                    : Text('TEST LATENCY', style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 11)),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
 
         SettingsSectionLabel(
-          text: 'Storage Footprint & Memory',
+          text: 'Storage Footprint',
           icon: LucideIcons.database,
           accentColor: _accent.primary,
         ),
 
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             color: Colors.white.withValues(alpha: 0.08),
             border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(LucideIcons.hardDrive, color: _accent.primary, size: 24),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Cache Storage', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text('${_cacheFootprint.toStringAsFixed(1)} MB occupied', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12)),
-                  ],
-                ),
+              Row(
+                children: [
+                  Icon(LucideIcons.hardDrive, color: _accent.primary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Cache Storage', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ),
+                ],
               ),
-              OutlinedButton(
-                onPressed: _purgingCache ? null : _purgeCache,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFEF4444),
-                  side: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              const SizedBox(height: 8),
+              Text('${_cacheFootprint.toStringAsFixed(1)} MB occupied', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12)),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _purgingCache ? null : _purgeCache,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFEF4444),
+                    side: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text('PURGE CACHE', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11)),
                 ),
-                child: Text('PURGE CACHE', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11)),
               ),
             ],
           ),
@@ -1140,9 +1205,9 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ── Tab 4: Notifications & Alert Console ───────────────────────────────────
-  Widget _buildNotificationsTab() {
+  Widget _buildNotificationsTab({bool isMobile = false}) {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 14 : 24),
       children: [
         SettingsSectionLabel(
           text: 'Signal Alert Channels',
@@ -1152,28 +1217,28 @@ class _SettingsModalState extends State<SettingsModal> {
 
         _buildGlassSwitchTile(
           title: 'ARIA AI Proactive Alerts',
-          subtitle: 'Realtime AI contextual triggers & voice responses',
+          subtitle: 'Realtime AI contextual triggers',
           value: _notifAria,
           onChanged: (v) => setState(() => _notifAria = v),
           icon: LucideIcons.bot,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
           title: 'Map Proximity Radar',
-          subtitle: 'Geofence proximity notifications & pin alerts',
+          subtitle: 'Geofence proximity notifications',
           value: _notifMap,
           onChanged: (v) => setState(() => _notifMap = v),
           icon: LucideIcons.mapPin,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
-          title: 'System Microservice Updates',
-          subtitle: 'Broadcast alerts when gateway ports reconnect',
+          title: 'System Microservices',
+          subtitle: 'Alerts when ports reconnect',
           value: _notifSystem,
           onChanged: (v) => setState(() => _notifSystem = v),
           icon: LucideIcons.radio,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
 
         SettingsSectionLabel(
           text: 'Tactile & Sound Feedback',
@@ -1183,23 +1248,23 @@ class _SettingsModalState extends State<SettingsModal> {
 
         _buildGlassSwitchTile(
           title: 'Notification Audio Chime',
-          subtitle: 'Play liquid audio chime upon receiving alerts',
+          subtitle: 'Play liquid chime on alert',
           value: _notifSound,
           onChanged: (v) => setState(() => _notifSound = v),
           icon: LucideIcons.volume2,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
           title: 'Tactile Haptic Vibration',
-          subtitle: 'Haptic pulse triggers on key interactions',
+          subtitle: 'Haptic pulse on interactions',
           value: _notifVibration,
           onChanged: (v) => setState(() => _notifVibration = v),
           icon: LucideIcons.vibrate,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _buildGlassSwitchTile(
           title: 'Unread Badge Counters',
-          subtitle: 'Show floating indicator badges on tab bar icons',
+          subtitle: 'Show badges on tab bar',
           value: _notifBadge,
           onChanged: (v) => setState(() => _notifBadge = v),
           icon: LucideIcons.badgeAlert,
@@ -1209,9 +1274,9 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ── Tab 5: About Nexal Architecture ────────────────────────────────────────
-  Widget _buildAboutTab() {
+  Widget _buildAboutTab({bool isMobile = false}) {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 14 : 24),
       children: [
         SettingsSectionLabel(
           text: 'Nexal Quantum Portal',
@@ -1223,37 +1288,37 @@ class _SettingsModalState extends State<SettingsModal> {
           child: Column(
             children: [
               Container(
-                width: 90,
-                height: 90,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(22),
                   gradient: LinearGradient(colors: [_accent.primary, _accent.secondary]),
                   boxShadow: [
                     BoxShadow(
                       color: _accent.glow,
-                      blurRadius: 30,
+                      blurRadius: 24,
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(6),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(19),
+                  borderRadius: BorderRadius.circular(16),
                   child: Image.asset('assets/nexal_logo.png', fit: BoxFit.cover),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Text(
                 'NEXAL THE NEW ERA',
                 style: GoogleFonts.outfit(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Version $_appVersion (Build $_buildNumber) • Quantum Engine',
+                'Version $_appVersion (Build $_buildNumber)',
                 style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13),
               ),
             ],
@@ -1276,25 +1341,25 @@ class _SettingsModalState extends State<SettingsModal> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.32), width: 1.2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.30), width: 1.2),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: GoogleFonts.outfit(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w600),
+        style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
-          icon: Icon(icon, color: _accent.primary, size: 21),
+          icon: Icon(icon, color: _accent.primary, size: 20),
           labelText: label,
-          labelStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.5),
+          labelStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 13),
           hintText: hint,
           hintStyle: GoogleFonts.outfit(color: Colors.white38),
           border: InputBorder.none,
           suffixIcon: onToggleObscure != null
               ? IconButton(
-                  icon: Icon(obscure ? LucideIcons.eyeOff : LucideIcons.eye, color: Colors.white60, size: 19),
+                  icon: Icon(obscure ? LucideIcons.eyeOff : LucideIcons.eye, color: Colors.white60, size: 18),
                   onPressed: onToggleObscure,
                 )
               : null,
@@ -1311,28 +1376,28 @@ class _SettingsModalState extends State<SettingsModal> {
     required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         color: Colors.white.withValues(alpha: 0.08),
         border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: _accent.primary, size: 23),
-          const SizedBox(width: 16),
+          Icon(icon, color: _accent.primary, size: 21),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.5),
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12),
+                  style: GoogleFonts.outfit(color: Colors.white60, fontSize: 11.5),
                 ),
               ],
             ),
