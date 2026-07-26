@@ -262,10 +262,13 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     const SizedBox(height: 16),
 
-                    // ── Brand Logo Header ───────────────────────────────
-                    _buildBrandHeader(),
+                    // ── Brand Logo Header (Shifted 20% upwards without moving login panel) ──
+                    Transform.translate(
+                      offset: const Offset(0, -22.0),
+                      child: _buildBrandHeader(),
+                    ),
 
-                    const SizedBox(height: 12), // Compact gap between logo & login panel
+                    const SizedBox(height: 12), // Gap maintained, login panel stays fixed
 
                     // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
