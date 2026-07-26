@@ -21,7 +21,13 @@ class _AccentStyle {
   final String name;
   final Color primary;
   final Color secondary;
-  const _AccentStyle({required this.name, required this.primary, required this.secondary});
+  final Color glow;
+  const _AccentStyle({
+    required this.name,
+    required this.primary,
+    required this.secondary,
+    required this.glow,
+  });
 }
 
 // Opens Settings as a full-screen page with smooth page transition
@@ -81,7 +87,7 @@ class _SettingsModalState extends State<SettingsModal> {
   int _activeTab = 0;
 
   // Visuals & Theme Accents
-  int _selectedAccent = 1;
+  int _selectedAccent = 0;
   bool _darkMode = true;
   bool _notifications = true;
   String _selectedLanguage = 'English (US)';
@@ -91,12 +97,11 @@ class _SettingsModalState extends State<SettingsModal> {
   bool _encryptSync       = true;
   bool _privacyShield     = false;
   bool _appLockPin        = false;
-  String _autoLockTime    = 'Immediately';
 
   // Diagnostics
   bool _testingConnection = false;
   String _connectionStatus = 'Not Tested';
-  int? _connectionPing;
+  int? _connectionPing = 14;
   double _cacheFootprint = 18.4;
   bool _purgingCache = false;
 
@@ -114,12 +119,38 @@ class _SettingsModalState extends State<SettingsModal> {
   static const String _buildNumber = '20260711';
   String _username = 'neuralnexus';
 
-  // Accent definitions
+  // 5 High-Glow Accent Definitions
   final List<_AccentStyle> _accents = [
-    const _AccentStyle(name: 'Solar Gold',    primary: Color(0xFFD4A843), secondary: Color(0xFFB45309)),
-    const _AccentStyle(name: 'Electric Cyan', primary: Color(0xFF00E5FF), secondary: Color(0xFF0284C7)),
-    const _AccentStyle(name: 'Cosmic Violet', primary: Color(0xFFA855F7), secondary: Color(0xFF7E22CE)),
-    const _AccentStyle(name: 'Ruby Rose',     primary: Color(0xFFF43F5E), secondary: Color(0xFFBE123C)),
+    const _AccentStyle(
+      name: 'Electric Cyan',
+      primary: Color(0xFF00E5FF),
+      secondary: Color(0xFF0284C7),
+      glow: Color(0x6600E5FF),
+    ),
+    const _AccentStyle(
+      name: 'Cosmic Violet',
+      primary: Color(0xFFA855F7),
+      secondary: Color(0xFF7E22CE),
+      glow: Color(0x66A855F7),
+    ),
+    const _AccentStyle(
+      name: 'Solar Gold',
+      primary: Color(0xFFF59E0B),
+      secondary: Color(0xFFD97706),
+      glow: Color(0x66F59E0B),
+    ),
+    const _AccentStyle(
+      name: 'Matrix Emerald',
+      primary: Color(0xFF10B981),
+      secondary: Color(0xFF059669),
+      glow: Color(0x6610B981),
+    ),
+    const _AccentStyle(
+      name: 'Crimson Cyber',
+      primary: Color(0xFFEF4444),
+      secondary: Color(0xFFDC2626),
+      glow: Color(0x66EF4444),
+    ),
   ];
 
   _AccentStyle get _accent => _accents[_selectedAccent];
@@ -152,7 +183,8 @@ class _SettingsModalState extends State<SettingsModal> {
     _livekitSecCtrl.text  = config.livekitApiSecret;
 
     final prefs = await SharedPreferences.getInstance();
-    _selectedAccent   = prefs.getInt('nexal_selected_accent') ?? 1;
+    _selectedAccent   = prefs.getInt('nexal_selected_accent') ?? 0;
+    if (_selectedAccent >= _accents.length) _selectedAccent = 0;
     _darkMode         = prefs.getBool('nexal_dark_mode') ?? true;
     _notifications    = prefs.getBool('nexal_notifications') ?? true;
     _selectedLanguage = prefs.getString('nexal_language') ?? 'English (US)';
@@ -162,7 +194,6 @@ class _SettingsModalState extends State<SettingsModal> {
     _encryptSync       = prefs.getBool('nexal_encrypt_sync') ?? true;
     _privacyShield     = prefs.getBool('nexal_privacy_shield') ?? false;
     _appLockPin        = prefs.getBool('nexal_app_lock_pin') ?? false;
-    _autoLockTime      = prefs.getString('nexal_auto_lock_time') ?? 'Immediately';
 
     _notifAria         = prefs.getBool('nexal_notif_aria') ?? true;
     _notifMap          = prefs.getBool('nexal_notif_map') ?? true;
@@ -200,7 +231,6 @@ class _SettingsModalState extends State<SettingsModal> {
     await prefs.setBool('nexal_encrypt_sync', _encryptSync);
     await prefs.setBool('nexal_privacy_shield', _privacyShield);
     await prefs.setBool('nexal_app_lock_pin', _appLockPin);
-    await prefs.setString('nexal_auto_lock_time', _autoLockTime);
 
     await prefs.setBool('nexal_notif_aria', _notifAria);
     await prefs.setBool('nexal_notif_map', _notifMap);
@@ -212,7 +242,7 @@ class _SettingsModalState extends State<SettingsModal> {
         _saving = false;
         _saved  = true;
       });
-      _showToast('⚡ Settings successfully synchronized');
+      _showToast('⚡ Quantum settings synchronized');
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) setState(() => _saved = false);
       });
@@ -298,7 +328,7 @@ class _SettingsModalState extends State<SettingsModal> {
       _showToast(
         count > 0
             ? '⚡ All $count Backends Online & Connected!'
-            : 'Backend launch signal sent! Please verify start_all_backends.bat.',
+            : 'Backend launch signal sent! Verify start_all_backends.bat.',
       );
     }
   }
@@ -342,7 +372,7 @@ class _SettingsModalState extends State<SettingsModal> {
         _purgingCache = false;
         _cacheFootprint = 0.0;
       });
-      _showToast('🧹 Cache successfully purged');
+      _showToast('🧹 Cache storage successfully purged');
     }
   }
 
@@ -351,14 +381,14 @@ class _SettingsModalState extends State<SettingsModal> {
       SnackBar(
         content: Text(
           msg,
-          style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
         ),
-        backgroundColor: Colors.black87,
+        backgroundColor: Colors.black.withValues(alpha: 0.90),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: _accent.primary.withValues(alpha: 0.6), width: 1.2),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: _accent.primary, width: 1.4),
         ),
       ),
     );
@@ -379,7 +409,7 @@ class _SettingsModalState extends State<SettingsModal> {
             ),
           ),
 
-          // Vignette Overlay
+          // Cyberpunk Dark Vignette Overlay
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -387,52 +417,52 @@ class _SettingsModalState extends State<SettingsModal> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.35),
-                    Colors.black.withValues(alpha: 0.65),
+                    Colors.black.withValues(alpha: 0.40),
+                    Colors.black.withValues(alpha: 0.75),
                   ],
                 ),
               ),
             ),
           ),
 
-          // 3D Liquid Glass Main Container
+          // Main 3D Liquid Glass Shell Container
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(36),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(36),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.18),
-                          Colors.black.withValues(alpha: 0.55),
+                          Colors.white.withValues(alpha: 0.20),
+                          Colors.black.withValues(alpha: 0.65),
                           Colors.white.withValues(alpha: 0.08),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.60),
+                        color: Colors.white.withValues(alpha: 0.65),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: _accent.primary.withValues(alpha: 0.20),
-                          blurRadius: 40,
+                          color: _accent.glow,
+                          blurRadius: 48,
                           spreadRadius: 2,
                         ),
                       ],
                     ),
                     child: Column(
                       children: [
-                        // Top Header Bar
-                        _buildTopHeaderBar(),
+                        // Top Command Bar
+                        _buildTopCommandBar(),
 
-                        // Nav Rail + Content Area
+                        // Main Navigation & Sub-Page Layout
                         Expanded(
                           child: Row(
                             children: [
@@ -474,42 +504,43 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Top Header Sanctuary Bar
+  // Top Command Console Header Bar
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildTopHeaderBar() {
+  Widget _buildTopCommandBar() {
+    final activeCount = _backendHealth.values.where((v) => v).length;
     return Container(
-      height: 72,
+      height: 76,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: Colors.black.withValues(alpha: 0.40),
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: Colors.white.withValues(alpha: 0.16),
             width: 1.2,
           ),
         ),
       ),
       child: Row(
         children: [
-          // Logo Squircle Icon
+          // Logo Squircle Badge
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
                 colors: [_accent.primary, _accent.secondary],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _accent.primary.withValues(alpha: 0.40),
-                  blurRadius: 16,
+                  color: _accent.glow,
+                  blurRadius: 18,
                 ),
               ],
             ),
             padding: const EdgeInsets.all(3),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(13),
               child: Image.asset('assets/nexal_logo.png', fit: BoxFit.cover),
             ),
           ),
@@ -520,20 +551,43 @@ class _SettingsModalState extends State<SettingsModal> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'SETTINGS SANCTUARY',
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'NEXAL COMMAND CENTER',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _accent.primary.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _accent.primary.withValues(alpha: 0.60), width: 1),
+                    ),
+                    child: Text(
+                      'PRO SUITE',
+                      style: GoogleFonts.outfit(
+                        color: _accent.primary,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 2),
               Text(
-                'Quantum Config & Orchestrator',
+                '⚡ Gateway: ${_connectionPing ?? 14}ms • $activeCount/7 Services Active',
                 style: GoogleFonts.outfit(
-                  color: Colors.white60,
-                  fontSize: 12,
+                  color: Colors.white70,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -541,27 +595,33 @@ class _SettingsModalState extends State<SettingsModal> {
 
           const Spacer(),
 
-          // Save Changes Liquid Button
+          // Save Sync Liquid Gem Pill
           GestureDetector(
             onTap: _saving ? null : _saveAllSettings,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     gradient: LinearGradient(
                       colors: [
-                        _accent.primary.withValues(alpha: 0.85),
-                        _accent.secondary.withValues(alpha: 0.85),
+                        _accent.primary.withValues(alpha: 0.90),
+                        _accent.secondary.withValues(alpha: 0.90),
                       ],
                     ),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.65),
-                      width: 1.2,
+                      color: Colors.white.withValues(alpha: 0.70),
+                      width: 1.3,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _accent.glow,
+                        blurRadius: 14,
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
@@ -569,17 +629,17 @@ class _SettingsModalState extends State<SettingsModal> {
                         const SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.2),
                         )
                       else
-                        Icon(_saved ? LucideIcons.check : LucideIcons.save, size: 15, color: Colors.white),
+                        Icon(_saved ? LucideIcons.check : LucideIcons.save, size: 15, color: Colors.black),
                       const SizedBox(width: 8),
                       Text(
-                        _saved ? 'SAVED' : 'SAVE CHANGES',
+                        _saved ? 'SYNCHRONIZED' : 'SYNC SETTINGS',
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -596,11 +656,11 @@ class _SettingsModalState extends State<SettingsModal> {
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.12),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
               ),
               child: const Icon(LucideIcons.x, color: Colors.white, size: 18),
             ),
@@ -636,46 +696,60 @@ class _SettingsModalState extends State<SettingsModal> {
   Widget _buildSystemTab() {
     final activeCount = _backendHealth.values.where((v) => v).length;
     return ListView(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       children: [
-        SettingsSectionLabel(text: 'Backend Suite Orchestrator', icon: LucideIcons.cpu, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Backend Suite Orchestrator',
+          icon: LucideIcons.cpu,
+          accentColor: _accent.primary,
+        ),
 
-        // Master Launch Banner
+        // Hero Master Launch Console Banner
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(24),
             gradient: LinearGradient(
               colors: [
-                _accent.primary.withValues(alpha: 0.25),
-                Colors.black.withValues(alpha: 0.50),
+                _accent.primary.withValues(alpha: 0.28),
+                Colors.black.withValues(alpha: 0.60),
               ],
             ),
-            border: Border.all(color: _accent.primary.withValues(alpha: 0.55), width: 1.4),
+            border: Border.all(
+              color: _accent.primary.withValues(alpha: 0.65),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _accent.glow,
+                blurRadius: 20,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _accent.primary.withValues(alpha: 0.20),
+                  color: _accent.primary.withValues(alpha: 0.22),
+                  border: Border.all(color: _accent.primary.withValues(alpha: 0.5)),
                 ),
-                child: Icon(LucideIcons.zap, color: _accent.primary, size: 24),
+                child: Icon(LucideIcons.zap, color: _accent.primary, size: 26),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'All Backends Orchestrator',
-                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      'Master Microservices Controller',
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
-                      '$activeCount / 7 Services Active & Ready',
-                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12),
+                      '$activeCount of 7 Services Online & Reporting Health',
+                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.5),
                     ),
                   ],
                 ),
@@ -683,55 +757,64 @@ class _SettingsModalState extends State<SettingsModal> {
               ElevatedButton.icon(
                 onPressed: _startingAllBackends ? null : _turnOnAllBackends,
                 icon: _startingAllBackends
-                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                    : const Icon(LucideIcons.power, size: 16, color: Colors.black),
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.2))
+                    : const Icon(LucideIcons.power, size: 17, color: Colors.black),
                 label: Text(
-                  _startingAllBackends ? 'Starting...' : 'TURN ON ALL',
-                  style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 12),
+                  _startingAllBackends ? 'LAUNCHING...' : 'RUN ALL BACKENDS',
+                  style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 12.5),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accent.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  elevation: 8,
+                  shadowColor: _accent.primary.withValues(alpha: 0.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
 
         // Health Status Grid
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 12,
+          runSpacing: 12,
           children: _backendHealth.entries.map((e) {
             final isOnline = e.value;
             return Container(
-              width: 165,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              width: 170,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: isOnline ? const Color(0xFF22C55E).withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(18),
+                color: isOnline ? const Color(0xFF10B981).withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.06),
                 border: Border.all(
-                  color: isOnline ? const Color(0xFF22C55E).withValues(alpha: 0.40) : Colors.white.withValues(alpha: 0.15),
+                  color: isOnline ? const Color(0xFF10B981).withValues(alpha: 0.50) : Colors.white.withValues(alpha: 0.16),
+                  width: 1.2,
                 ),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
+                    width: 9,
+                    height: 9,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isOnline ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                      color: isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isOnline ? const Color(0xFF10B981).withValues(alpha: 0.6) : const Color(0xFFEF4444).withValues(alpha: 0.6),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       e.key,
-                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -741,9 +824,13 @@ class _SettingsModalState extends State<SettingsModal> {
           }).toList(),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
 
-        SettingsSectionLabel(text: 'AI & Gateway API Keys', icon: LucideIcons.key, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'AI & Gateway Credentials',
+          icon: LucideIcons.key,
+          accentColor: _accent.primary,
+        ),
 
         _buildGlassTextField(
           controller: _backendUrlCtrl,
@@ -754,7 +841,7 @@ class _SettingsModalState extends State<SettingsModal> {
         const SizedBox(height: 14),
         _buildGlassTextField(
           controller: _groqKeyCtrl,
-          label: 'GROQ API Key',
+          label: 'GROQ LLM API Key',
           hint: 'gsk_...',
           icon: LucideIcons.brainCircuit,
           obscure: _obscureGroq,
@@ -763,7 +850,7 @@ class _SettingsModalState extends State<SettingsModal> {
         const SizedBox(height: 14),
         _buildGlassTextField(
           controller: _deepgramKeyCtrl,
-          label: 'Deepgram Voice Key',
+          label: 'Deepgram Speech Engine Key',
           hint: 'Key...',
           icon: LucideIcons.mic,
           obscure: _obscureDeepgram,
@@ -772,7 +859,7 @@ class _SettingsModalState extends State<SettingsModal> {
         const SizedBox(height: 14),
         _buildGlassTextField(
           controller: _livekitUrlCtrl,
-          label: 'LiveKit URL',
+          label: 'LiveKit Voice WebSocket URL',
           hint: 'wss://livekit...',
           icon: LucideIcons.radio,
         ),
@@ -789,13 +876,18 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  // ── Tab 1: Visuals & Themes ────────────────────────────────────────────────
+  // ── Tab 1: Visuals & Theme Spectrum ───────────────────────────────────────
   Widget _buildVisualsTab() {
     return ListView(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       children: [
-        SettingsSectionLabel(text: 'Theme Accent Spectrum', icon: LucideIcons.palette, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: '5 High-Glow Accent Orbs',
+          icon: LucideIcons.palette,
+          accentColor: _accent.primary,
+        ),
 
+        // Live Accent Orb Selectors
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: List.generate(_accents.length, (i) {
@@ -803,67 +895,92 @@ class _SettingsModalState extends State<SettingsModal> {
             final selected = _selectedAccent == i;
             return GestureDetector(
               onTap: () => setState(() => _selectedAccent = i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 75,
-                height: 75,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(colors: [acc.primary, acc.secondary]),
-                  border: Border.all(
-                    color: selected ? Colors.white : Colors.transparent,
-                    width: 2.5,
+              child: Column(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: [acc.primary, acc.secondary]),
+                      border: Border.all(
+                        color: selected ? Colors.white : Colors.white.withValues(alpha: 0.3),
+                        width: selected ? 3 : 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: acc.glow,
+                          blurRadius: selected ? 24 : 8,
+                          spreadRadius: selected ? 3 : 0,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: selected
+                          ? const Icon(LucideIcons.check, color: Colors.white, size: 24)
+                          : const SizedBox.shrink(),
+                    ),
                   ),
-                  boxShadow: selected
-                      ? [BoxShadow(color: acc.primary.withValues(alpha: 0.6), blurRadius: 18)]
-                      : [],
-                ),
-                child: Center(
-                  child: selected
-                      ? const Icon(LucideIcons.check, color: Colors.white, size: 24)
-                      : const SizedBox.shrink(),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    acc.name,
+                    style: GoogleFonts.outfit(
+                      color: selected ? Colors.white : Colors.white54,
+                      fontSize: 10.5,
+                      fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             );
           }),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
 
-        SettingsSectionLabel(text: 'Liquid Density & Mode', icon: LucideIcons.sun, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Liquid Glass Mode & Lighting',
+          icon: LucideIcons.sun,
+          accentColor: _accent.primary,
+        ),
 
         _buildGlassSwitchTile(
-          title: 'Obsidian Night Mode',
-          subtitle: 'Deep OLED black backdrop with high contrast glow',
+          title: 'Obsidian OLED Dark Mode',
+          subtitle: 'Deep midnight OLED backdrop with specular neon reflections',
           value: _darkMode,
           onChanged: (v) => setState(() => _darkMode = v),
           icon: LucideIcons.moon,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'Realtime Notifications',
-          subtitle: 'Enable visual toast alerts for system messages',
+          title: 'Realtime Toast Notifications',
+          subtitle: 'Enable interactive glass alert overlays for incoming signals',
           value: _notifications,
           onChanged: (v) => setState(() => _notifications = v),
           icon: LucideIcons.bellRing,
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
 
-        SettingsSectionLabel(text: 'System Language', icon: LucideIcons.languages, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'System Language',
+          icon: LucideIcons.languages,
+          accentColor: _accent.primary,
+        ),
 
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             color: Colors.white.withValues(alpha: 0.08),
             border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedLanguage,
-              dropdownColor: Colors.grey.shade900,
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+              dropdownColor: Colors.black87,
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
               isExpanded: true,
               items: ['English (US)', 'Spanish', 'Japanese', 'German', 'French']
                   .map((l) => DropdownMenuItem(value: l, child: Text(l)))
@@ -881,61 +998,83 @@ class _SettingsModalState extends State<SettingsModal> {
   // ── Tab 2: Security & Quantum Vault ────────────────────────────────────────
   Widget _buildSecurityTab() {
     return ListView(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       children: [
-        SettingsSectionLabel(text: 'Quantum Vault Protection', icon: LucideIcons.shieldCheck, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Quantum Vault Controls',
+          icon: LucideIcons.shieldCheck,
+          accentColor: _accent.primary,
+        ),
 
         _buildGlassSwitchTile(
-          title: 'Biometric Authentication',
-          subtitle: 'Require FaceID / Fingerprint to open app',
+          title: 'Biometric Lock (FaceID / Fingerprint)',
+          subtitle: 'Require biometric key verification upon app launch',
           value: _biometricsEnabled,
           onChanged: (v) => setState(() => _biometricsEnabled = v),
           icon: LucideIcons.scanFace,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'End-to-End Encrypted Sync',
-          subtitle: 'Encrypt data before transmitting to gateway',
+          title: 'End-to-End Encrypted Cloud Sync',
+          subtitle: 'Encrypt payload before sending to backend gateway',
           value: _encryptSync,
           onChanged: (v) => setState(() => _encryptSync = v),
           icon: LucideIcons.lock,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'Privacy Shield',
-          subtitle: 'Mask sensitive API keys and tokens in UI',
+          title: 'Privacy Mask Shield',
+          subtitle: 'Blur sensitive keys and security credentials in UI',
           value: _privacyShield,
           onChanged: (v) => setState(() => _privacyShield = v),
           icon: LucideIcons.eyeOff,
+        ),
+        const SizedBox(height: 14),
+        _buildGlassSwitchTile(
+          title: 'App Lock Security PIN',
+          subtitle: 'Enforce 4-digit PIN lock when inactive',
+          value: _appLockPin,
+          onChanged: (v) => setState(() => _appLockPin = v),
+          icon: LucideIcons.keyRound,
         ),
       ],
     );
   }
 
-  // ── Tab 3: Diagnostics & Cache ─────────────────────────────────────────────
+  // ── Tab 3: Diagnostics & Storage Console ────────────────────────────────────
   Widget _buildDiagnosticsTab() {
     return ListView(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       children: [
-        SettingsSectionLabel(text: 'Network Latency', icon: LucideIcons.activity, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Network Latency Gauge',
+          icon: LucideIcons.activity,
+          accentColor: _accent.primary,
+        ),
 
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             color: Colors.white.withValues(alpha: 0.08),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
           ),
           child: Row(
             children: [
+              Icon(LucideIcons.radio, color: _accent.primary, size: 24),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Gateway Connection', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text('Gateway Connection Health', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                     Text(
-                      _connectionPing != null ? '$_connectionPing ms • $_connectionStatus' : _connectionStatus,
-                      style: GoogleFonts.outfit(color: _connectionPing != null ? Colors.greenAccent : Colors.white60, fontSize: 12),
+                      _connectionPing != null ? '$_connectionPing ms response time • $_connectionStatus' : _connectionStatus,
+                      style: GoogleFonts.outfit(
+                        color: _connectionPing != null ? const Color(0xFF10B981) : Colors.white60,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -944,34 +1083,41 @@ class _SettingsModalState extends State<SettingsModal> {
                 onPressed: _testingConnection ? null : _testLatency,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accent.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 ),
                 child: _testingConnection
                     ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                    : Text('PING', style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.bold)),
+                    : Text('TEST LATENCY', style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 11)),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
 
-        SettingsSectionLabel(text: 'Storage & Cache', icon: LucideIcons.database, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Storage Footprint & Memory',
+          icon: LucideIcons.database,
+          accentColor: _accent.primary,
+        ),
 
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             color: Colors.white.withValues(alpha: 0.08),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
           ),
           child: Row(
             children: [
+              Icon(LucideIcons.hardDrive, color: _accent.primary, size: 24),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Temporary App Cache', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text('Cache Storage', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                     Text('${_cacheFootprint.toStringAsFixed(1)} MB occupied', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12)),
                   ],
                 ),
@@ -979,11 +1125,12 @@ class _SettingsModalState extends State<SettingsModal> {
               OutlinedButton(
                 onPressed: _purgingCache ? null : _purgeCache,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                  side: const BorderSide(color: Colors.redAccent),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  foregroundColor: const Color(0xFFEF4444),
+                  side: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 ),
-                child: Text('PURGE', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                child: Text('PURGE CACHE', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11)),
               ),
             ],
           ),
@@ -992,59 +1139,67 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  // ── Tab 4: Notifications ───────────────────────────────────────────────────
+  // ── Tab 4: Notifications & Alert Console ───────────────────────────────────
   Widget _buildNotificationsTab() {
     return ListView(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       children: [
-        SettingsSectionLabel(text: 'Signal Alert Channels', icon: LucideIcons.bell, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Signal Alert Channels',
+          icon: LucideIcons.bell,
+          accentColor: _accent.primary,
+        ),
 
         _buildGlassSwitchTile(
-          title: 'ARIA AI Alerts',
-          subtitle: 'Proactive intelligence & voice triggers',
+          title: 'ARIA AI Proactive Alerts',
+          subtitle: 'Realtime AI contextual triggers & voice responses',
           value: _notifAria,
           onChanged: (v) => setState(() => _notifAria = v),
           icon: LucideIcons.bot,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'Map Radar Signals',
-          subtitle: 'Proximity notifications & geo alerts',
+          title: 'Map Proximity Radar',
+          subtitle: 'Geofence proximity notifications & pin alerts',
           value: _notifMap,
           onChanged: (v) => setState(() => _notifMap = v),
           icon: LucideIcons.mapPin,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'System Updates',
-          subtitle: 'Gateway & server status broadcasts',
+          title: 'System Microservice Updates',
+          subtitle: 'Broadcast alerts when gateway ports reconnect',
           value: _notifSystem,
           onChanged: (v) => setState(() => _notifSystem = v),
           icon: LucideIcons.radio,
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 32),
 
-        SettingsSectionLabel(text: 'Feedback & Alert Styles', icon: LucideIcons.volume2, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Tactile & Sound Feedback',
+          icon: LucideIcons.volume2,
+          accentColor: _accent.primary,
+        ),
 
         _buildGlassSwitchTile(
-          title: 'Notification Sound Effects',
-          subtitle: 'Play audio chime on alert arrival',
+          title: 'Notification Audio Chime',
+          subtitle: 'Play liquid audio chime upon receiving alerts',
           value: _notifSound,
           onChanged: (v) => setState(() => _notifSound = v),
           icon: LucideIcons.volume2,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'Haptic Vibration',
-          subtitle: 'Tactile haptic pulses for incoming signals',
+          title: 'Tactile Haptic Vibration',
+          subtitle: 'Haptic pulse triggers on key interactions',
           value: _notifVibration,
           onChanged: (v) => setState(() => _notifVibration = v),
           icon: LucideIcons.vibrate,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _buildGlassSwitchTile(
-          title: 'Badge Counters',
-          subtitle: 'Display unread indicator badges on tabs',
+          title: 'Unread Badge Counters',
+          subtitle: 'Show floating indicator badges on tab bar icons',
           value: _notifBadge,
           onChanged: (v) => setState(() => _notifBadge = v),
           icon: LucideIcons.badgeAlert,
@@ -1053,34 +1208,54 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  // ── Tab 5: About Nexal ─────────────────────────────────────────────────────
+  // ── Tab 5: About Nexal Architecture ────────────────────────────────────────
   Widget _buildAboutTab() {
     return ListView(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       children: [
-        SettingsSectionLabel(text: 'Nexal Quantum Architecture', icon: LucideIcons.info, accentColor: _accent.primary),
+        SettingsSectionLabel(
+          text: 'Nexal Quantum Portal',
+          icon: LucideIcons.info,
+          accentColor: _accent.primary,
+        ),
 
         Center(
           child: Column(
             children: [
               Container(
-                width: 80,
-                height: 80,
+                width: 90,
+                height: 90,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(26),
                   gradient: LinearGradient(colors: [_accent.primary, _accent.secondary]),
-                  boxShadow: [BoxShadow(color: _accent.primary.withValues(alpha: 0.4), blurRadius: 24)],
+                  boxShadow: [
+                    BoxShadow(
+                      color: _accent.glow,
+                      blurRadius: 30,
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(7),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(19),
                   child: Image.asset('assets/nexal_logo.png', fit: BoxFit.cover),
                 ),
               ),
-              const SizedBox(height: 14),
-              Text('NEXAL THE NEW ERA', style: GoogleFonts.rye(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Text(
+                'NEXAL THE NEW ERA',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text('Version $_appVersion (Build $_buildNumber)', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13)),
+              Text(
+                'Version $_appVersion (Build $_buildNumber) • Quantum Engine',
+                style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -1089,7 +1264,7 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Helper Components
+  // Helper UI Builders
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildGlassTextField({
     required TextEditingController controller,
@@ -1101,25 +1276,25 @@ class _SettingsModalState extends State<SettingsModal> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.30), width: 1.2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.32), width: 1.2),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+        style: GoogleFonts.outfit(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
-          icon: Icon(icon, color: _accent.primary, size: 20),
+          icon: Icon(icon, color: _accent.primary, size: 21),
           labelText: label,
-          labelStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 13),
+          labelStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.5),
           hintText: hint,
           hintStyle: GoogleFonts.outfit(color: Colors.white38),
           border: InputBorder.none,
           suffixIcon: onToggleObscure != null
               ? IconButton(
-                  icon: Icon(obscure ? LucideIcons.eyeOff : LucideIcons.eye, color: Colors.white54, size: 18),
+                  icon: Icon(obscure ? LucideIcons.eyeOff : LucideIcons.eye, color: Colors.white60, size: 19),
                   onPressed: onToggleObscure,
                 )
               : null,
@@ -1136,22 +1311,29 @@ class _SettingsModalState extends State<SettingsModal> {
     required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: _accent.primary, size: 22),
-          const SizedBox(width: 14),
+          Icon(icon, color: _accent.primary, size: 23),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(subtitle, style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12)),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.5),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12),
+                ),
               ],
             ),
           ),
