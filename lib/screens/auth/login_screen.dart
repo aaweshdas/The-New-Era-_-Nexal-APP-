@@ -238,7 +238,10 @@ class _LoginScreenState extends State<LoginScreen>
           Positioned.fill(
             child: Image.asset(
               'assets/login BG.png',
-              fit: BoxFit.fill,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              width: double.infinity,
+              height: double.infinity,
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
           ),
@@ -259,11 +262,11 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // ── Main Content (Logo & Auth Card shifted downwards together) ───
+          // ── Main Content (Logo & Auth Card) ───
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(26, 140, 26, 20),
+              padding: const EdgeInsets.fromLTRB(26, 40, 26, 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
