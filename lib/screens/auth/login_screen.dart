@@ -353,17 +353,17 @@ class _LoginScreenState extends State<LoginScreen>
 
           const SizedBox(width: 20),
 
-          // ── Right Side Typography: Nexal & The New Era (Rye Font from Messages Page) ─
+          // ── Right Side Typography: Nexal & The New Era (Rye Font Indented Layout) ─
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Line 1: Nexal (Headline Font from Messages Page - GoogleFonts.rye)
+              // Line 1: Nexal (Enlarged Rye Font - size 56)
               Text(
                 'Nexal',
                 style: GoogleFonts.rye(
                   color: Colors.white,
-                  fontSize: 48,
+                  fontSize: 56,
                   height: 1.05,
                   letterSpacing: 1.5,
                 ),
@@ -381,15 +381,18 @@ class _LoginScreenState extends State<LoginScreen>
                   )
                   .fadeIn(delay: 200.ms, duration: 600.ms),
 
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
 
-              // Line 2: The New Era (Sub-Headline in Rye Font)
-              Text(
-                'The New Era',
-                style: GoogleFonts.rye(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 18,
-                  letterSpacing: 2.0,
+              // Line 2: The New Era (Indented Right under Nexal, size 22)
+              Padding(
+                padding: const EdgeInsets.only(left: 36.0),
+                child: Text(
+                  'The New Era',
+                  style: GoogleFonts.rye(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 22,
+                    letterSpacing: 2.0,
+                  ),
                 ),
               ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
             ],
