@@ -314,13 +314,19 @@ class _LoginScreenState extends State<LoginScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── Clean Logo Container (Enlarged 100x100, No Outline) ───────────
+          // ── Brightened Logo Container (ColorFilter Brightness + Glow Shadow) ──
           Container(
             width: 100,
             height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(26),
               boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  blurRadius: 32,
+                  spreadRadius: 3,
+                  offset: const Offset(0, 4),
+                ),
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.65),
                   blurRadius: 32,
@@ -331,9 +337,17 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(26),
-              child: Image.asset(
-                'assets/nexal_logo.png',
-                fit: BoxFit.cover,
+              child: ColorFiltered(
+                colorFilter: const ColorFilter.matrix([
+                  1.25, 0,    0,    0, 15,
+                  0,    1.25, 0,    0, 15,
+                  0,    0,    1.25, 0, 15,
+                  0,    0,    0,    1, 0,
+                ]),
+                child: Image.asset(
+                  'assets/nexal_logo.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           )
