@@ -319,28 +319,28 @@ class _LoginScreenState extends State<LoginScreen>
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildBrandHeader() {
     return Padding(
-      padding: const EdgeInsets.only(right: 28.0),
+      padding: const EdgeInsets.only(right: 20.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── Clean Logo Container (No Outline or Border) ───────────────────
+          // ── Clean Logo Container (Enlarged 100x100, No Outline) ───────────
           Container(
-            width: 84,
-            height: 84,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(26),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.65),
-                  blurRadius: 28,
+                  blurRadius: 32,
                   spreadRadius: 2,
-                  offset: const Offset(0, 8),
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(26),
               child: Image.asset(
                 'assets/nexal_logo.png',
                 fit: BoxFit.cover,
@@ -351,14 +351,14 @@ class _LoginScreenState extends State<LoginScreen>
               .fadeIn(duration: 700.ms)
               .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
 
-          const SizedBox(width: 18),
+          const SizedBox(width: 20),
 
-          // ── Right Side Typography: Nexal (Big Main Font) & The New Era ─────
+          // ── Right Side Typography: Nexal (Enlarged Main Font) & The New Era ─
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Line 1: Nexal (Big Main Dashboard Font - Outfit w900)
+              // Line 1: Nexal (Enlarged Main Dashboard Font - Outfit w900, size 52)
               ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
                   colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFCBD5E1)],
@@ -367,9 +367,9 @@ class _LoginScreenState extends State<LoginScreen>
                   'Nexal',
                   style: GoogleFonts.outfit(
                     color: Colors.white,
-                    fontSize: 44,
+                    fontSize: 52,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
+                    letterSpacing: 2.0,
                     height: 1.05,
                   ),
                 ),
@@ -377,13 +377,13 @@ class _LoginScreenState extends State<LoginScreen>
 
               const SizedBox(height: 2),
 
-              // Line 2: The New Era (Sub-Headline in Main Dashboard Font)
+              // Line 2: The New Era (Enlarged Sub-Headline, size 21)
               Text(
                 'The New Era',
                 style: GoogleFonts.outfit(
-                  color: Colors.white.withValues(alpha: 0.82),
-                  fontSize: 18,
-                  letterSpacing: 2.8,
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 21,
+                  letterSpacing: 3.2,
                   fontWeight: FontWeight.w600,
                 ),
               ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
