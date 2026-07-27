@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import '../services/socket_service.dart';
 import 'messages_view.dart';
 
 // ─── ChatScreen ────────────────────────────────────────────────────────────────
@@ -53,10 +55,25 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       if (atBottom != !_showScrollDown) setState(() => _showScrollDown = !atBottom);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(animated: false));
+
+    // Subscribe to real-time incoming messages for this conversation
+    _socketSub = SocketService.instance.onMessageReceived.listen((data) {
+      final senderId = data['senderId'] as String?;
+      final text = data['text'] as String?;
+      // Only show messages from the current conversation partner
+      if (senderId == widget.item.name && text != null && mounted) {
+        final incoming = ChatMessage(text: text, isSent: false, time: DateTime.now());
+        setState(() => _messages.add(incoming));
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      }
+    });
   }
+
+  StreamSubscription? _socketSub;
 
   @override
   void dispose() {
+    _socketSub?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -94,7 +111,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     widget.onMessageSent(msg);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    // Simulate a reply after 1.5s
+    // ✓ Try real Socket.IO first
+    final socketConnected = SocketService.instance.isConnected;
+    if (socketConnected) {
+      SocketService.instance.sendMessage(widget.item.name, fullText);
+      return; // Real delivery — no simulated reply needed
+    }
+
+    // Graceful offline fallback: smart simulated reply (shown only when socket is offline)
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
       
@@ -102,11 +126,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       String replyText = '';
 
       if (query.contains('photo') || query.contains('pic') || query.contains('image')) {
-        final photoReplies = ['Send it over! 📸', 'I love photos!', 'Is it a good one?', 'Can\'t wait to see it! ✨'];
+        final photoReplies = ['Send it over! 📸', 'I love photos!', 'Is it a good one?', "Can't wait to see it! ✨"];
         photoReplies.shuffle();
         replyText = photoReplies.first;
       } else if (query.contains('hello') || query.contains('hi') || query.contains('hey')) {
-        final greetReplies = ['Hey there! 👋', 'Hi!', 'Hello! How are you?', 'Hey, what\'s up?'];
+        final greetReplies = ['Hey there! 👋', 'Hi!', 'Hello! How are you?', "Hey, what's up?"];
         greetReplies.shuffle();
         replyText = greetReplies.first;
       } else if (query.contains('video') || query.contains('reel')) {
@@ -119,7 +143,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         replyText = questionReplies.first;
       } else {
         final replies = [
-          'That\'s cool! 🔥', 'Got it 👍', 'Sounds good!', 'Wow, really? ✨',
+          "That's cool! 🔥", 'Got it 👍', 'Sounds good!', 'Wow, really? ✨',
           'Haha 😂', 'Nice one!', 'On it 🚀', 'Let me check...',
           'Interesting perspective 🧠', 'Tell me more.', 'I completely agree 💯',
           'Whoa, mind blown 🤯', 'Love that energy ⚡', 'Classic! 🎯',

@@ -1,11 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
 class Feel {
   final String id, userName, userAvatar, videoImage, caption, sound;
@@ -22,10 +23,15 @@ class FeelsView extends StatefulWidget {
 
 class _FeelsViewState extends State<FeelsView> {
   int _currentPage = 0;
+  /// Like indices persist in widget state — never reset unless widget disposed
   final Set<int> _likedIndices = {};
   final Set<int> _followedIndices = {};
   final Set<String> _savedFeelIds = {};
   bool _isMuted = false;
+
+  // Double-tap heart animation state
+  bool _showHeart = false;
+  Offset _heartPos = Offset.zero;
 
   @override
   void initState() {
@@ -103,11 +109,35 @@ class _FeelsViewState extends State<FeelsView> {
             Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.center, colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent]))),
             Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.center, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.85)]))),
 
-            // ── Play indicator (center) ──
-            Center(child: GestureDetector(
-              onDoubleTap: () => setState(() { _likedIndices.add(index); _snack('❤️ Liked!'); }),
-              child: Container(width: double.infinity, height: double.infinity, color: Colors.transparent),
+            // ── Double-tap to like (with heart animation) ──
+            Positioned.fill(child: GestureDetector(
+              onDoubleTapDown: (details) {
+                HapticFeedback.mediumImpact();
+                final pos = details.localPosition;
+                setState(() {
+                  _likedIndices.add(index);
+                  _heartPos = pos;
+                  _showHeart = true;
+                });
+                Future.delayed(const Duration(milliseconds: 800), () {
+                  if (mounted) setState(() => _showHeart = false);
+                });
+              },
+              onDoubleTap: () {},
+              child: Container(color: Colors.transparent),
             )),
+
+            // ── Heart burst animation ──
+            if (_showHeart && _currentPage == index)
+              Positioned(
+                left: _heartPos.dx - 40,
+                top: _heartPos.dy - 40,
+                child: const Icon(LucideIcons.heart, color: Colors.redAccent, size: 80)
+                    .animate()
+                    .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.3, 1.3), duration: 300.ms, curve: Curves.easeOut)
+                    .then()
+                    .fadeOut(duration: 400.ms),
+              ),
 
             // ── Top bar ──
             Positioned(top: 0, left: 0, right: 0, child: SafeArea(bottom: false, child: Padding(

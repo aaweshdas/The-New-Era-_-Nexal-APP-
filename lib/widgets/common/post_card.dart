@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/feed_provider.dart';
 import '../../theme/app_theme.dart';
 
 class PostComment {
@@ -126,6 +127,11 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
       widget.post.likes = _likeCount;
       widget.post.selectedReaction = _currentReaction;
     });
+    // Persist like state via FeedProvider (calls backend API)
+    try {
+      final feed = Provider.of<FeedProvider>(context, listen: false);
+      feed.toggleLike(widget.post.id);
+    } catch (_) {}
   }
 
   void _handleDoubleTap(TapDownDetails details) {

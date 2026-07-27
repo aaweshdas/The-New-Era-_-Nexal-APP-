@@ -8,8 +8,10 @@ import 'screens/auth/splash_router.dart';
 import 'providers/auth_provider.dart';
 import 'providers/feed_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/messages_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'providers/background_provider.dart';
+import 'services/socket_service.dart';
 
 import 'services/supabase_service.dart';
 import 'config/app_config.dart';
@@ -66,6 +68,10 @@ class NexalApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
+        ChangeNotifierProvider(create: (_) {
+          final mp = MessagesProvider();
+          return mp;
+        }),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => NotificationsProvider()),
         ChangeNotifierProvider(create: (_) {
@@ -73,6 +79,16 @@ class NexalApp extends StatelessWidget {
           p.load(); // load persisted background on startup
           return p;
         }),
+        // Wire AuthProvider changes → connect Socket.IO
+        ChangeNotifierProxyProvider<AuthProvider, MessagesProvider>(
+          create: (_) => MessagesProvider(),
+          update: (ctx, auth, prev) {
+            if (auth.user != null) {
+              SocketService.instance.connect(auth.user!.uid);
+            }
+            return prev ?? MessagesProvider();
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'Nexal',

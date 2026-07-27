@@ -20,6 +20,8 @@ import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
 import '../models/post_model.dart';
 import '../providers/feed_provider.dart';
+// ignore: unused_import
+import '../providers/messages_provider.dart';
 
 // ── Feed Filter Enum ─────────────────────────────────────────────────────────
 enum FeedFilter { forYou, trending, following, aiPicks, global }
@@ -177,18 +179,42 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   FeedFilter? _cachedFilter;
   String? _cachedSearchQuery;
 
+  /// Converts live PostModel objects from FeedProvider to local Post objects
+  List<Post> _postModelsToLocal(List<PostModel> models) {
+    return models.map((m) => Post(
+      id: m.id,
+      userName: m.userName,
+      userAvatar: m.userAvatar,
+      isVerified: m.isVerified,
+      content: m.content,
+      image: m.imageUrl,
+      timeAgo: m.timeAgo,
+      likes: m.likes,
+      comments: m.commentsCount,
+      shares: m.sharesCount,
+      views: m.viewsCount,
+      isLiked: m.isLiked,
+    )).toList();
+  }
+
   List<Post> get _currentPosts {
-    // Return cached result if inputs haven't changed
-    if (_cachedPosts != null && _cachedFilter == _activeFilter && _cachedSearchQuery == _searchQuery) {
-      return _cachedPosts!;
-    }
+    // For "For You" use live provider posts (falls back to curated if empty)
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
     late List<Post> base;
     switch (_activeFilter) {
-      case FeedFilter.forYou:    base = _forYouPosts;    break;
+      case FeedFilter.forYou:
+        final livePosts = _postModelsToLocal(feedProvider.posts);
+        base = livePosts.isNotEmpty ? livePosts : _forYouPosts;
+        break;
       case FeedFilter.trending:  base = _trendingPosts;  break;
       case FeedFilter.following: base = _followingPosts; break;
       case FeedFilter.aiPicks:   base = _aiPicksPosts;   break;
       case FeedFilter.global:    base = _globalPosts;    break;
+    }
+    // Return cached result if inputs haven't changed
+    if (_cachedPosts != null && _cachedFilter == _activeFilter && _cachedSearchQuery == _searchQuery) {
+      // Only use cache for non-live tabs
+      if (_activeFilter != FeedFilter.forYou) return _cachedPosts!;
     }
     if (_searchQuery.isEmpty) {
       _cachedPosts = base;
@@ -209,13 +235,21 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _loadBookmarks();
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) setState(() => _isLoading = false);
+    // Use FeedProvider's loading state; stop shimmer after initial fetch
+    // Capture provider reference synchronously to avoid BuildContext across async gaps
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    Future.microtask(() {
+      if (!feedProvider.isLoading) {
+        if (mounted) setState(() => _isLoading = false);
+      } else {
+        // Listen for when feed finishes loading
+        feedProvider.addListener(_onFeedLoaded);
+      }
     });
-    // Schedule banner to appear after 5s with random pending count
-    _newPostsTimer = Timer(const Duration(seconds: 5), () {
+    // Schedule new-posts banner wave after 30s (simulates real new content arriving)
+    _newPostsTimer = Timer(const Duration(seconds: 30), () {
       if (mounted) {
-        final count = math.Random().nextInt(4) + 1; // 1-5 new posts
+        final count = math.Random().nextInt(3) + 1;
         setState(() {
           _pendingNewPostsCount = count;
           _showNewPostsBanner = true;
@@ -225,6 +259,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))..repeat(reverse: true);
     _headerGlowController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000))..repeat(reverse: true);
     _scrollController.addListener(_onScroll);
+  }
+
+  void _onFeedLoaded() {
+    final feedProvider = Provider.of<FeedProvider>(context, listen: false);
+    if (!feedProvider.isLoading && mounted) {
+      setState(() => _isLoading = false);
+      feedProvider.removeListener(_onFeedLoaded);
+    }
   }
 
   int _lastScrollCheckMs = 0;
@@ -270,12 +312,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   Future<void> _onRefresh() async {
     HapticFeedback.mediumImpact();
-    setState(() { _isLoading = true; _showNewPostsBanner = false; });
-    await Future.delayed(const Duration(milliseconds: 1200));
+    setState(() { _showNewPostsBanner = false; _cachedPosts = null; });
+    // Pull fresh posts from backend via FeedProvider
     if (mounted) {
-      // Inject any pending posts on refresh too
+      await Provider.of<FeedProvider>(context, listen: false).refreshFeed();
+    }
+    if (mounted) {
       if (_pendingNewPostsCount > 0) _injectNewPosts();
-      setState(() => _isLoading = false);
+      setState(() {});
     }
   }
 

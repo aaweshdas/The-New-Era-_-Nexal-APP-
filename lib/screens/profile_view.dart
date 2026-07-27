@@ -5,7 +5,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../models/user_model.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -15,27 +18,40 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
-  String _profileName = 'Neural Nexus';
-  String _profileBio = 'Exploring the quantum realm of digital consciousness ✨';
-  String _profileLink = 'nexal.space/neural';
+  // Locally-edited overrides (saved via SharedPreferences)
+  String? _overrideName;
+  String? _overrideBio;
+  String? _overrideLink;
 
   @override
   void initState() { 
     super.initState(); 
     _tabCtrl = TabController(length: 4, vsync: this); 
-    _loadProfile();
+    _loadLocalOverrides();
   }
 
-  Future<void> _loadProfile() async {
+  Future<void> _loadLocalOverrides() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _profileName = prefs.getString('profileName') ?? _profileName;
-        _profileBio = prefs.getString('profileBio') ?? _profileBio;
-        _profileLink = prefs.getString('profileLink') ?? _profileLink;
+        _overrideName = prefs.getString('profileName');
+        _overrideBio = prefs.getString('profileBio');
+        _overrideLink = prefs.getString('profileLink');
       });
     }
   }
+
+  /// Resolves the display name: local edit > Supabase user > fallback
+  String _displayName(UserModel? user) =>
+      _overrideName ?? user?.name ?? 'Neural Nexus';
+
+  String _displayBio(UserModel? user) =>
+      _overrideBio ?? user?.bio ?? 'Exploring the quantum realm of digital consciousness ✨';
+
+  String _displayLink(UserModel? user) =>
+      _overrideLink ?? user?.website ?? 'nexal.space/neural';
+
+  String _displayUsername(UserModel? user) => user?.username ?? 'neuralnexus';
   @override
   void dispose() { _tabCtrl.dispose(); super.dispose(); }
 
@@ -49,6 +65,13 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
+    final displayName = _displayName(user);
+    final displayBio = _displayBio(user);
+    final displayLink = _displayLink(user);
+    final displayUsername = _displayUsername(user);
+    final avatarUrl = user?.avatarUrl ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(children: [
@@ -57,31 +80,31 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           slivers: [
             SliverToBoxAdapter(child: _buildCoverHeader()),
-            SliverToBoxAdapter(child: _buildAvatarWithAchievements()),
-            SliverToBoxAdapter(child: _buildCompactStats()),
-            SliverToBoxAdapter(child: _buildProfileInfo()),
+            SliverToBoxAdapter(child: _buildAvatarWithAchievements(avatarUrl)),
+            SliverToBoxAdapter(child: _buildCompactStats(user)),
+            SliverToBoxAdapter(child: _buildProfileInfo(displayName, displayBio, displayLink, displayUsername)),
             SliverToBoxAdapter(child: _buildActionButtons()),
             SliverToBoxAdapter(child: _buildContentTabs()),
             SliverToBoxAdapter(child: _buildGrid()),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
-        Positioned(top: 0, left: 0, right: 0, child: SafeArea(bottom: false, child: _buildTopBar())),
+        Positioned(top: 0, left: 0, right: 0, child: SafeArea(bottom: false, child: _buildTopBar(displayName, displayLink))),
       ]),
     );
   }
 
   // ── TOP BAR ──
-  Widget _buildTopBar() {
+  Widget _buildTopBar(String displayName, String displayLink) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(children: [
         _iconBtn(LucideIcons.arrowLeft, () => Navigator.maybePop(context)),
         const SizedBox(width: 12),
-        Expanded(child: Center(child: Text(_profileName, style: GoogleFonts.rye(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)))),
+        Expanded(child: Center(child: Text(displayName, style: GoogleFonts.rye(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)))),
         const SizedBox(width: 12),
         _iconBtn(LucideIcons.share2, () async {
-          await Clipboard.setData(ClipboardData(text: 'https://$_profileLink'));
+          await Clipboard.setData(ClipboardData(text: 'https://$displayLink'));
           if (mounted) _snack('🔗 Profile link copied to clipboard!');
         }),
         const SizedBox(width: 10),
@@ -104,7 +127,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   // ── AVATAR WITH ACHIEVEMENTS ON SIDES ──
-  Widget _buildAvatarWithAchievements() {
+  Widget _buildAvatarWithAchievements(String avatarUrl) {
     final leftBadges = [
       {'icon': LucideIcons.award, 'label': 'Top Creator', 'color': const Color(0xFFFBBF24)},
       {'icon': LucideIcons.flame, 'label': '30 Day Streak', 'color': AppTheme.pink500},
@@ -120,11 +143,11 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         children: [
           // Left achievements
           Expanded(child: Column(children: leftBadges.asMap().entries.map((e) => _badgeTile(e.value, e.key)).toList())),
-          // Center avatar
+          // Center avatar — uses real user photo
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: [AppTheme.purple500, AppTheme.cyan500]), boxShadow: [BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2)]),
-            child: CircleAvatar(radius: 48, backgroundColor: Colors.black, child: CircleAvatar(radius: 44, backgroundImage: const CachedNetworkImageProvider('https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200'), backgroundColor: Colors.grey[900])),
+            child: CircleAvatar(radius: 48, backgroundColor: Colors.black, child: CircleAvatar(radius: 44, backgroundImage: CachedNetworkImageProvider(avatarUrl), backgroundColor: Colors.grey[900])),
           ).animate().fadeIn(delay: 200.ms, duration: 500.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1), duration: 500.ms),
           // Right achievements
           Expanded(child: Column(children: rightBadges.asMap().entries.map((e) => _badgeTile(e.value, e.key + 2)).toList())),
@@ -154,17 +177,26 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   // ── COMPACT STATS (below avatar) ──
-  Widget _buildCompactStats() {
+  Widget _buildCompactStats(UserModel? user) {
+    final energy = user != null ? _fmtNum(user.energy) : '2.4K';
+    final connections = user != null ? _fmtNum(user.connections) : '12.5K';
+    final influence = user != null ? _fmtNum(user.influence) : '8.9K';
     return Padding(
       padding: const EdgeInsets.fromLTRB(40, 12, 40, 0),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        _compactStat('2.4K', 'Energy', LucideIcons.zap, AppTheme.purple500),
+        _compactStat(energy, 'Energy', LucideIcons.zap, AppTheme.purple500),
         Container(width: 1, height: 28, color: Colors.white.withValues(alpha: 0.08)),
-        _compactStat('12.5K', 'Connections', LucideIcons.users, AppTheme.cyan500),
+        _compactStat(connections, 'Connections', LucideIcons.users, AppTheme.cyan500),
         Container(width: 1, height: 28, color: Colors.white.withValues(alpha: 0.08)),
-        _compactStat('8.9K', 'Influence', LucideIcons.trendingUp, AppTheme.pink500),
+        _compactStat(influence, 'Influence', LucideIcons.trendingUp, AppTheme.pink500),
       ]),
     ).animate().fadeIn(delay: 400.ms, duration: 400.ms);
+  }
+
+  String _fmtNum(int n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+    return '$n';
   }
 
   Widget _compactStat(String value, String label, IconData icon, Color c) {
@@ -183,14 +215,14 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   // ── PROFILE INFO ──
-  Widget _buildProfileInfo() {
+  Widget _buildProfileInfo(String displayName, String displayBio, String displayLink, String displayUsername) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(padding: const EdgeInsets.all(2), decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [AppTheme.cyan500, AppTheme.purple500])), child: const Icon(LucideIcons.checkCircle, color: Colors.white, size: 14)),
           const SizedBox(width: 6),
-          Text('@neuralnexus', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w500)),
+          Text('@$displayUsername', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w500)),
         ]),
         const SizedBox(height: 4),
         Container(
@@ -199,7 +231,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           child: Text('ELITE CREATOR', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 2)),
         ),
         const SizedBox(height: 10),
-        Text(_profileBio, textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13, height: 1.4)),
+        Text(displayBio, textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13, height: 1.4)),
         const SizedBox(height: 6),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(LucideIcons.mapPin, size: 13, color: AppTheme.cyan500.withValues(alpha: 0.5)),
@@ -208,7 +240,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           const SizedBox(width: 14),
           Icon(LucideIcons.link, size: 13, color: AppTheme.cyan500.withValues(alpha: 0.5)),
           const SizedBox(width: 4),
-          GestureDetector(onTap: () => _snack('Opening link...'), child: Text(_profileLink, style: GoogleFonts.outfit(color: AppTheme.cyan500.withValues(alpha: 0.7), fontSize: 12))),
+          GestureDetector(onTap: () => _snack('Opening link...'), child: Text(displayLink, style: GoogleFonts.outfit(color: AppTheme.cyan500.withValues(alpha: 0.7), fontSize: 12))),
         ]),
       ]),
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
@@ -398,9 +430,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
   // ── EDIT PROFILE SHEET ──
   void _showEditProfile() {
-    final nameCtrl = TextEditingController(text: _profileName);
-    final bioCtrl = TextEditingController(text: _profileBio);
-    final linkCtrl = TextEditingController(text: _profileLink);
+    final user = context.read<AuthProvider>().user;
+    final nameCtrl = TextEditingController(text: _displayName(user));
+    final bioCtrl = TextEditingController(text: _displayBio(user));
+    final linkCtrl = TextEditingController(text: _displayLink(user));
     showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
       child: Container(
@@ -425,7 +458,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
               await prefs.setString('profileLink', linkCtrl.text);
 
               if (mounted) {
-                setState(() { _profileName = nameCtrl.text; _profileBio = bioCtrl.text; _profileLink = linkCtrl.text; });
+                setState(() { _overrideName = nameCtrl.text; _overrideBio = bioCtrl.text; _overrideLink = linkCtrl.text; });
               }
               if (ctx.mounted) {
                 Navigator.pop(ctx);

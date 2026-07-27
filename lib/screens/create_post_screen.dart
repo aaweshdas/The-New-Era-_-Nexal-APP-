@@ -7,9 +7,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/feed_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/post_model.dart';
+import '../services/api_service.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final File? initialImage;
@@ -108,13 +110,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final user = auth.user;
 
     setState(() => _isPosting = true);
-    await Future.delayed(const Duration(milliseconds: 600));
 
-    // Use real local file path when image was picked from gallery
-    // ignore: prefer_null_aware_operators
-    final imageUrlOrPath = _selectedImage != null
-        ? _selectedImage!.path  // real local file path
-        : null;
+    String? imageUrl;
+
+    // Step 1: Upload image to Supabase Storage (if selected)
+    if (_selectedImage != null) {
+      try {
+        final supabase = Supabase.instance.client;
+        final bytes = await _selectedImage!.readAsBytes();
+        final ext = _selectedImage!.path.split('.').last.toLowerCase();
+        final fileName = 'posts/${user?.uid ?? 'guest'}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        await supabase.storage.from('media').uploadBinary(fileName, bytes,
+            fileOptions: FileOptions(contentType: 'image/$ext', upsert: true));
+        imageUrl = supabase.storage.from('media').getPublicUrl(fileName);
+      } catch (e) {
+        // Storage upload failed — use local file path as fallback (shows in UI only)
+        imageUrl = _selectedImage!.path;
+        debugPrint('[CreatePost] Storage upload failed, using local path: $e');
+      }
+    }
 
     final newPost = PostModel(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
@@ -124,13 +138,31 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200',
       isVerified: true,
       content: text.isEmpty ? 'Shared a new memory ⚡' : text,
-      imageUrl: imageUrlOrPath,
+      imageUrl: imageUrl,
       timeAgo: 'Just now',
       location: _locationLabel,
     );
 
+    if (!mounted) return;
+
+    // Step 2: Optimistic local update — feed appears instantly (like Instagram)
+    Provider.of<FeedProvider>(context, listen: false).addPost(newPost);
+
+    // Step 3: Persist to backend API (non-blocking, fire & forget)
+    try {
+      await ApiService.instance.post('/api/posts', {
+        'userId': newPost.userId,
+        'content': newPost.content,
+        'imageUrl': imageUrl,
+        'tag': _selectedTag,
+        'location': _locationLabel,
+      });
+    } catch (e) {
+      // Backend unavailable — post is already in local feed, nothing to roll back
+      debugPrint('[CreatePost] Backend save failed (post is in local feed): $e');
+    }
+
     if (mounted) {
-      Provider.of<FeedProvider>(context, listen: false).addPost(newPost);
       setState(() => _isPosting = false);
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
