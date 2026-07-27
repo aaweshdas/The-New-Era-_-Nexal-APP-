@@ -454,26 +454,25 @@ class _LoginScreenState extends State<LoginScreen>
         borderRadius: BorderRadius.circular(38),
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.20),
-            blurRadius: 36,
+            color: Colors.black.withValues(alpha: 0.60),
+            blurRadius: 40,
             spreadRadius: 2,
-            offset: const Offset(0, 6),
+            offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.80),
-            blurRadius: 50,
-            spreadRadius: 2,
-            offset: const Offset(0, 14),
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(38),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
           child: Stack(
             children: [
-              // Black & White Glassmorphism Gradient Fill
+              // Sleek Dark Obsidian Glassmorphism Fill (Compatible with all wallpapers)
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(38),
@@ -481,16 +480,16 @@ class _LoginScreenState extends State<LoginScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withValues(alpha: 0.22),
-                      Colors.black.withValues(alpha: 0.50),
-                      Colors.white.withValues(alpha: 0.10),
-                      Colors.black.withValues(alpha: 0.40),
+                      Colors.black.withValues(alpha: 0.65),
+                      Colors.black.withValues(alpha: 0.78),
+                      Colors.white.withValues(alpha: 0.05),
+                      Colors.black.withValues(alpha: 0.70),
                     ],
                     stops: const [0.0, 0.40, 0.75, 1.0],
                   ),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.65),
-                    width: 1.6,
+                    color: Colors.white.withValues(alpha: 0.22),
+                    width: 1.2,
                   ),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
@@ -611,12 +610,12 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
 
-              // Upper Specular Lens Arc Highlight (Reflective Gloss)
+              // Upper Specular Lens Arc Highlight (Subtle Reflective Gloss)
               Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
-                height: 70,
+                height: 60,
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
@@ -625,7 +624,7 @@ class _LoginScreenState extends State<LoginScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withValues(alpha: 0.50),
+                          Colors.white.withValues(alpha: 0.18),
                           Colors.white.withValues(alpha: 0.0),
                         ],
                       ),
