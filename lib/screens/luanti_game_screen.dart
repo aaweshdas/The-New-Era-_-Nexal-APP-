@@ -117,10 +117,11 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
         _statusMessage = 'SENDING LAUNCH SIGNAL TO SERVER...';
       });
 
+      final gatewayBase = AppConfig.gatewayUrl;
       final backendUrls = [
-        '${AppConfig.gatewayUrl}/game/api/launch-luanti',
-        'http://localhost:3005/game/api/launch-luanti',
-        'http://127.0.0.1:3005/game/api/launch-luanti',
+        '$gatewayBase/game/api/launch-luanti',
+        if (!gatewayBase.contains('localhost')) 'http://localhost:10000/game/api/launch-luanti',
+        'http://127.0.0.1:10000/game/api/launch-luanti',
       ];
 
       bool launched = false;

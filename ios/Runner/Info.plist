@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Nexal requires camera access for Smart Vision & AR filters.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Nexal requires microphone access for ARIA AI voice interactions.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Nexal requires location access for real-time map navigation.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nexal requires photo library access to save and view media.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Nexal requires speech recognition for voice commands.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Nexal requires motion sensors for 360° Dome gallery experience.</string>
 </dict>
 </plist>

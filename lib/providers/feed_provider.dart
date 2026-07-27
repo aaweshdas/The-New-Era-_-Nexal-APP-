@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post_model.dart';
 
+import '../services/api_service.dart';
+
 class FeedProvider extends ChangeNotifier {
   final List<PostModel> _posts = [];
   final Set<String> _bookmarkedIds = {};
@@ -14,6 +16,7 @@ class FeedProvider extends ChangeNotifier {
   FeedProvider() {
     _loadInitialPosts();
     _loadBookmarks();
+    fetchLivePosts();
   }
 
   Future<void> _loadBookmarks() async {
@@ -29,6 +32,7 @@ class FeedProvider extends ChangeNotifier {
   }
 
   void _loadInitialPosts() {
+    if (_posts.isNotEmpty) return;
     _posts.addAll([
       PostModel(
         id: 'p1',
@@ -85,6 +89,23 @@ class FeedProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchLivePosts() async {
+    try {
+      final res = await ApiService.instance.get('/api/posts');
+      if (res is List && res.isNotEmpty) {
+        final fetched = res.map((json) => PostModel.fromJson(json)).toList();
+        _posts.clear();
+        _posts.addAll(fetched);
+        notifyListeners();
+      }
+    } catch (_) {
+      // Graceful fallback to initial curated posts
+      if (_posts.isEmpty) {
+        _loadInitialPosts();
+      }
+    }
+  }
+
   void toggleLike(String postId) {
     final index = _posts.indexWhere((p) => p.id == postId);
     if (index != -1) {
@@ -112,12 +133,14 @@ class FeedProvider extends ChangeNotifier {
   void addPost(PostModel post) {
     _posts.insert(0, post);
     notifyListeners();
+    // Also push to backend asynchronously
+    ApiService.instance.post('/api/posts', post.toJson()).catchError((_) => null);
   }
 
   Future<void> refreshFeed() async {
     _isLoading = true;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await fetchLivePosts();
     _isLoading = false;
     notifyListeners();
   }
