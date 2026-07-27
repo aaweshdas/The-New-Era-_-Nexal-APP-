@@ -360,3 +360,17 @@
 2026-07-25 23:47:24: ACTION[Server]: singleplayer [127.0.0.1] joins game. List of players: singleplayer
 2026-07-25 23:47:47: ACTION[Server]: singleplayer leaves game. List of players: 
 2026-07-25 23:47:48: ACTION[ServerStop]: Server: Shutting down
+
+
+-------------
+  Separator
+-------------
+
+2026-07-28 01:05:23: [Main]: Using world specified by --worldname on the command line
+
+
+-------------
+  Separator
+-------------
+
+2026-07-28 01:05:49: [Main]: Automatically selecting world at [s:\All Code\Antigravity\Nexal_App\luanti-master\bin\..\worlds\hkj]

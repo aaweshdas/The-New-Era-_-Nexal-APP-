@@ -62,6 +62,13 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
       DeviceOrientation.landscapeRight,
       DeviceOrientation.portraitUp,
     ]);
+
+    // Auto-launch the Real Native Luanti C++ engine when entering screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_isRunning) {
+        _launchLuantiEngine();
+      }
+    });
   }
 
   @override
@@ -195,11 +202,10 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
 
     if (_quickStart) {
       args.add('--go');
-      if (_selectedGameId.isNotEmpty) {
-        args.addAll(['--gameid', _selectedGameId]);
-      }
-      if (_selectedWorld.isNotEmpty) {
-        args.addAll(['--worldname', _selectedWorld]);
+      if (_selectedGameId == 'voxelibre') {
+        args.addAll(['--gameid', 'voxelibre']);
+      } else if (_selectedGameId == 'minetest_game' || _selectedGameId == 'minetest') {
+        args.addAll(['--worldname', 'hkj', '--gameid', 'minetest']);
       }
     }
 
@@ -567,18 +573,20 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
 
             const SizedBox(height: 24),
 
-            // Primary CTA: Play In-App (WebGL 3D Voxel Engine)
+            // Primary CTA: Start Real Native Luanti C++ Engine
             GestureDetector(
-              onTap: _launchInAppVoxelGame,
+              onTap: _isRunning ? _stopLuantiEngine : _launchLuantiEngine,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [_kCyan, _kPurple, _kPink]),
+                  gradient: _isRunning
+                      ? const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)])
+                      : const LinearGradient(colors: [_kCyan, _kPurple, _kPink]),
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: _kCyan.withValues(alpha: 0.4),
+                      color: (_isRunning ? Colors.redAccent : _kCyan).withValues(alpha: 0.4),
                       blurRadius: 24,
                       spreadRadius: -2,
                     ),
@@ -587,13 +595,17 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(LucideIcons.gamepad2, color: Colors.white, size: 22),
+                    Icon(
+                      _isRunning ? LucideIcons.square : LucideIcons.play,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     const SizedBox(width: 12),
                     Text(
-                      'PLAY IN-APP VOXEL REALM (3D ENGINE)',
+                      _isRunning ? 'TERMINATE NATIVE PROCESS (${_processPid ?? 0})' : 'START REAL NATIVE LUANTI C++ ENGINE',
                       style: GoogleFonts.outfit(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.5,
                       ),
@@ -605,33 +617,26 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
 
             const SizedBox(height: 12),
 
-            // Secondary CTA: Launch Native C++ Engine Process (Desktop)
+            // Secondary Option: Play In-App 3D WebGL Realm
             GestureDetector(
-              onTap: _isRunning ? _stopLuantiEngine : _launchLuantiEngine,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: 48,
+              onTap: _launchInAppVoxelGame,
+              child: Container(
+                height: 46,
                 decoration: BoxDecoration(
-                  color: _isRunning ? Colors.red.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _isRunning ? Colors.redAccent : Colors.white.withValues(alpha: 0.2),
-                  ),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      _isRunning ? LucideIcons.square : LucideIcons.cpu,
-                      color: _isRunning ? Colors.redAccent : _kCyan,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
+                    const Icon(LucideIcons.globe, color: _kCyan, size: 16),
+                    const SizedBox(width: 8),
                     Text(
-                      _isRunning ? 'TERMINATE NATIVE PROCESS (${_processPid ?? 0})' : 'LAUNCH NATIVE C++ ENGINE (DESKTOP)',
+                      'PLAY WEBGL 3D REALM (IN-APP CANVAS)',
                       style: GoogleFonts.shareTechMono(
-                        color: _isRunning ? Colors.redAccent : Colors.white,
-                        fontSize: 12,
+                        color: Colors.white70,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                       ),
