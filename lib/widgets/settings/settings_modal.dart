@@ -73,6 +73,8 @@ class _SettingsModalState extends State<SettingsModal> {
 
   // Backend Suite Orchestrator State
   Map<String, bool> _backendHealth = {
+    'Render Cloud': false,
+    'Active Gateway': false,
     'Gateway (10000)': false,
     'ARIA AI (3003)': false,
     'Search (3004)': false,
@@ -251,6 +253,8 @@ class _SettingsModalState extends State<SettingsModal> {
 
   Future<void> _checkAllBackendsHealth() async {
     final targets = {
+      'Render Cloud':    '${AppConfig.renderGatewayUrl}/health',
+      'Active Gateway':  '${AppConfig.gatewayUrl}/health',
       'Gateway (10000)': 'http://localhost:10000/health',
       'ARIA AI (3003)':  'http://localhost:3003/health',
       'Search (3004)':   'http://localhost:3004/health',

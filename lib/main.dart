@@ -12,6 +12,7 @@ import 'providers/notifications_provider.dart';
 import 'providers/background_provider.dart';
 
 import 'services/supabase_service.dart';
+import 'config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,9 @@ void main() async {
   // 🚀 Ultra-Smooth Performance: Expand Image Cache & prevent rendering jank
   PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024; // 100 MB cache limit
   PaintingBinding.instance.imageCache.maximumSize = 200;
+
+  // 🌐 Resolve active backend Gateway URL (Render Cloud -> Saved -> Local)
+  await AppConfig.resolveGatewayUrl();
 
   await SupabaseService.initialize();
   SystemChrome.setPreferredOrientations([

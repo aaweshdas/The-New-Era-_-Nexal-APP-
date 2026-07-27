@@ -119,21 +119,7 @@ class _SearchViewState extends State<SearchView>
   }
 
   Future<void> _resolveBaseUrl() async {
-    try {
-      final cfg = await AriaConfig.load();
-      final uri = Uri.parse(cfg.backendUrl);
-      if (uri.host.isNotEmpty && !uri.host.contains('onrender.com')) {
-        final candidate = 'http://${uri.host}:3004';
-        if (await _ping(candidate)) { _baseUrl = candidate; return; }
-      }
-    } catch (_) {}
-    for (final c in [
-      'https://nexal-backend.onrender.com',
-      'http://localhost:3004',
-      'http://10.0.2.2:3004',
-      'http://192.168.100.70:3004',
-    ]) { if (await _ping(c)) { _baseUrl = c; return; } }
-    _baseUrl = 'https://nexal-backend.onrender.com';
+    _baseUrl = await AppConfig.resolveGatewayUrl();
   }
 
   Future<void> _fetchInitialData() async {
