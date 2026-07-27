@@ -472,7 +472,7 @@ class _LoginScreenState extends State<LoginScreen>
           filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
           child: Stack(
             children: [
-              // Sleek Dark Obsidian Glassmorphism Fill (Compatible with all wallpapers)
+              // Sleek Dark Obsidian Glassmorphism Fill (Pure Matte Obsidian Glass, Zero White Glare)
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(38),
@@ -480,16 +480,15 @@ class _LoginScreenState extends State<LoginScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.black.withValues(alpha: 0.65),
-                      Colors.black.withValues(alpha: 0.78),
-                      Colors.white.withValues(alpha: 0.05),
+                      Colors.black.withValues(alpha: 0.75),
+                      Colors.black.withValues(alpha: 0.85),
                       Colors.black.withValues(alpha: 0.70),
+                      Colors.black.withValues(alpha: 0.80),
                     ],
-                    stops: const [0.0, 0.40, 0.75, 1.0],
                   ),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    width: 1.2,
+                    color: Colors.white.withValues(alpha: 0.10),
+                    width: 1.0,
                   ),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
@@ -610,12 +609,12 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
 
-              // Upper Specular Lens Arc Highlight (Subtle Reflective Gloss)
+              // Upper Soft Ambient Arc (Minimal 4% Tint, Zero White Glare)
               Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
-                height: 60,
+                height: 35,
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
@@ -624,7 +623,7 @@ class _LoginScreenState extends State<LoginScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withValues(alpha: 0.18),
+                          Colors.white.withValues(alpha: 0.04),
                           Colors.white.withValues(alpha: 0.0),
                         ],
                       ),
