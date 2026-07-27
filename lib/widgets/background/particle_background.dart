@@ -24,13 +24,15 @@ class _ParticleBackgroundState extends State<ParticleBackground>
     )..repeat();
   }
 
+  Size _cachedSize = Size.zero;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_particles.isEmpty) {
-      final size = MediaQuery.of(context).size;
+    _cachedSize = MediaQuery.of(context).size;
+    if (_particles.isEmpty && _cachedSize != Size.zero) {
       for (int i = 0; i < _maxParticles; i++) {
-        _particles.add(_createParticle(size, randomY: true));
+        _particles.add(_createParticle(_cachedSize, randomY: true));
       }
     }
   }
@@ -83,7 +85,8 @@ class _ParticleBackgroundState extends State<ParticleBackground>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          final size = MediaQuery.of(context).size;
+          final size = _cachedSize;
+          if (size == Size.zero) return const SizedBox.shrink();
           
           // Update particles
           for (int i = 0; i < _particles.length; i++) {
@@ -118,7 +121,10 @@ class _ParticleBackgroundState extends State<ParticleBackground>
           }
 
           return CustomPaint(
-            painter: _CatHairParticlePainter(particles: _particles),
+            painter: _CatHairParticlePainter(
+              particles: _particles,
+              animValue: _controller.value,
+            ),
             size: Size.infinite,
           );
         },
@@ -148,8 +154,9 @@ class _HairParticle {
 
 class _CatHairParticlePainter extends CustomPainter {
   final List<_HairParticle> particles;
+  final double animValue;
 
-  _CatHairParticlePainter({required this.particles});
+  _CatHairParticlePainter({required this.particles, required this.animValue});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -177,5 +184,6 @@ class _CatHairParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CatHairParticlePainter oldDelegate) => true;
+  bool shouldRepaint(covariant _CatHairParticlePainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
 }

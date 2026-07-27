@@ -10,31 +10,29 @@ class AppTheme {
 
   static const Color background = Color(0xFF000000); // Deep Space Black
 
-  static ThemeData get darkTheme {
-    return ThemeData.dark().copyWith(
-      scaffoldBackgroundColor: background,
-      primaryColor: purple500,
-      colorScheme: const ColorScheme.dark(
-        primary: purple500,
-        secondary: pink500,
-        tertiary: blue500,
-        surface: Colors.black, // darker surface
-        onSurface: Colors.white,
-      ),
-      textTheme: GoogleFonts.outfitTextTheme(
-        ThemeData.dark().textTheme,
-      ).apply(bodyColor: Colors.white, displayColor: Colors.white),
-      iconTheme: const IconThemeData(color: Colors.white),
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
-        },
-      ),
-    );
-  }
+  static final ThemeData darkTheme = ThemeData.dark().copyWith(
+    scaffoldBackgroundColor: background,
+    primaryColor: purple500,
+    colorScheme: const ColorScheme.dark(
+      primary: purple500,
+      secondary: pink500,
+      tertiary: blue500,
+      surface: Colors.black, // darker surface
+      onSurface: Colors.white,
+    ),
+    textTheme: GoogleFonts.outfitTextTheme(
+      ThemeData.dark().textTheme,
+    ).apply(bodyColor: Colors.white, displayColor: Colors.white),
+    iconTheme: const IconThemeData(color: Colors.white),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+      },
+    ),
+  );
 
   static const LinearGradient deepSpaceGradient = LinearGradient(
     begin: Alignment.topLeft,

@@ -298,15 +298,24 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 1. Animated background — same source as the galaxy screen
-          const Positioned.fill(
-            child: SmartBackground(opacity: 0.8),
-          ),
-
-          // 2. Dark overlay — 70% black = background shows through at ~30%
+          // 1. Lightweight gradient background (no duplicate video player)
+          // The parent HomeScreen already runs SmartBackground — creating
+          // another one here would double the video decoder & GPU load.
           Positioned.fill(
             child: Container(
-              color: Colors.black.withValues(alpha: 0.70),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF0A0015),
+                    Color(0xFF050510),
+                    Color(0xFF000008),
+                    Color(0xFF000000),
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
+              ),
             ),
           ),
 
@@ -357,7 +366,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             return _buildPostItem(posts[index], index);
                           },
                           childCount: _currentPosts.length + 1,
-                          addAutomaticKeepAlives: false,
+                          addAutomaticKeepAlives: true,
                           addRepaintBoundaries: true,
                         ),
                       ),

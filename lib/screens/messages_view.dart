@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
 
 import 'package:image_picker/image_picker.dart';
@@ -41,10 +40,6 @@ class MessagesView extends StatefulWidget {
 
 class _MessagesViewState extends State<MessagesView> with TickerProviderStateMixin {
   late TabController _tabCtrl;
-  double _gyroX = 0;
-  double _gyroY = 0;
-  bool _gyroDirty = false;
-  StreamSubscription<GyroscopeEvent>? _gyroSub;
   String _searchQuery = '';
   bool _isSearching = false;
   String _filterMode = 'All'; // All, Unread, Online
@@ -149,26 +144,11 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
-    _gyroSub = gyroscopeEventStream().listen((event) {
-      if (!mounted) return;
-      _gyroX += event.y * 0.5;
-      _gyroY += event.x * 0.5;
-      _gyroX = _gyroX.clamp(-15.0, 15.0);
-      _gyroY = _gyroY.clamp(-15.0, 15.0);
-      // Throttle: batch sensor events to one setState per frame
-      if (!_gyroDirty) {
-        _gyroDirty = true;
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (mounted) setState(() => _gyroDirty = false);
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
     _tabCtrl.dispose();
-    _gyroSub?.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }

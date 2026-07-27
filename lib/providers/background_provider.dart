@@ -48,11 +48,17 @@ class BackgroundProvider extends ChangeNotifier {
   // User's saved media library
   List<BackgroundItem> library = [];
 
+  SharedPreferences? _prefs;
   bool _initialized = false;
   bool get initialized => _initialized;
 
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
 
     final typeName = prefs.getString(_activeType);
     if (typeName != null) {
@@ -152,7 +158,7 @@ class BackgroundProvider extends ChangeNotifier {
     activeType = item.type;
     activePath = item.path;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setString(_activeType, item.type.name);
     await prefs.setString(_activeKey, item.path);
     notifyListeners();
@@ -162,7 +168,7 @@ class BackgroundProvider extends ChangeNotifier {
     activeType = BackgroundType.assetImage;
     activePath = 'assets/backgrounds/11.png';
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setString(_activeType, BackgroundType.assetImage.name);
     await prefs.setString(_activeKey, activePath);
     notifyListeners();
@@ -188,7 +194,7 @@ class BackgroundProvider extends ChangeNotifier {
   }
 
   Future<void> _saveLibrary() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setStringList(
       _libraryKey,
       library.map((e) => json.encode(e.toJson())).toList(),

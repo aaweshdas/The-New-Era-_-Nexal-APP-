@@ -564,214 +564,216 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
         ? '${widget.post.content.substring(0, 110)}...'
         : widget.post.content;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+    return RepaintBoundary(
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: Colors.black.withValues(alpha: 0.45),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+        margin: const EdgeInsets.only(bottom: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.black.withValues(alpha: 0.45),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: _showProfileModal,
-                    child: Stack(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(colors: [AppTheme.purple500, AppTheme.pink500]),
-                          ),
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: CachedNetworkImageProvider(widget.post.userAvatar, maxWidth: 100),
-                          ),
-                        ),
-                        if (widget.post.isOnline)
-                          Positioned(
-                            right: 0, bottom: 0,
-                            child: Container(
-                              width: 10, height: 10,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF22C55E),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.black, width: 1.5),
-                              ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _showProfileModal,
+                      child: Stack(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(colors: [AppTheme.purple500, AppTheme.pink500]),
+                            ),
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundImage: CachedNetworkImageProvider(widget.post.userAvatar, maxWidth: 100),
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _showProfileModal,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(widget.post.userName, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                              if (widget.post.isVerified) ...[
-                                const SizedBox(width: 4),
-                                Icon(LucideIcons.checkCircle, size: 14, color: AppTheme.blue500),
-                              ],
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text(widget.post.timeAgo, style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
-                              const SizedBox(width: 4),
-                              const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
-                              const SizedBox(width: 4),
-                              Icon(LucideIcons.eye, size: 12, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Text(_formatCount(widget.post.views), style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
-                            ],
-                          ),
+                          if (widget.post.isOnline)
+                            Positioned(
+                              right: 0, bottom: 0,
+                              child: Container(
+                                width: 10, height: 10,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF22C55E),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.black, width: 1.5),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Text Content with #hashtag & @mention highlights
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      children: _parseFormattedText(displayText),
-                      style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 14.5, height: 1.4),
-                    ),
-                  ),
-                  if (hasLongText)
-                    GestureDetector(
-                      onTap: () => setState(() => _isExpanded = !_isExpanded),
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          _isExpanded ? 'Show less' : 'Read more',
-                          style: GoogleFonts.outfit(color: AppTheme.cyan500, fontSize: 12.5, fontWeight: FontWeight.bold),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _showProfileModal,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(widget.post.userName, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                                if (widget.post.isVerified) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(LucideIcons.checkCircle, size: 14, color: AppTheme.blue500),
+                                ],
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(widget.post.timeAgo, style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+                                const SizedBox(width: 4),
+                                const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                                const SizedBox(width: 4),
+                                Icon(LucideIcons.eye, size: 12, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(_formatCount(widget.post.views), style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Image / Video with Double-Tap to Like
-            if (widget.post.image != null)
-              GestureDetector(
-                onDoubleTapDown: _handleDoubleTap,
-                onDoubleTap: () {},
-                onTap: () => _showImageZoom(widget.post.image!),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      height: 280,
-                      width: double.infinity,
-                      child: CachedNetworkImage(
-                        imageUrl: widget.post.image!,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 600,
-                        placeholder: (ctx, _) => Container(color: Colors.white.withValues(alpha: 0.05)),
-                      ),
-                    ),
-                    if (widget.post.isVideo)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                        child: const Icon(LucideIcons.play, color: Colors.white, size: 30),
-                      ),
-                    if (_showDoubleTapHeart)
-                      Positioned(
-                        left: _heartPos.dx - 40,
-                        top: _heartPos.dy - 40,
-                        child: Icon(LucideIcons.heart, size: 80, color: AppTheme.pink500)
-                            .animate()
-                            .scale(duration: 300.ms, curve: Curves.elasticOut)
-                            .fadeOut(delay: 500.ms, duration: 300.ms),
-                      ),
                   ],
                 ),
               ),
 
-            // Actions row
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+              // Text Content with #hashtag & @mention highlights
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        children: _parseFormattedText(displayText),
+                        style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 14.5, height: 1.4),
+                      ),
+                    ),
+                    if (hasLongText)
+                      GestureDetector(
+                        onTap: () => setState(() => _isExpanded = !_isExpanded),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            _isExpanded ? 'Show less' : 'Read more',
+                            style: GoogleFonts.outfit(color: AppTheme.cyan500, fontSize: 12.5, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Image / Video with Double-Tap to Like
+              if (widget.post.image != null)
+                GestureDetector(
+                  onDoubleTapDown: _handleDoubleTap,
+                  onDoubleTap: () {},
+                  onTap: () => _showImageZoom(widget.post.image!),
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      // Like button with long press reaction
-                      GestureDetector(
-                        onTap: _toggleLike,
-                        onLongPressStart: (d) => _showReactionPicker(d.globalPosition),
-                        child: Row(
-                          children: [
-                            Text(_currentReaction ?? '', style: const TextStyle(fontSize: 16)),
-                            if (_currentReaction == null)
-                              Icon(_isLiked ? LucideIcons.heart : LucideIcons.heart, size: 20, color: _isLiked ? AppTheme.pink500 : Colors.grey),
-                            const SizedBox(width: 6),
-                            Text('$_likeCount', style: GoogleFonts.outfit(color: _isLiked ? AppTheme.pink500 : Colors.grey, fontSize: 13.5, fontWeight: _isLiked ? FontWeight.bold : FontWeight.normal)),
-                          ],
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        height: 280,
+                        width: double.infinity,
+                        child: CachedNetworkImage(
+                          imageUrl: widget.post.image!,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 600,
+                          placeholder: (ctx, _) => Container(color: Colors.white.withValues(alpha: 0.05)),
                         ),
                       ),
-                      const SizedBox(width: 20),
-                      // Comment button
-                      GestureDetector(
-                        onTap: _showCommentsModal,
-                        child: Row(
-                          children: [
-                            const Icon(LucideIcons.messageCircle, size: 20, color: Colors.grey),
-                            const SizedBox(width: 6),
-                            Text('$_commentCount', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
-                          ],
+                      if (widget.post.isVideo)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                          child: const Icon(LucideIcons.play, color: Colors.white, size: 30),
                         ),
-                      ),
-                      const SizedBox(width: 20),
-                      // Share button
-                      GestureDetector(
-                        onTap: _showShareModal,
-                        child: Row(
-                          children: [
-                            const Icon(LucideIcons.share2, size: 20, color: Colors.grey),
-                            const SizedBox(width: 6),
-                            Text('$_shareCount', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
-                          ],
+                      if (_showDoubleTapHeart)
+                        Positioned(
+                          left: _heartPos.dx - 40,
+                          top: _heartPos.dy - 40,
+                          child: Icon(LucideIcons.heart, size: 80, color: AppTheme.pink500)
+                              .animate()
+                              .scale(duration: 300.ms, curve: Curves.elasticOut)
+                              .fadeOut(delay: 500.ms, duration: 300.ms),
                         ),
-                      ),
                     ],
                   ),
-                  ColorfulThreeDots(
-                    dotSize: 6,
-                    spacing: 4,
-                    onTap: widget.onOptionsTap,
-                  ),
+                ),
 
-                ],
+              // Actions row
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        // Like button with long press reaction
+                        GestureDetector(
+                          onTap: _toggleLike,
+                          onLongPressStart: (d) => _showReactionPicker(d.globalPosition),
+                          child: Row(
+                            children: [
+                              Text(_currentReaction ?? '', style: const TextStyle(fontSize: 16)),
+                              if (_currentReaction == null)
+                                Icon(_isLiked ? LucideIcons.heart : LucideIcons.heart, size: 20, color: _isLiked ? AppTheme.pink500 : Colors.grey),
+                              const SizedBox(width: 6),
+                              Text('$_likeCount', style: GoogleFonts.outfit(color: _isLiked ? AppTheme.pink500 : Colors.grey, fontSize: 13.5, fontWeight: _isLiked ? FontWeight.bold : FontWeight.normal)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        // Comment button
+                        GestureDetector(
+                          onTap: _showCommentsModal,
+                          child: Row(
+                            children: [
+                              const Icon(LucideIcons.messageCircle, size: 20, color: Colors.grey),
+                              const SizedBox(width: 6),
+                              Text('$_commentCount', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        // Share button
+                        GestureDetector(
+                          onTap: _showShareModal,
+                          child: Row(
+                            children: [
+                              const Icon(LucideIcons.share2, size: 20, color: Colors.grey),
+                              const SizedBox(width: 6),
+                              Text('$_shareCount', style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13.5)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    ColorfulThreeDots(
+                      dotSize: 6,
+                      spacing: 4,
+                      onTap: widget.onOptionsTap,
+                    ),
+
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

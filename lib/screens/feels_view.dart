@@ -33,14 +33,17 @@ class _FeelsViewState extends State<FeelsView> {
     _loadSavedFeels();
   }
 
+  SharedPreferences? _prefs;
+
   Future<void> _loadSavedFeels() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('saved_feels') ?? [];
-    setState(() => _savedFeelIds.addAll(saved));
+    _prefs = await SharedPreferences.getInstance();
+    final saved = _prefs?.getStringList('saved_feels') ?? [];
+    if (mounted) {
+      setState(() => _savedFeelIds.addAll(saved));
+    }
   }
 
   Future<void> _toggleSaveFeel(String feelId) async {
-    final prefs = await SharedPreferences.getInstance();
     setState(() {
       if (_savedFeelIds.contains(feelId)) {
         _savedFeelIds.remove(feelId);
@@ -48,7 +51,8 @@ class _FeelsViewState extends State<FeelsView> {
         _savedFeelIds.add(feelId);
       }
     });
-    await prefs.setStringList('saved_feels', _savedFeelIds.toList());
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs?.setStringList('saved_feels', _savedFeelIds.toList());
   }
 
   final _feels = [

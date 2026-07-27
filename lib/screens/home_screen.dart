@@ -171,12 +171,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
             );
           }
           return FadeTransition(
-            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 380),
-        reverseTransitionDuration: const Duration(milliseconds: 280),
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 220),
       ),
     );
   }
@@ -450,6 +450,12 @@ class _CelestialTextPainter extends CustomPainter {
     required this.style,
   });
 
+  static TextPainter? _cachedMaskPainter;
+  static TextPainter? _cachedOutlinePainter;
+  static TextPainter? _cachedReadablePainter;
+  static String? _cachedText;
+  static double? _cachedWidth;
+
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Save outer layer for letter-mask clipping
@@ -457,11 +463,41 @@ class _CelestialTextPainter extends CustomPainter {
     canvas.saveLayer(rect, _sharedFillPaint);
 
     // 2. Draw solid white text as the clip mask
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: style.copyWith(color: Colors.white)),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
+    if (_cachedMaskPainter == null || _cachedText != text || _cachedWidth != size.width) {
+      _cachedText = text;
+      _cachedWidth = size.width;
+      
+      _cachedMaskPainter = TextPainter(
+        text: TextSpan(text: text, style: style.copyWith(color: Colors.white)),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: size.width);
 
+      _cachedOutlinePainter = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: style.copyWith(
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 0.8
+              ..color = const Color(0xFFD4A843).withValues(alpha: 0.75),
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: size.width);
+
+      _cachedReadablePainter = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: style.copyWith(
+            color: Colors.white.withValues(alpha: 0.45),
+            shadows: null,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: size.width);
+    }
+
+    final textPainter = _cachedMaskPainter!;
     final textWidth  = textPainter.width;
     final textHeight = textPainter.height;
     final x = (size.width  - textWidth)  / 2;
@@ -597,32 +633,10 @@ class _CelestialTextPainter extends CustomPainter {
     canvas.restore();
 
     // 10. Crisp golden stroke outline
-    final outlinePainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: style.copyWith(
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.8
-            ..color = const Color(0xFFD4A843).withValues(alpha: 0.75),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
-    outlinePainter.paint(canvas, Offset(x, y));
+    _cachedOutlinePainter?.paint(canvas, Offset(x, y));
 
     // 11. Semi-transparent white fill
-    final readablePainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: style.copyWith(
-          color: Colors.white.withValues(alpha: 0.45),
-          shadows: null,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
-    readablePainter.paint(canvas, Offset(x, y));
+    _cachedReadablePainter?.paint(canvas, Offset(x, y));
   }
 
   @override
