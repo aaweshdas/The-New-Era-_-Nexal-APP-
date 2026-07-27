@@ -35,8 +35,8 @@ class _SplashRouterState extends State<SplashRouter> {
     if (mounted) {
       try {
         await precacheImage(const AssetImage('assets/login BG.png'), context);
-        await precacheImage(const AssetImage('assets/nexal_logo.png'), context);
-        await precacheImage(const AssetImage('assets/backgrounds/11.png'), context);
+        if (mounted) await precacheImage(const AssetImage('assets/nexal_logo.png'), context);
+        if (mounted) await precacheImage(const AssetImage('assets/backgrounds/11.png'), context);
       } catch (_) {}
     }
 

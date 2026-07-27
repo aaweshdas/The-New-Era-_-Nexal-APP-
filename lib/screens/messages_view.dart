@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -682,7 +681,6 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
                 ),
               ),
             ),
-          ),
 
           // Stories Row
           SliverToBoxAdapter(
