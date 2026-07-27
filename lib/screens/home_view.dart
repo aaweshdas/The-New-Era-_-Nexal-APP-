@@ -20,7 +20,6 @@ import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
 import '../models/post_model.dart';
 import '../providers/feed_provider.dart';
-import '../widgets/background/smart_background.dart';
 
 // ── Feed Filter Enum ─────────────────────────────────────────────────────────
 enum FeedFilter { forYou, trending, following, aiPicks, global }

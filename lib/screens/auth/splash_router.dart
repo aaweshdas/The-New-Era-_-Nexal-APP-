@@ -28,12 +28,17 @@ class _SplashRouterState extends State<SplashRouter> {
     final supabase = Supabase.instance.client;
     final session = supabase.auth.currentSession;
 
+    final bool hasValidSession = session != null &&
+        !_isSessionExpired(session);
+
     // 🚀 Precache key background assets to prevent frame pop-in on first render
-    try {
-      await precacheImage(const AssetImage('assets/login BG.png'), context);
-      await precacheImage(const AssetImage('assets/nexal_logo.png'), context);
-      await precacheImage(const AssetImage('assets/backgrounds/11.png'), context);
-    } catch (_) {}
+    if (mounted) {
+      try {
+        await precacheImage(const AssetImage('assets/login BG.png'), context);
+        await precacheImage(const AssetImage('assets/nexal_logo.png'), context);
+        await precacheImage(const AssetImage('assets/backgrounds/11.png'), context);
+      } catch (_) {}
+    }
 
     final Widget nextScreen = hasValidSession ? const HomeScreen() : const LoginScreen();
 

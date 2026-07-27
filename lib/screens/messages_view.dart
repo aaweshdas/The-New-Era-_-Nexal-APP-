@@ -447,9 +447,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
         slivers: [
           // ── PREMIUM HEADER ──
           SliverToBoxAdapter(
-            child: Transform.translate(
-              offset: Offset(_gyroX * 0.3, _gyroY * 0.3),
-              child: Padding(
+            child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 48, 0, 8),
                 child: Stack(
                   children: [
