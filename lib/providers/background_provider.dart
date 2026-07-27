@@ -43,7 +43,7 @@ class BackgroundProvider extends ChangeNotifier {
 
   // Active background
   BackgroundType activeType   = BackgroundType.assetImage;
-  String         activePath   = 'assets/backgrounds/11.png';
+  String         activePath   = 'assets/backgrounds/12.jpg';
 
   // User's saved media library
   List<BackgroundItem> library = [];
@@ -67,7 +67,7 @@ class BackgroundProvider extends ChangeNotifier {
         orElse: () => BackgroundType.assetImage,
       );
     }
-    activePath = prefs.getString(_activeKey) ?? 'assets/backgrounds/11.png';
+    activePath = prefs.getString(_activeKey) ?? 'assets/backgrounds/12.jpg';
 
     final raw = prefs.getStringList(_libraryKey);
     if (raw == null) {
@@ -166,7 +166,7 @@ class BackgroundProvider extends ChangeNotifier {
 
   Future<void> resetToDefault() async {
     activeType = BackgroundType.assetImage;
-    activePath = 'assets/backgrounds/11.png';
+    activePath = 'assets/backgrounds/12.jpg';
 
     final prefs = await _getPrefs();
     await prefs.setString(_activeType, BackgroundType.assetImage.name);
