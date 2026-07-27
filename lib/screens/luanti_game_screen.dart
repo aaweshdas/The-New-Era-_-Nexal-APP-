@@ -10,6 +10,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import 'game_webview_screen.dart';
 
 // ─── Theme Colors ─────────────────────────────────────────────────────────────
 const _kBg = Color(0xFF060913);
@@ -81,6 +82,17 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
         final cur = Directory.current.path;
         candidatePaths.add('$cur/luanti-master/bin/luanti.exe');
         candidatePaths.add('$cur/bin/luanti.exe');
+        candidatePaths.add('$cur/../luanti-master/bin/luanti.exe');
+      } catch (_) {}
+
+      try {
+        Directory dir = Directory(Platform.resolvedExecutable).parent;
+        for (int i = 0; i < 6; i++) {
+          candidatePaths.add('${dir.path}/luanti-master/bin/luanti.exe');
+          candidatePaths.add('${dir.path}/bin/luanti.exe');
+          if (dir.parent.path == dir.path) break;
+          dir = dir.parent;
+        }
       } catch (_) {}
 
       for (final p in candidatePaths) {
@@ -166,9 +178,10 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
 
     if (exeFile == null || !exeFile.existsSync()) {
       setState(() {
-        _statusMessage = 'ERROR: luanti.exe not found!';
+        _statusMessage = 'NATIVE ENGINE NOT FOUND · LAUNCHING IN-APP WEBGL 3D REALM...';
       });
-      _showToast('Could not find luanti.exe in luanti-master/bin/');
+      _showToast('Native luanti.exe not found on device — launching In-App 3D Engine!');
+      _launchInAppVoxelGame();
       return;
     }
 
@@ -239,6 +252,19 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
       });
       _showToast('Luanti Engine stopped.');
     }
+  }
+
+  void _launchInAppVoxelGame() {
+    HapticFeedback.heavyImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const GameWebViewScreen(
+          gameTitle: 'VOXEL REALM 3D',
+          gameAssetFolder: 'assets/voxel_realm',
+        ),
+      ),
+    );
   }
 
   void _showToast(String msg) {
@@ -541,20 +567,18 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
 
             const SizedBox(height: 24),
 
-            // Big Launch / Stop CTA Button
+            // Primary CTA: Play In-App (WebGL 3D Voxel Engine)
             GestureDetector(
-              onTap: _isRunning ? _stopLuantiEngine : _launchLuantiEngine,
+              onTap: _launchInAppVoxelGame,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: _isRunning
-                      ? const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)])
-                      : const LinearGradient(colors: [_kCyan, _kPurple, _kPink]),
+                  gradient: const LinearGradient(colors: [_kCyan, _kPurple, _kPink]),
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: (_isRunning ? Colors.redAccent : _kCyan).withValues(alpha: 0.4),
+                      color: _kCyan.withValues(alpha: 0.4),
                       blurRadius: 24,
                       spreadRadius: -2,
                     ),
@@ -563,19 +587,53 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      _isRunning ? LucideIcons.square : LucideIcons.play,
-                      color: Colors.white,
-                      size: 22,
-                    ),
+                    const Icon(LucideIcons.gamepad2, color: Colors.white, size: 22),
                     const SizedBox(width: 12),
                     Text(
-                      _isRunning ? 'TERMINATE ENGINE PROCESS' : 'START NATIVE VOXEL ENGINE',
+                      'PLAY IN-APP VOXEL REALM (3D ENGINE)',
                       style: GoogleFonts.outfit(
                         color: Colors.white,
-                        fontSize: 14.5,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Secondary CTA: Launch Native C++ Engine Process (Desktop)
+            GestureDetector(
+              onTap: _isRunning ? _stopLuantiEngine : _launchLuantiEngine,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _isRunning ? Colors.red.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _isRunning ? Colors.redAccent : Colors.white.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _isRunning ? LucideIcons.square : LucideIcons.cpu,
+                      color: _isRunning ? Colors.redAccent : _kCyan,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      _isRunning ? 'TERMINATE NATIVE PROCESS (${_processPid ?? 0})' : 'LAUNCH NATIVE C++ ENGINE (DESKTOP)',
+                      style: GoogleFonts.shareTechMono(
+                        color: _isRunning ? Colors.redAccent : Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ],
