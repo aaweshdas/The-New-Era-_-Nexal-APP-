@@ -11,7 +11,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/common/glass_empty_state.dart';
-import '../services/aria_config.dart';
 import '../config/app_config.dart';
 
 // ---------------------------------------------------------------------------
@@ -110,13 +109,6 @@ class _SearchViewState extends State<SearchView>
 
   Future<http.Response> _get(String path) =>
       _client.get(Uri.parse('$_baseUrl$path')).timeout(8.seconds);
-
-  Future<bool> _ping(String url) async {
-    try {
-      final r = await _client.get(Uri.parse('$url/health')).timeout(1200.ms);
-      return r.statusCode == 200;
-    } catch (_) { return false; }
-  }
 
   Future<void> _resolveBaseUrl() async {
     _baseUrl = await AppConfig.resolveGatewayUrl();
