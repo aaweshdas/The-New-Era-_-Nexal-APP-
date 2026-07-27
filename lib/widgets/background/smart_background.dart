@@ -5,7 +5,6 @@ import 'package:video_player/video_player.dart';
 
 import '../../providers/background_provider.dart';
 import '../../theme/app_theme.dart';
-import 'particle_background.dart';
 
 /// Smart background widget that reacts to [BackgroundProvider].
 /// Supports:
@@ -164,32 +163,20 @@ class _SmartBackgroundState extends State<SmartBackground>
         Widget bg;
 
         if (type == BackgroundType.customImage) {
-          bg = Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.file(
-                File(path),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                cacheWidth: 1080,
-              ),
-              const ParticleBackground(),
-            ],
+          bg = Image.file(
+            File(path),
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            cacheWidth: 1080,
           );
         } else if (type == BackgroundType.assetImage) {
-          bg = Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                path,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                cacheWidth: 1080,
-              ),
-              const ParticleBackground(),
-            ],
+          bg = Image.asset(
+            path,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            cacheWidth: 1080,
           );
         } else if (_ctrl != null) {
           bg = FittedBox(
