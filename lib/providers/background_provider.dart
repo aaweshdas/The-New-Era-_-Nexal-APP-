@@ -105,11 +105,42 @@ class BackgroundProvider extends ChangeNotifier {
       addedAt: DateTime(2026),
     ));
 
+    // Base background wallpapers (1.png - 11.png)
     for (int i = 1; i <= 11; i++) {
       list.add(BackgroundItem(
         path: 'assets/backgrounds/$i.png',
         type: BackgroundType.assetImage,
         name: 'Neo-City Grid $i',
+        addedAt: DateTime(2026),
+      ));
+    }
+
+    // Extended wallpaper collection (12.jpg - 28.jpg)
+    final customBgNames = <int, String>{
+      12: 'Cosmic Pathway',
+      13: 'Mosaico Abstract',
+      14: 'Celestial Horizon',
+      15: 'Cyber Glow 1',
+      16: 'Cyber Glow 2',
+      17: 'Cyber Glow 3',
+      18: 'Cyber Glow 4',
+      19: 'Cyber Glow 5',
+      20: 'Cyber Glow 6',
+      21: 'Cyber Glow 7',
+      22: 'Cyber Glow 8',
+      23: 'Cyber Glow 9',
+      24: 'Cyber Glow 10',
+      25: 'Cyber Glow 11',
+      26: 'Cyber Glow 12',
+      27: 'Neon Locomotive',
+      28: 'Hypercar Synthwave',
+    };
+
+    for (int i = 12; i <= 28; i++) {
+      list.add(BackgroundItem(
+        path: 'assets/backgrounds/$i.jpg',
+        type: BackgroundType.assetImage,
+        name: customBgNames[i] ?? 'Cyber Wallpaper $i',
         addedAt: DateTime(2026),
       ));
     }
