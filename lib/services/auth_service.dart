@@ -285,6 +285,11 @@ class AuthService {
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', false);
+    await prefs.remove('user_uid');
+    await prefs.remove('user_email');
+    await prefs.remove('user_username');
+    await prefs.remove('user_avatar');
+    await prefs.remove('profileName');
     _currentUser = null;
     _authStateController.add(null);
   }
