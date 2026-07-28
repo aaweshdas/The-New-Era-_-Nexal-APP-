@@ -117,6 +117,7 @@ class FeedProvider extends ChangeNotifier {
         post.likes--;
       }
       notifyListeners();
+      ApiService.instance.post('/api/posts/$postId/like', {}).catchError((_) => null);
     }
   }
 
@@ -128,6 +129,7 @@ class FeedProvider extends ChangeNotifier {
     }
     _saveBookmarks();
     notifyListeners();
+    ApiService.instance.post('/api/posts/$postId/bookmark', {}).catchError((_) => null);
   }
 
   void addPost(PostModel post) {
