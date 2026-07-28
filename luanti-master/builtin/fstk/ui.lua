@@ -47,8 +47,7 @@ function ui.get_message_formspec(title, message, btn_id)
 		"set_focus[", btn_id, ";true]",
 		"box[0.5,1.2;13,5;#000]",
 		("textarea[0.5,1.2;13,5;;%s;%s]"):format(title, message),
-		"button[2,6.6;4,1;", btn_id, ";" .. fgettext("OK") .. "]",
-		"button[8,6.6;4,1;btn_error_copy;" .. fgettext("Copy to clipboard") .. "]"
+		"button[5,6.6;4,1;", btn_id, ";" .. fgettext("OK") .. "]",
 	})
 end
 
@@ -181,9 +180,6 @@ core.button_handler = function(fields)
 		gamedata.errormessage = nil
 		gamedata.reconnect_requested = false
 		ui.update()
-		return
-	elseif fields["btn_error_copy"] then
-		core.copy_to_clipboard(gamedata.errormessage)
 		return
 	end
 

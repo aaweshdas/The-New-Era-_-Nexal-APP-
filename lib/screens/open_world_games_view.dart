@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'game_webview_screen.dart';
+import 'luanti_game_screen.dart';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -127,6 +128,24 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       rating: '4.9',
       tags: ['Physics', 'Cloud', 'Zero-Load'],
     ),
+    ArcadeGame(
+      id: 'voxel_realm',
+      title: 'VOXEL REALM',
+      subtitle: 'Luanti 3D Open World Sandbox',
+      category: 'OPEN WORLD',
+      description:
+          'Build, mine, craft, and survive in an infinite procedurally generated 3D voxel universe. Powered by the native Luanti C++ engine with Voxelibre & Minetest support.',
+      engine: 'Luanti C++ · 60 FPS Native',
+      difficulty: 'MEDIUM',
+      difficultyColor: _kGreen,
+      isPlayable: true,
+      icon: LucideIcons.box,
+      themeColor: _kPurple,
+      gradientColors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
+      playersCount: '1.2k',
+      rating: '4.8',
+      tags: ['Voxel', 'Sandbox', 'Voxelibre', 'Minetest'],
+    ),
   ];
 
   final List<LeaderboardEntry> _leaderboard = const [
@@ -179,11 +198,13 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     if (!game.isPlayable) { _toast('Coming soon to Nexal Cloud Arcade!'); return; }
     HapticFeedback.heavyImpact();
 
-    final Widget destination = GameWebViewScreen(
-      gameUrl: game.gameUrl,
-      gameTitle: game.title,
-      gameAssetFolder: game.gameAssetFolder ?? 'assets/wordl',
-    );
+    final Widget destination = (game.id == 'voxel_realm' || game.engine.contains('Luanti'))
+        ? LuantiGameScreen(gameTitle: game.title)
+        : GameWebViewScreen(
+            gameUrl: game.gameUrl,
+            gameTitle: game.title,
+            gameAssetFolder: game.gameAssetFolder ?? 'assets/wordl',
+          );
 
     Navigator.push(context, PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 500),

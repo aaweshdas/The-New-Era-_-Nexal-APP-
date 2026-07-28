@@ -64,6 +64,7 @@ local function set_selected_server(server)
 	end
 	local address = server.address
 	local port    = server.port
+	gamedata.serverdescription = server.description
 
 	if address and port then
 		core.settings:set("address", address)
@@ -151,9 +152,10 @@ local function get_formspec(tabview, name, tabdata)
 	local selected_server = find_selected_server()
 
 	if selected_server then
-		if selected_server.description then
+		gamedata.serverdescription = selected_server.description
+		if gamedata.serverdescription then
 			retval = retval .. "textarea[0.25,1.85;5.25,2.7;;;" ..
-				core.formspec_escape(selected_server.description) .. "]"
+				core.formspec_escape(gamedata.serverdescription) .. "]"
 		end
 
 		-- URL button
@@ -512,7 +514,6 @@ local function main_button_handler(tabview, fields, name, tabdata)
 					return true
 				end
 
-				gamedata.mode       = "join"
 				gamedata.address    = server.address
 				gamedata.port       = server.port
 				gamedata.playername = fields.te_name
@@ -521,6 +522,9 @@ local function main_button_handler(tabview, fields, name, tabdata)
 				if fields.te_pwd then
 					gamedata.password = fields.te_pwd
 				end
+
+				gamedata.servername        = server.name
+				gamedata.serverdescription = server.description
 
 				if gamedata.address and gamedata.port then
 					set_selected_server(server)
@@ -596,7 +600,6 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	local te_port_number = tonumber(fields.te_port)
 
 	if (fields.btn_mp_login or fields.key_enter) and host_filled then
-		gamedata.mode       = "join"
 		gamedata.playername = fields.te_name
 		gamedata.password   = fields.te_pwd
 		gamedata.address    = fields.te_address
@@ -614,11 +617,17 @@ local function main_button_handler(tabview, fields, name, tabdata)
 
 			serverlistmgr.add_favorite(server)
 
+			gamedata.servername        = server.name
+			gamedata.serverdescription = server.description
+
 			if not is_server_protocol_compat_or_error(
 						server.proto_min, server.proto_max) then
 				return true
 			end
 		else
+			gamedata.servername        = ""
+			gamedata.serverdescription = ""
+
 			serverlistmgr.add_favorite({
 				address = gamedata.address,
 				port = gamedata.port,
