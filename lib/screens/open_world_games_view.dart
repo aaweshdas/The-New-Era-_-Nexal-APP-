@@ -10,15 +10,16 @@ import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'game_webview_screen.dart';
 
-// ─── Color Palette & Styling Tokens ──────────────────────────────────────────
+// ─── StitchMCP Cyber-Glassmorphism Palette & Styling Tokens ───────────────────
 
-const Color _kBg = Color(0xFF060913); // Deep Space Obsidian
-const Color _kCardBg = Color(0xFF0F172A);
-const Color _kPurple = Color(0xFF8B5CF6); // Cosmic Violet
-const Color _kCyan = Color(0xFF00E5FF);   // Cyber Cyan
-const Color _kPink = Color(0xFFEC4899);   // Aurora Pink
-const Color _kAmber = Color(0xFFF59E0B);  // Solar Gold
-const Color _kGreen = Color(0xFF10B981);  // Bio Emerald
+const Color _kBg = Color(0xFF060913);         // Deep Space Obsidian
+const Color _kCardBg = Color(0xFF10131D);     // Surface Obsidian Container
+const Color _kBioEmerald = Color(0xFF10B981); // Bio-Emerald Green Primary
+const Color _kCyberCyan = Color(0xFF00E5FF);   // Cyber Cyan Accent
+const Color _kSolarGold = Color(0xFFF59E0B);  // Solar Gold Achievement
+const Color _kCosmicViolet = Color(0xFF8B5CF6);// Cosmic Violet Aura
+const Color _kAuroraPink = Color(0xFFEC4899);  // Aurora Pink Highlight
+const Color _kDeepBlue = Color(0xFF3B82F6);    // Deep Blue Sub-Surface
 
 enum ArcadeViewMode { featured, grid, list }
 
@@ -148,10 +149,10 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       bannerAsset: 'assets/wordl/assets/images/game_banner.png',
       engine: 'Three.js · WebGL 2.0',
       difficulty: 'HARD',
-      difficultyColor: _kAmber,
+      difficultyColor: _kSolarGold,
       isPlayable: true,
       icon: LucideIcons.globe,
-      themeColor: _kCyan,
+      themeColor: _kCyberCyan,
       gradientColors: [Color(0xFF00E5FF), Color(0xFF7C3AED)],
       gameAssetFolder: 'assets/wordl',
       playersCount: '2.8k',
@@ -160,14 +161,77 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       controls: ['Drag to Rotate Globe', 'Tap Cargo to Deliver', 'Space Turbo Boost'],
       streamQuality: '60 FPS · 0% CPU Load',
     ),
+    ArcadeGame(
+      id: 'voxel_realm',
+      title: 'VOXEL REALM',
+      subtitle: 'Luanti 3D Open World Sandbox',
+      category: 'OPEN WORLD',
+      description:
+          'Build, mine, craft, and survive in an infinite procedurally generated 3D voxel universe. Powered by the native Luanti C++ engine with Voxelibre & Minetest support.',
+      bannerAsset: 'assets/images/voxel_realm_banner.png',
+      engine: 'Luanti C++ · 60 FPS Native',
+      difficulty: 'MEDIUM',
+      difficultyColor: _kBioEmerald,
+      isPlayable: true,
+      icon: LucideIcons.box,
+      themeColor: _kCosmicViolet,
+      gradientColors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
+      gameAssetFolder: 'assets/voxel_realm',
+      playersCount: '1.2k',
+      rating: '4.8',
+      tags: ['Voxel', 'Sandbox', 'Voxelibre', 'Minetest'],
+      controls: ['WASD Move', 'Mouse Look / Touch Drag', 'Left Click Mine', 'Right Click Place'],
+      streamQuality: '60 FPS Native · C++ Core',
+    ),
+    ArcadeGame(
+      id: 'cyber_run',
+      title: 'CYBER RUN 2099',
+      subtitle: 'Zero-G Cloud Runner',
+      category: 'ACTION',
+      description:
+          'Dash through neon-lit futuristic skyscrapers, dodge plasma barriers, and trigger quantum gravity shifts in this high-speed arcade runner.',
+      bannerAsset: 'assets/images/cyber_run_banner.png',
+      engine: 'Cloud Shader 4.0 · WebGL',
+      difficulty: 'INSANE',
+      difficultyColor: _kAuroraPink,
+      isPlayable: false,
+      icon: LucideIcons.zap,
+      themeColor: _kAuroraPink,
+      gradientColors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
+      playersCount: '3.4k Interested',
+      rating: '5.0',
+      tags: ['Cyberpunk', 'High-Speed', 'Neon', 'Gravity Shift'],
+      controls: ['Swipe/Arrow Left & Right', 'Space Jump', 'Down Slide'],
+      streamQuality: '120 FPS Ultra Stream',
+    ),
+    ArcadeGame(
+      id: 'quantum_arena',
+      title: 'QUANTUM ARENA',
+      subtitle: 'PvP Mech Battle Simulator',
+      category: 'MULTIPLAYER',
+      description:
+          'Engage in real-time tactical mech battles against online pilots. Customize loadouts and dominate the cloud arena.',
+      engine: 'Realtime Netcode · WebGL',
+      difficulty: 'HARD',
+      difficultyColor: _kSolarGold,
+      isPlayable: false,
+      icon: LucideIcons.swords,
+      themeColor: _kDeepBlue,
+      gradientColors: [Color(0xFF3B82F6), Color(0xFF00E5FF)],
+      playersCount: '4.1k Pre-Reg',
+      rating: '4.9',
+      tags: ['PvP', 'Mechs', 'Multiplayer', 'Tactical'],
+      controls: ['Virtual Dual Joysticks', 'Fire Weapons', 'Shield Deploy'],
+      streamQuality: '60 FPS Low Latency',
+    ),
   ];
 
   final List<LeaderboardEntry> _leaderboard = const [
-    LeaderboardEntry(rank: 1, username: 'AriaMind_99',  score: 48920, level: 42, color: _kAmber),
+    LeaderboardEntry(rank: 1, username: 'AriaMind_99',  score: 48920, level: 42, color: _kSolarGold),
     LeaderboardEntry(rank: 2, username: 'QuantumRider', score: 42150, level: 38, color: Color(0xFFB0BEC5)),
     LeaderboardEntry(rank: 3, username: 'CyberVoxel',   score: 39800, level: 35, color: Color(0xFFCD7F32)),
-    LeaderboardEntry(rank: 4, username: 'NexusExplorer',score: 31200, level: 29, color: _kCyan),
-    LeaderboardEntry(rank: 5, username: 'Starlight_X',  score: 28400, level: 24, color: _kPurple),
+    LeaderboardEntry(rank: 4, username: 'NexusExplorer',score: 31200, level: 29, color: _kCyberCyan),
+    LeaderboardEntry(rank: 5, username: 'Starlight_X',  score: 28400, level: 24, color: _kCosmicViolet),
   ];
 
   final List<ArcadeQuest> _quests = const [
@@ -210,7 +274,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache banner images to eliminate white flashes
     for (final game in _games) {
       if (game.bannerAsset != null) {
         precacheImage(AssetImage(game.bannerAsset!), context).catchError((_) {});
@@ -272,7 +335,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-      backgroundColor: _kPurple,
+      backgroundColor: _kCosmicViolet,
       behavior: SnackBarBehavior.floating,
       margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -357,7 +420,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         ),
 
-        // Gradient & Vignette Overlay
+        // StitchMCP Vignette Overlay
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -367,7 +430,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 colors: [
                   _kBg.withValues(alpha: 0.15),
                   _kBg.withValues(alpha: 0.45),
-                  _kBg.withValues(alpha: 0.75),
+                  _kBg.withValues(alpha: 0.80),
                   _kBg,
                 ],
                 stops: const [0.0, 0.35, 0.7, 1.0],
@@ -376,33 +439,33 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         ),
 
-        // Top-left Violet Glow Orb
+        // Top-left Bio-Emerald Glow Orb
         AnimatedBuilder(
           animation: _floatCtrl,
           builder: (context, _) => Positioned(
             top: -60 + 15 * _floatCtrl.value,
             left: -50,
-            child: _orb(320, _kPurple, 0.15),
+            child: _orb(320, _kBioEmerald, 0.16),
           ),
         ),
 
-        // Top-right Cyan Glow Orb
+        // Top-right Cyber Cyan Glow Orb
         AnimatedBuilder(
           animation: _floatCtrl,
           builder: (context, _) => Positioned(
             top: 180 - 20 * _floatCtrl.value,
             right: -60,
-            child: _orb(280, _kCyan, 0.14),
+            child: _orb(280, _kCyberCyan, 0.14),
           ),
         ),
 
-        // Bottom-left Emerald Glow Orb
+        // Bottom-left Cosmic Violet Glow Orb
         AnimatedBuilder(
           animation: _floatCtrl,
           builder: (context, _) => Positioned(
             bottom: 40 + 15 * _floatCtrl.value,
             left: -40,
-            child: _orb(300, _kGreen, 0.12),
+            child: _orb(300, _kCosmicViolet, 0.14),
           ),
         ),
       ],
@@ -421,7 +484,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   // ── Header & Hero Section ────────────────────────────────────────────────────
 
   Widget _buildHeaderSection(String userName, double topPad) {
-    final statusColor = _isCheckingBackend ? _kAmber : (_isBackendOnline ? _kGreen : _kAmber);
+    final statusColor = _isCheckingBackend ? _kSolarGold : (_isBackendOnline ? _kBioEmerald : _kSolarGold);
     final statusLabel = _isCheckingBackend
         ? 'CONNECTING...'
         : (_isBackendOnline ? '⚡ LIVE · $_latencyMs ms' : 'OFFLINE');
@@ -429,7 +492,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     return Container(
       padding: EdgeInsets.fromLTRB(0, topPad + 10, 0, 0),
       child: CustomPaint(
-        painter: _GridPainter(_kCyan.withValues(alpha: 0.03)),
+        painter: _GridPainter(_kCyberCyan.withValues(alpha: 0.03)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -449,7 +512,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 _glassButton(
                   highlight: _showSearch,
                   child: Icon(LucideIcons.search,
-                    color: _showSearch ? _kCyan : Colors.white70, size: 18),
+                    color: _showSearch ? _kCyberCyan : Colors.white70, size: 18),
                   onTap: () {
                     HapticFeedback.selectionClick();
                     setState(() => _showSearch = !_showSearch);
@@ -460,7 +523,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 _glassButton(
                   highlight: _showQuests,
                   child: Icon(LucideIcons.target,
-                    color: _showQuests ? _kAmber : Colors.white70, size: 18),
+                    color: _showQuests ? _kSolarGold : Colors.white70, size: 18),
                   onTap: () {
                     HapticFeedback.selectionClick();
                     setState(() => _showQuests = !_showQuests);
@@ -471,7 +534,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 _glassButton(
                   highlight: _showLeaderboard,
                   child: Icon(LucideIcons.trophy,
-                    color: _showLeaderboard ? _kPink : Colors.white70, size: 18),
+                    color: _showLeaderboard ? _kAuroraPink : Colors.white70, size: 18),
                   onTap: () {
                     HapticFeedback.selectionClick();
                     setState(() => _showLeaderboard = !_showLeaderboard);
@@ -492,13 +555,13 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [_kPink, _kPurple]),
+                        gradient: const LinearGradient(colors: [_kAuroraPink, _kCosmicViolet]),
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: _kPink.withValues(alpha: 0.4), blurRadius: 12)],
+                        boxShadow: [BoxShadow(color: _kAuroraPink.withValues(alpha: 0.4), blurRadius: 12)],
                       ),
                       child: Text('NEXAL CLOUD ARCADE',
-                        style: GoogleFonts.outfit(
-                          fontSize: 9.5, fontWeight: FontWeight.w900,
+                        style: GoogleFonts.sora(
+                          fontSize: 9.5, fontWeight: FontWeight.w800,
                           color: Colors.white, letterSpacing: 2.2,
                         )),
                     ),
@@ -506,49 +569,52 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                       decoration: BoxDecoration(
-                        color: _kGreen.withValues(alpha: 0.12),
+                        color: _kBioEmerald.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: _kGreen.withValues(alpha: 0.4)),
+                        border: Border.all(color: _kBioEmerald.withValues(alpha: 0.4)),
                       ),
                       child: Text('⚡ 0% CPU LOAD',
                         style: GoogleFonts.shareTechMono(
                           fontSize: 8.5, fontWeight: FontWeight.bold,
-                          color: _kGreen, letterSpacing: 1.5,
+                          color: _kBioEmerald, letterSpacing: 1.5,
                         )),
                     ),
                   ]),
 
                   const SizedBox(height: 10),
 
-                  // Shader Title
+                  // Sora Display Header
                   ShaderMask(
                     shaderCallback: (r) => const LinearGradient(
-                      colors: [Color(0xFFFFFFFF), _kCyan, _kPurple],
-                      stops: [0.0, 0.5, 1.0],
+                      colors: [Color(0xFFFFFFFF), _kCyberCyan, _kBioEmerald],
+                      stops: [0.0, 0.55, 1.0],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ).createShader(r),
                     child: Text('ARCADE',
-                      style: GoogleFonts.bebasNeue(
-                        fontSize: 76,
+                      style: GoogleFonts.sora(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: 6,
-                        height: 0.95,
+                        letterSpacing: 2,
+                        height: 1.0,
                       )),
                   ),
 
+                  const SizedBox(height: 4),
+
                   Text(
-                    'Stream next-gen games live · Zero load · Multi-engine cloud',
+                    'Stream next-gen games live · Zero load · Cyber-Glass cloud',
                     style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.55),
-                      letterSpacing: 0.3,
+                      fontSize: 12.5,
+                      color: Colors.white.withValues(alpha: 0.65),
+                      letterSpacing: 0.2,
                     ),
                   ),
 
                   const SizedBox(height: 18),
 
-                  // Player Pilot Card
+                  // Player Pilot HUD Chip
                   _buildPlayerChip(userName),
 
                   const SizedBox(height: 16),
@@ -571,17 +637,17 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: highlight
-                  ? _kPurple.withValues(alpha: 0.35)
+                  ? _kCosmicViolet.withValues(alpha: 0.35)
                   : Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: highlight
-                    ? _kPurple.withValues(alpha: 0.7)
+                    ? _kCosmicViolet.withValues(alpha: 0.7)
                     : Colors.white.withValues(alpha: 0.12),
                 width: 1.2,
               ),
@@ -597,7 +663,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
@@ -619,8 +685,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               ),
             ),
             const SizedBox(width: 7),
-            Text(label, style: GoogleFonts.outfit(
-              fontSize: 10.5, fontWeight: FontWeight.w800,
+            Text(label, style: GoogleFonts.shareTechMono(
+              fontSize: 10.5, fontWeight: FontWeight.w700,
               color: Colors.white, letterSpacing: 1.1,
             )),
           ]),
@@ -639,7 +705,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(36),
-            border: Border.all(color: _kCyan.withValues(alpha: 0.2)),
+            border: Border.all(color: _kCyberCyan.withValues(alpha: 0.25)),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             // Avatar
@@ -648,37 +714,37 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [_kPurple, _kPink],
+                  colors: [_kBioEmerald, _kCyberCyan],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
               ),
               child: Center(
                 child: Text(
                   name.isNotEmpty ? name[0].toUpperCase() : 'N',
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
             const SizedBox(width: 10),
             Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text(name,
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
+                style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
               Text('RANK #1  •  48,920 PTS',
                 style: GoogleFonts.shareTechMono(
-                  color: _kCyan, fontSize: 9, letterSpacing: 0.8,
+                  color: _kCyberCyan, fontSize: 9, letterSpacing: 0.8,
                 )),
             ]),
             const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: _kAmber.withValues(alpha: 0.15),
+                color: _kSolarGold.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _kAmber.withValues(alpha: 0.35)),
+                border: Border.all(color: _kSolarGold.withValues(alpha: 0.35)),
               ),
               child: Text('LVL 42',
                 style: GoogleFonts.shareTechMono(
-                  color: _kAmber, fontSize: 9.5, fontWeight: FontWeight.bold,
+                  color: _kSolarGold, fontSize: 9.5, fontWeight: FontWeight.bold,
                 )),
             ),
           ]),
@@ -695,16 +761,16 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _kCyan.withValues(alpha: 0.3)),
+              border: Border.all(color: _kCyberCyan.withValues(alpha: 0.35)),
             ),
             child: Row(children: [
-              const Icon(LucideIcons.search, color: _kCyan, size: 18),
+              const Icon(LucideIcons.search, color: _kCyberCyan, size: 18),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
@@ -744,17 +810,17 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         decoration: BoxDecoration(
           color: _kCardBg.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _kAmber.withValues(alpha: 0.35), width: 1.2),
-          boxShadow: [BoxShadow(color: _kAmber.withValues(alpha: 0.1), blurRadius: 16)],
+          border: Border.all(color: _kSolarGold.withValues(alpha: 0.35), width: 1.2),
+          boxShadow: [BoxShadow(color: _kSolarGold.withValues(alpha: 0.1), blurRadius: 16)],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              const Icon(LucideIcons.target, color: _kAmber, size: 18),
+              const Icon(LucideIcons.target, color: _kSolarGold, size: 18),
               const SizedBox(width: 8),
               Text('DAILY ARCADE QUESTS',
-                style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 18, letterSpacing: 1.5)),
+                style: GoogleFonts.sora(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
               const Spacer(),
               Text('RESETS IN 14H', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 9.5)),
             ]),
@@ -772,7 +838,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(children: [
-        Icon(q.icon, color: q.isCompleted ? _kGreen : Colors.white60, size: 16),
+        Icon(q.icon, color: q.isCompleted ? _kBioEmerald : Colors.white60, size: 16),
         const SizedBox(width: 10),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -784,7 +850,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 value: q.progress,
                 minHeight: 4,
                 backgroundColor: Colors.white10,
-                valueColor: AlwaysStoppedAnimation<Color>(q.isCompleted ? _kGreen : _kCyan),
+                valueColor: AlwaysStoppedAnimation<Color>(q.isCompleted ? _kBioEmerald : _kCyberCyan),
               ),
             ),
           ]),
@@ -793,14 +859,14 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: q.isCompleted ? _kGreen.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+            color: q.isCompleted ? _kBioEmerald.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: q.isCompleted ? _kGreen : Colors.white24),
+            border: Border.all(color: q.isCompleted ? _kBioEmerald : Colors.white24),
           ),
           child: Text(
             q.isCompleted ? 'CLAIMED' : q.reward,
             style: GoogleFonts.shareTechMono(
-              color: q.isCompleted ? _kGreen : _kAmber,
+              color: q.isCompleted ? _kBioEmerald : _kSolarGold,
               fontSize: 9.5, fontWeight: FontWeight.bold,
             ),
           ),
@@ -818,7 +884,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       child: Column(
         children: [
           Row(children: [
-            // Category horizontal list
             Expanded(
               child: SizedBox(
                 height: 40,
@@ -835,19 +900,19 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: sel ? _kCyan.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.04),
+                          color: sel ? _kCyberCyan.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: sel ? _kCyan : Colors.white.withValues(alpha: 0.08),
+                            color: sel ? _kCyberCyan : Colors.white.withValues(alpha: 0.08),
                             width: sel ? 1.4 : 1,
                           ),
-                          boxShadow: sel ? [BoxShadow(color: _kCyan.withValues(alpha: 0.25), blurRadius: 10)] : [],
+                          boxShadow: sel ? [BoxShadow(color: _kCyberCyan.withValues(alpha: 0.25), blurRadius: 10)] : [],
                         ),
                         child: Text(cat,
-                          style: GoogleFonts.outfit(
-                            color: sel ? _kCyan : Colors.white60,
+                          style: GoogleFonts.sora(
+                            color: sel ? _kCyberCyan : Colors.white60,
                             fontSize: 11,
-                            fontWeight: sel ? FontWeight.w800 : FontWeight.w500,
+                            fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                             letterSpacing: 1.2,
                           )),
                       ),
@@ -857,7 +922,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               ),
             ),
             const SizedBox(width: 10),
-            // View Mode Switcher
             Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
@@ -884,15 +948,15 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: sel ? _kPurple.withValues(alpha: 0.3) : Colors.transparent,
+          color: sel ? _kCosmicViolet.withValues(alpha: 0.3) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, size: 15, color: sel ? _kCyan : Colors.white38),
+        child: Icon(icon, size: 15, color: sel ? _kCyberCyan : Colors.white38),
       ),
     );
   }
 
-  // ── Games Sliver Display Switcher ───────────────────────────────────────────
+  // ── Games Display Switcher ───────────────────────────────────────────────────
 
   Widget _buildGamesSliver() {
     final games = _filteredGames;
@@ -936,7 +1000,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       );
     }
 
-    // Default Featured Mode
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
@@ -960,7 +1023,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: game.themeColor.withValues(alpha: 0.35), width: 1.2),
           boxShadow: [
-            BoxShadow(color: game.themeColor.withValues(alpha: 0.12), blurRadius: 20, spreadRadius: -2),
+            BoxShadow(color: game.themeColor.withValues(alpha: 0.14), blurRadius: 20, spreadRadius: -2),
           ],
         ),
         child: ClipRRect(
@@ -968,9 +1031,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Card Banner
               _buildCardBanner(game),
-              // Card Body
               _buildCardBody(game),
             ]),
           ),
@@ -984,7 +1045,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     return SizedBox(
       height: 160,
       child: Stack(fit: StackFit.expand, children: [
-        // Fallback Gradient background
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -995,7 +1055,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         ),
 
-        // Asset image
         if (game.bannerAsset != null)
           Positioned.fill(child: Image.asset(
             game.bannerAsset!,
@@ -1003,7 +1062,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
             errorBuilder: (ctx, err, st) => const SizedBox(),
           )),
 
-        // Dark Vignette
         Positioned.fill(child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -1017,22 +1075,19 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         )),
 
-        // Grid painter overlay
         Positioned.fill(child: CustomPaint(painter: _GridPainter(game.themeColor.withValues(alpha: 0.06)))),
 
-        // Top Badges
         Positioned(top: 12, left: 12, right: 12, child: Row(children: [
           _badge(game.category, game.themeColor),
           const SizedBox(width: 6),
           _badge(game.difficulty, game.difficultyColor),
           const Spacer(),
           if (game.isPlayable)
-            _badge('● LIVE STREAM', _kGreen)
+            _badge('● LIVE STREAM', _kBioEmerald)
           else
             _badge('⏳ SOON', Colors.white38),
         ])),
 
-        // Bottom Icon & Title
         Positioned(bottom: 12, left: 12, right: 12, child: Row(children: [
           Container(
             padding: const EdgeInsets.all(9),
@@ -1047,8 +1102,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(game.title,
-              style: GoogleFonts.bebasNeue(
-                color: Colors.white, fontSize: 26, letterSpacing: 2,
+              style: GoogleFonts.sora(
+                color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.5,
               )),
             Text(game.subtitle,
               style: GoogleFonts.outfit(
@@ -1058,14 +1113,14 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(LucideIcons.star, color: _kAmber, size: 14),
+              const Icon(LucideIcons.star, color: _kSolarGold, size: 14),
               const SizedBox(width: 4),
               Text(game.rating,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.sora(
                   color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800,
                 )),
             ]),
-            Text('RATING', style: GoogleFonts.outfit(
+            Text('RATING', style: GoogleFonts.sora(
               color: Colors.white38, fontSize: 8, letterSpacing: 0.8,
             )),
           ]),
@@ -1087,13 +1142,12 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
         const SizedBox(height: 12),
 
-        // Specs row
         Row(children: [
-          Icon(LucideIcons.cpu, size: 12, color: Colors.white38),
+          const Icon(LucideIcons.cpu, size: 12, color: Colors.white38),
           const SizedBox(width: 5),
           Text(game.engine, style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 10)),
           const Spacer(),
-          Icon(LucideIcons.users, size: 12, color: Colors.white38),
+          const Icon(LucideIcons.users, size: 12, color: Colors.white38),
           const SizedBox(width: 5),
           Text(game.playersCount, style: GoogleFonts.outfit(
             color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w600,
@@ -1102,7 +1156,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
         const SizedBox(height: 10),
 
-        // Tags
         if (game.tags.isNotEmpty) Wrap(spacing: 6, runSpacing: 6, children: game.tags.map((t) =>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1120,7 +1173,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
         const SizedBox(height: 14),
 
-        // Launch CTA
         _buildLaunchButton(game),
       ]),
     );
@@ -1155,9 +1207,9 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           const SizedBox(width: 8),
           Text(
             game.isPlayable ? 'LAUNCH CLOUD ENGINE' : 'COMING SOON',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.sora(
               color: game.isPlayable ? Colors.black : Colors.white38,
-              fontSize: 12.5, fontWeight: FontWeight.w900, letterSpacing: 1.8,
+              fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 1.8,
             ),
           ),
         ]),
@@ -1179,7 +1231,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Top Thumbnail
             Expanded(
               flex: 5,
               child: Stack(fit: StackFit.expand, children: [
@@ -1194,14 +1245,13 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 Positioned(top: 8, left: 8, child: _badge(game.category, game.themeColor)),
               ]),
             ),
-            // Bottom Info
             Expanded(
               flex: 4,
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(game.title,
-                    style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 18, letterSpacing: 1),
+                    style: GoogleFonts.sora(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                   Text(game.engine,
                     style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 8.5),
@@ -1218,7 +1268,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                       ),
                       child: Center(
                         child: Text(game.isPlayable ? 'PLAY' : 'SOON',
-                          style: GoogleFonts.outfit(color: game.isPlayable ? Colors.black : Colors.white38,
+                          style: GoogleFonts.sora(color: game.isPlayable ? Colors.black : Colors.white38,
                             fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1)),
                       ),
                     ),
@@ -1257,7 +1307,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(game.title, style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 19, letterSpacing: 1.2)),
+              Text(game.title, style: GoogleFonts.sora(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
               Text('${game.category} · ${game.engine}', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 9.5)),
             ]),
           ),
@@ -1271,7 +1321,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: Text(game.isPlayable ? 'LAUNCH' : 'SOON',
-              style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1)),
+              style: GoogleFonts.sora(fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1)),
           ),
         ]),
       ),
@@ -1286,8 +1336,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
-      child: Text(label, style: GoogleFonts.outfit(
-        color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1,
+      child: Text(label, style: GoogleFonts.sora(
+        color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1,
       )),
     );
   }
@@ -1309,7 +1359,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
             border: Border.all(color: game.themeColor.withValues(alpha: 0.4), width: 1.5),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Handle bar
             Center(
               child: Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
@@ -1321,7 +1370,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
                 children: [
-                  // Banner Header
                   SizedBox(
                     height: 150,
                     child: ClipRRect(
@@ -1332,7 +1380,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                           Image.asset(game.bannerAsset!, fit: BoxFit.cover, errorBuilder: (ctx, err, st) => const SizedBox()),
                         Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.4))),
                         Positioned(bottom: 14, left: 14, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(game.title, style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 32, letterSpacing: 2)),
+                          Text(game.title, style: GoogleFonts.sora(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
                           Text(game.subtitle, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
                         ])),
                       ]),
@@ -1341,27 +1389,24 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
                   const SizedBox(height: 18),
 
-                  // Description
-                  Text('GAME OVERVIEW', style: GoogleFonts.bebasNeue(color: _kCyan, fontSize: 16, letterSpacing: 1.5)),
+                  Text('GAME OVERVIEW', style: GoogleFonts.sora(color: _kCyberCyan, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
                   const SizedBox(height: 6),
                   Text(game.description, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, height: 1.5)),
 
                   const SizedBox(height: 20),
 
-                  // Cloud Specs
-                  Text('LIVE CLOUD SPECS', style: GoogleFonts.bebasNeue(color: _kPurple, fontSize: 16, letterSpacing: 1.5)),
+                  Text('LIVE CLOUD SPECS', style: GoogleFonts.sora(color: _kCosmicViolet, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
                   const SizedBox(height: 10),
                   Wrap(spacing: 8, runSpacing: 8, children: [
-                    _specBadge(LucideIcons.gauge, 'Stream Quality', game.streamQuality, _kGreen),
-                    _specBadge(LucideIcons.cpu, 'Engine Architecture', game.engine, _kCyan),
-                    _specBadge(LucideIcons.activity, 'Netcode Latency', '$_latencyMs ms Live Ping', _kAmber),
-                    _specBadge(LucideIcons.users, 'Active Pilots', game.playersCount, _kPink),
+                    _specBadge(LucideIcons.gauge, 'Stream Quality', game.streamQuality, _kBioEmerald),
+                    _specBadge(LucideIcons.cpu, 'Engine Architecture', game.engine, _kCyberCyan),
+                    _specBadge(LucideIcons.activity, 'Netcode Latency', '$_latencyMs ms Live Ping', _kSolarGold),
+                    _specBadge(LucideIcons.users, 'Active Pilots', game.playersCount, _kAuroraPink),
                   ]),
 
                   const SizedBox(height: 20),
 
-                  // Controls
-                  Text('CONTROLS OVERVIEW', style: GoogleFonts.bebasNeue(color: _kAmber, fontSize: 16, letterSpacing: 1.5)),
+                  Text('CONTROLS OVERVIEW', style: GoogleFonts.sora(color: _kSolarGold, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
                   const SizedBox(height: 8),
                   ...game.controls.map((c) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),
@@ -1374,7 +1419,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
                   const SizedBox(height: 28),
 
-                  // Launch Button
                   _buildLaunchButton(game),
                 ],
               ),
@@ -1416,8 +1460,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       decoration: BoxDecoration(
         color: _kCardBg.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _kAmber.withValues(alpha: 0.35), width: 1.2),
-        boxShadow: [BoxShadow(color: _kAmber.withValues(alpha: 0.12), blurRadius: 20)],
+        border: Border.all(color: _kSolarGold.withValues(alpha: 0.35), width: 1.2),
+        boxShadow: [BoxShadow(color: _kSolarGold.withValues(alpha: 0.12), blurRadius: 20)],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -1426,11 +1470,11 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               ShaderMask(
-                shaderCallback: (r) => const LinearGradient(colors: [_kAmber, _kPink]).createShader(r),
+                shaderCallback: (r) => const LinearGradient(colors: [_kSolarGold, _kAuroraPink]).createShader(r),
                 child: const Icon(LucideIcons.trophy, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 10),
-              Text('HALL OF FAME', style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 22, letterSpacing: 2)),
+              Text('HALL OF FAME', style: GoogleFonts.sora(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
               const Spacer(),
               Text('GLOBAL PILOTS', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 9.5)),
             ]),
@@ -1462,7 +1506,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(e.username, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+          Text(e.username, style: GoogleFonts.sora(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
           Text('LEVEL ${e.level}', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 9)),
         ])),
         Container(
