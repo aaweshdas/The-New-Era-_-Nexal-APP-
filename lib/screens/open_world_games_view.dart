@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,7 +9,6 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'game_webview_screen.dart';
-import 'luanti_game_screen.dart';
 
 // ─── Color Palette & Styling Tokens ──────────────────────────────────────────
 
@@ -22,7 +19,6 @@ const Color _kCyan = Color(0xFF00E5FF);   // Cyber Cyan
 const Color _kPink = Color(0xFFEC4899);   // Aurora Pink
 const Color _kAmber = Color(0xFFF59E0B);  // Solar Gold
 const Color _kGreen = Color(0xFF10B981);  // Bio Emerald
-const Color _kBlue = Color(0xFF3B82F6);   // Deep Blue
 
 enum ArcadeViewMode { featured, grid, list }
 
@@ -164,69 +160,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       controls: ['Drag to Rotate Globe', 'Tap Cargo to Deliver', 'Space Turbo Boost'],
       streamQuality: '60 FPS · 0% CPU Load',
     ),
-    ArcadeGame(
-      id: 'voxel_realm',
-      title: 'VOXEL REALM',
-      subtitle: 'Luanti 3D Open World Sandbox',
-      category: 'OPEN WORLD',
-      description:
-          'Build, mine, craft, and survive in an infinite procedurally generated 3D voxel universe. Powered by the native Luanti C++ engine with Voxelibre & Minetest support.',
-      bannerAsset: 'assets/images/voxel_realm_banner.png',
-      engine: 'Luanti C++ · 60 FPS Native',
-      difficulty: 'MEDIUM',
-      difficultyColor: _kGreen,
-      isPlayable: true,
-      icon: LucideIcons.box,
-      themeColor: _kPurple,
-      gradientColors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
-      gameAssetFolder: 'assets/voxel_realm',
-      playersCount: '1.2k',
-      rating: '4.8',
-      tags: ['Voxel', 'Sandbox', 'Voxelibre', 'Minetest'],
-      controls: ['WASD Move', 'Mouse Look / Touch Drag', 'Left Click Mine', 'Right Click Place'],
-      streamQuality: '60 FPS Native · C++ Core',
-    ),
-    ArcadeGame(
-      id: 'cyber_run',
-      title: 'CYBER RUN 2099',
-      subtitle: 'Zero-G Cloud Runner',
-      category: 'ACTION',
-      description:
-          'Dash through neon-lit futuristic skyscrapers, dodge plasma barriers, and trigger quantum gravity shifts in this high-speed arcade runner.',
-      bannerAsset: 'assets/images/cyber_run_banner.png',
-      engine: 'Cloud Shader 4.0 · WebGL',
-      difficulty: 'INSANE',
-      difficultyColor: _kPink,
-      isPlayable: false,
-      icon: LucideIcons.zap,
-      themeColor: _kPink,
-      gradientColors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
-      playersCount: '3.4k Interested',
-      rating: '5.0',
-      tags: ['Cyberpunk', 'High-Speed', 'Neon', 'Gravity Shift'],
-      controls: ['Swipe/Arrow Left & Right', 'Space Jump', 'Down Slide'],
-      streamQuality: '120 FPS Ultra Stream',
-    ),
-    ArcadeGame(
-      id: 'quantum_arena',
-      title: 'QUANTUM ARENA',
-      subtitle: 'PvP Mech Battle Simulator',
-      category: 'MULTIPLAYER',
-      description:
-          'Engage in real-time tactical mech battles against online pilots. Customize loadouts and dominate the cloud arena.',
-      engine: 'Realtime Netcode · WebGL',
-      difficulty: 'HARD',
-      difficultyColor: _kAmber,
-      isPlayable: false,
-      icon: LucideIcons.swords,
-      themeColor: _kBlue,
-      gradientColors: [Color(0xFF3B82F6), Color(0xFF00E5FF)],
-      playersCount: '4.1k Pre-Reg',
-      rating: '4.9',
-      tags: ['PvP', 'Mechs', 'Multiplayer', 'Tactical'],
-      controls: ['Virtual Dual Joysticks', 'Fire Weapons', 'Shield Deploy'],
-      streamQuality: '60 FPS Low Latency',
-    ),
   ];
 
   final List<LeaderboardEntry> _leaderboard = const [
@@ -320,15 +253,11 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     }
     HapticFeedback.heavyImpact();
 
-    final bool isDesktop = !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
-
-    final Widget destination = (game.id == 'voxel_realm' && isDesktop)
-        ? LuantiGameScreen(gameTitle: game.title)
-        : GameWebViewScreen(
-            gameUrl: game.gameUrl,
-            gameTitle: game.title,
-            gameAssetFolder: game.gameAssetFolder ?? 'assets/wordl',
-          );
+    final Widget destination = GameWebViewScreen(
+      gameUrl: game.gameUrl,
+      gameTitle: game.title,
+      gameAssetFolder: game.gameAssetFolder ?? 'assets/wordl',
+    );
 
     Navigator.push(context, PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 450),
