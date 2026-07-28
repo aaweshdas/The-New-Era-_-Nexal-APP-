@@ -625,18 +625,20 @@ class _AIAssistViewState extends State<AIAssistView>
 
           // Winding Vertical Flowing Particle Layer
           Positioned.fill(
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_orbCtrl, _orbPulseCtrl]),
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: _OrbPainter(
-                    animationValue: _orbCtrl.value,
-                    pulseValue: _orbPulseCtrl.value,
-                    isListening: _isListening,
-                    particles: _particles,
-                  ),
-                );
-              },
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_orbCtrl, _orbPulseCtrl]),
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _OrbPainter(
+                      animationValue: _orbCtrl.value,
+                      pulseValue: _orbPulseCtrl.value,
+                      isListening: _isListening,
+                      particles: _particles,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
 

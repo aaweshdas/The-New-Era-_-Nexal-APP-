@@ -102,20 +102,40 @@ class SnapCameraController extends ChangeNotifier {
 
   Future<void> _setCamera(int index) async {
     if (cameras.isEmpty) return;
-    final controller = CameraController(
+    isInitialized = false;
+    notifyListeners();
+
+    CameraController controller = CameraController(
       cameras[index],
       ResolutionPreset.high,
       enableAudio: true,
-      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21,
     );
-    cameraController = controller;
+
     try {
       await controller.initialize();
+      cameraController = controller;
       isInitialized = true;
       isPermissionDenied = false;
       notifyListeners();
     } catch (e) {
-      debugPrint("Camera controller initialize error: $e");
+      debugPrint("Camera initialize error with audio: $e. Retrying without audio...");
+      // Fallback: try initializing without audio in case mic permission is restricted
+      try {
+        controller = CameraController(
+          cameras[index],
+          ResolutionPreset.high,
+          enableAudio: false,
+        );
+        await controller.initialize();
+        cameraController = controller;
+        isInitialized = true;
+        isPermissionDenied = false;
+        notifyListeners();
+      } catch (err) {
+        debugPrint("Camera initialize fallback error: $err");
+        isInitialized = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -129,18 +149,22 @@ class SnapCameraController extends ChangeNotifier {
   }
 
   void cycleFlashMode() async {
-    if (cameraController == null || !isInitialized) return;
-    if (flashState == FlashModeState.off) {
-      flashState = FlashModeState.on;
-      await cameraController!.setFlashMode(FlashMode.always);
-    } else if (flashState == FlashModeState.on) {
-      flashState = FlashModeState.auto;
-      await cameraController!.setFlashMode(FlashMode.auto);
-    } else {
-      flashState = FlashModeState.off;
-      await cameraController!.setFlashMode(FlashMode.off);
+    if (cameraController == null || !isInitialized || !cameraController!.value.isInitialized) return;
+    try {
+      if (flashState == FlashModeState.off) {
+        flashState = FlashModeState.on;
+        await cameraController!.setFlashMode(FlashMode.always);
+      } else if (flashState == FlashModeState.on) {
+        flashState = FlashModeState.auto;
+        await cameraController!.setFlashMode(FlashMode.auto);
+      } else {
+        flashState = FlashModeState.off;
+        await cameraController!.setFlashMode(FlashMode.off);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Flash mode toggle error: $e");
     }
-    notifyListeners();
   }
 
   void cycleTimer() {
@@ -155,21 +179,23 @@ class SnapCameraController extends ChangeNotifier {
   }
 
   void setZoom(double scale) async {
-    if (cameraController == null || !isInitialized) return;
-    zoomLevel = (zoomLevel * scale).clamp(1.0, 5.0);
-    await cameraController!.setZoomLevel(zoomLevel);
-    isZoomVisible = true;
-    notifyListeners();
-
-    _zoomTimer?.cancel();
-    _zoomTimer = Timer(const Duration(seconds: 1), () {
-      isZoomVisible = false;
+    if (cameraController == null || !isInitialized || !cameraController!.value.isInitialized) return;
+    try {
+      zoomLevel = (zoomLevel * scale).clamp(1.0, 5.0);
+      await cameraController!.setZoomLevel(zoomLevel);
+      isZoomVisible = true;
       notifyListeners();
-    });
+
+      _zoomTimer?.cancel();
+      _zoomTimer = Timer(const Duration(seconds: 1), () {
+        isZoomVisible = false;
+        notifyListeners();
+      });
+    } catch (_) {}
   }
 
   void setFocus(TapUpDetails details, BoxConstraints constraints) async {
-    if (cameraController == null || !isInitialized) return;
+    if (cameraController == null || !isInitialized || !cameraController!.value.isInitialized) return;
     final dx = details.localPosition.dx / constraints.maxWidth;
     final dy = details.localPosition.dy / constraints.maxHeight;
     focusPoint = details.localPosition;
@@ -177,8 +203,8 @@ class SnapCameraController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await cameraController!.setFocusPoint(Offset(dx, dy));
-      await cameraController!.setExposurePoint(Offset(dx, dy));
+      await cameraController!.setFocusPoint(Offset(dx.clamp(0.0, 1.0), dy.clamp(0.0, 1.0)));
+      await cameraController!.setExposurePoint(Offset(dx.clamp(0.0, 1.0), dy.clamp(0.0, 1.0)));
     } catch (_) {}
 
     _focusTimer?.cancel();
@@ -205,7 +231,7 @@ class SnapCameraController extends ChangeNotifier {
 
   // ── PHOTO CAPTURE ──
   Future<XFile?> takePhoto() async {
-    if (cameraController == null || !isInitialized || isRecording) return null;
+    if (cameraController == null || !isInitialized || !cameraController!.value.isInitialized || isRecording) return null;
     try {
       if (timerDuration > 0) {
         await Future.delayed(Duration(seconds: timerDuration));
@@ -223,7 +249,7 @@ class SnapCameraController extends ChangeNotifier {
 
   // ── VIDEO RECORDING ──
   Future<void> startVideoRecording() async {
-    if (cameraController == null || !isInitialized || isRecording) return;
+    if (cameraController == null || !isInitialized || !cameraController!.value.isInitialized || isRecording) return;
     try {
       await cameraController!.startVideoRecording();
       isRecording = true;

@@ -423,7 +423,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           Positioned(
             bottom: 24,
             right: 20,
-            child: _showScrollToTop ? _buildScrollToTopButton() : _buildFloatingCreateButton(),
+            child: RepaintBoundary(
+              child: _showScrollToTop ? _buildScrollToTopButton() : _buildFloatingCreateButton(),
+            ),
           ),
         ],
       ),

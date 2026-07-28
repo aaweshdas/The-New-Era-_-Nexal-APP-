@@ -355,19 +355,21 @@ class _SearchViewState extends State<SearchView>
         // Ambient glow
         Positioned(
           top: -100, right: -80,
-          child: AnimatedBuilder(
-            animation: _orbCtrl,
-            builder: (context, child) => Transform.rotate(
-              angle: _orbCtrl.value * 2 * math.pi,
-              child: Container(
-                width: 320, height: 320,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    _purpleD.withValues(alpha: 0.14),
-                    _pink.withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ]),
+          child: RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _orbCtrl,
+              builder: (context, child) => Transform.rotate(
+                angle: _orbCtrl.value * 2 * math.pi,
+                child: Container(
+                  width: 320, height: 320,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      _purpleD.withValues(alpha: 0.14),
+                      _pink.withValues(alpha: 0.04),
+                      Colors.transparent,
+                    ]),
+                  ),
                 ),
               ),
             ),

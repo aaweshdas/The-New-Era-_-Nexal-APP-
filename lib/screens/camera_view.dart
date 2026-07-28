@@ -141,11 +141,15 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
               fit: StackFit.expand,
               children: [
                 // ── LAYER 1: Full-Screen Viewfinder (100% Fit & No Distortion) ──
-                if (_snapCtrl.isInitialized && _snapCtrl.cameraController != null)
+                if (_snapCtrl.isInitialized &&
+                    _snapCtrl.cameraController != null &&
+                    _snapCtrl.cameraController!.value.isInitialized)
                   Builder(
                     builder: (context) {
                       final camera = _snapCtrl.cameraController!;
-                      var scale = screenSize.aspectRatio * camera.value.aspectRatio;
+                      double aspectRatio = camera.value.aspectRatio;
+                      if (aspectRatio <= 0) aspectRatio = 16 / 9;
+                      var scale = screenSize.aspectRatio * aspectRatio;
                       if (scale < 1) scale = 1 / scale;
                       return Transform.scale(
                         scale: scale,
