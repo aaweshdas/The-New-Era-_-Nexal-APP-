@@ -78,12 +78,17 @@ class SnapCameraController extends ChangeNotifier {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> initCamera() async {
-    final status = await Permission.camera.request();
-    if (status.isDenied || status.isPermanentlyDenied) {
+    var camStatus = await Permission.camera.status;
+    if (!camStatus.isGranted) {
+      camStatus = await Permission.camera.request();
+    }
+
+    if (camStatus.isPermanentlyDenied) {
       isPermissionDenied = true;
       notifyListeners();
       return;
     }
+
     await Permission.microphone.request();
 
     try {
@@ -93,6 +98,8 @@ class SnapCameraController extends ChangeNotifier {
         int frontIndex = cameras.indexWhere((c) => c.lensDirection == CameraLensDirection.front);
         selectedCameraIndex = frontIndex != -1 ? frontIndex : 0;
         await _setCamera(selectedCameraIndex);
+      } else {
+        debugPrint("No camera devices available.");
       }
     } catch (e) {
       debugPrint("Camera init error: $e");
@@ -118,7 +125,6 @@ class SnapCameraController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Camera initialize error with audio: $e. Retrying without audio...");
-      // Fallback: try initializing without audio in case mic permission is restricted
       try {
         controller = CameraController(
           cameras[index],

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../controllers/snap_camera_controller.dart';
 import '../widgets/camera/snap_capture_button.dart';
@@ -30,13 +31,14 @@ class CameraView extends StatefulWidget {
   State<CameraView> createState() => _CameraViewState();
 }
 
-class _CameraViewState extends State<CameraView> with SingleTickerProviderStateMixin {
+class _CameraViewState extends State<CameraView> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late SnapCameraController _snapCtrl;
   bool _isShutterFlashing = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Hide status bar for immersive full-screen camera viewfinder
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _snapCtrl = SnapCameraController();
@@ -49,7 +51,15 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _snapCtrl.initCamera();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _snapCtrl.removeListener(_onControllerUpdate);
     _snapCtrl.dispose();
@@ -254,7 +264,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                   ),
                 ),
 
-                // ── LAYER 7: Filter Carousel + Bottom Controls (Safe Overflow Handling) ──
+                // ── LAYER 7: Filter Carousel + Bottom Controls ──
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -700,6 +710,18 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () => openAppSettings(),
+                  child: Text(
+                    'Open App Settings',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white54,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
