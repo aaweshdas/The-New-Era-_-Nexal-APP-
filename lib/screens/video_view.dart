@@ -245,28 +245,30 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
           ),
           // Play button center
           Center(
-            child: GestureDetector(
-              onTap: () => _showVideoDetail(VideoItem(id: 'hero', title: 'Cosmic Origins: The Beginning', category: 'Documentary', imageUrl: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?w=800', duration: '45m', views: '5.2M', rating: 4.9, creator: 'Nexal Originals')),
-              child: AnimatedBuilder(
-                animation: _pulseCtrl,
-                builder: (ctx, child) {
-                  return Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.purple500.withValues(alpha: 0.15 + _pulseCtrl.value * 0.2),
-                          blurRadius: 20 + _pulseCtrl.value * 10,
-                          spreadRadius: _pulseCtrl.value * 4,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(LucideIcons.play, color: Colors.white, size: 28),
-                  );
-                },
+            child: RepaintBoundary(
+              child: GestureDetector(
+                onTap: () => _showVideoDetail(VideoItem(id: 'hero', title: 'Cosmic Origins: The Beginning', category: 'Documentary', imageUrl: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?w=800', duration: '45m', views: '5.2M', rating: 4.9, creator: 'Nexal Originals')),
+                child: AnimatedBuilder(
+                  animation: _pulseCtrl,
+                  builder: (ctx, child) {
+                    return Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.purple500.withValues(alpha: 0.15 + _pulseCtrl.value * 0.2),
+                            blurRadius: 20 + _pulseCtrl.value * 10,
+                            spreadRadius: _pulseCtrl.value * 4,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(LucideIcons.play, color: Colors.white, size: 28),
+                    );
+                  },
+                ),
               ),
             ),
           ),
