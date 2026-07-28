@@ -185,9 +185,8 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
 
     if (exeFile == null || !exeFile.existsSync()) {
       setState(() {
-        _statusMessage = 'NATIVE ENGINE NOT FOUND · LAUNCHING IN-APP WEBGL 3D REALM...';
+        _statusMessage = 'LAUNCHING IN-APP 3D ENGINE...';
       });
-      _showToast('Native luanti.exe not found on device — launching In-App 3D Engine!');
       _launchInAppVoxelGame();
       return;
     }
@@ -267,7 +266,7 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
       MaterialPageRoute(
         builder: (_) => const GameWebViewScreen(
           gameTitle: 'VOXEL REALM 3D',
-          gameAssetFolder: 'assets/voxel_realm',
+          gameAssetFolder: 'assets/wordl',
         ),
       ),
     );

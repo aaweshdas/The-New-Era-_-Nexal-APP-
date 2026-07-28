@@ -1,6 +1,7 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -198,7 +199,9 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     if (!game.isPlayable) { _toast('Coming soon to Nexal Cloud Arcade!'); return; }
     HapticFeedback.heavyImpact();
 
-    final Widget destination = (game.id == 'voxel_realm' || game.engine.contains('Luanti'))
+    final bool isDesktop = !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+
+    final Widget destination = (game.id == 'voxel_realm' && isDesktop)
         ? LuantiGameScreen(gameTitle: game.title)
         : GameWebViewScreen(
             gameUrl: game.gameUrl,
