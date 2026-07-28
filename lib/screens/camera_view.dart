@@ -217,7 +217,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                   right: 16,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left side Avatar
                       _buildProfileAvatar(),
@@ -529,7 +529,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
               child: Image.network(
                 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=100',
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(LucideIcons.image, color: Colors.white, size: 24),
+                errorBuilder: (context, error, stackTrace) => const Icon(LucideIcons.image, color: Colors.white, size: 24),
               ),
             ),
           ),
