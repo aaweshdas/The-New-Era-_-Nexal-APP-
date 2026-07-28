@@ -221,8 +221,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       extendBodyBehindAppBar: true,
       extendBody: true,
       body: Stack(children: [
-        // Full-screen background orbs (behind everything)
-        _buildBgOrbs(),
+        // Full-screen background orbs (behind everything) — isolated layer
+        RepaintBoundary(child: _buildBgOrbs()),
         // Full-screen scrollable content
         CustomScrollView(
           physics: const BouncingScrollPhysics(),

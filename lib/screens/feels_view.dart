@@ -101,7 +101,7 @@ class _FeelsViewState extends State<FeelsView> {
           final feel = _feels[index];
           final isLiked = _likedIndices.contains(index);
           final isFollowed = _followedIndices.contains(index);
-          return Stack(fit: StackFit.expand, children: [
+          return RepaintBoundary(child: Stack(fit: StackFit.expand, children: [
             // ── Background image ──
             CachedNetworkImage(imageUrl: feel.videoImage, fit: BoxFit.cover, errorWidget: (c, url, error) => Container(color: Colors.grey[900], child: const Center(child: Icon(LucideIcons.film, color: Colors.white24, size: 48)))),
 
@@ -245,7 +245,7 @@ class _FeelsViewState extends State<FeelsView> {
               margin: const EdgeInsets.symmetric(vertical: 2),
               decoration: BoxDecoration(color: i == _currentPage ? AppTheme.cyan500 : Colors.white24, borderRadius: BorderRadius.circular(2)),
             )))),
-          ]);
+          ]));
         },
       ),
       ),

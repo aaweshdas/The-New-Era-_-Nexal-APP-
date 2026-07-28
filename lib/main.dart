@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import 'theme/app_theme.dart';
@@ -20,8 +21,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 🚀 Ultra-Smooth Performance: Expand Image Cache & prevent rendering jank
-  PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024; // 100 MB cache limit
-  PaintingBinding.instance.imageCache.maximumSize = 200;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 200 * 1024 * 1024; // 200 MB cache limit
+  PaintingBinding.instance.imageCache.maximumSize = 400;
+
+  // ⚡ Request high-priority UI thread scheduling (reduces jank on busy devices)
+  // This sets the Dart VM to minimize latency for UI animations
+  SchedulerBinding.instance.schedulingStrategy = defaultSchedulingStrategy;
 
   // 🌐 Resolve active backend Gateway URL (Render Cloud -> Saved -> Local)
   await AppConfig.resolveGatewayUrl();

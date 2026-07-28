@@ -37,7 +37,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    // Hide status bar & navigation bar for edge-to-edge full-screen viewfinder
+    // Hide status bar for immersive full-screen camera viewfinder
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _snapCtrl = SnapCameraController();
     _snapCtrl.addListener(_onControllerUpdate);
@@ -93,6 +93,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       return _buildPermissionRequestScreen();
     }
 
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: LayoutBuilder(
@@ -138,22 +140,23 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // ── LAYER 1: Full-Screen Viewfinder ──
+                // ── LAYER 1: Full-Screen Viewfinder (100% Fit & No Distortion) ──
                 if (_snapCtrl.isInitialized && _snapCtrl.cameraController != null)
-                  RepaintBoundary(
-                    child: SizedBox.expand(
-                      child: FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: _snapCtrl.cameraController!.value.previewSize!.height,
-                          height: _snapCtrl.cameraController!.value.previewSize!.width,
+                  Builder(
+                    builder: (context) {
+                      final camera = _snapCtrl.cameraController!;
+                      var scale = screenSize.aspectRatio * camera.value.aspectRatio;
+                      if (scale < 1) scale = 1 / scale;
+                      return Transform.scale(
+                        scale: scale,
+                        child: Center(
                           child: ColorFiltered(
                             colorFilter: _getActiveFilter(),
-                            child: CameraPreview(_snapCtrl.cameraController!),
+                            child: CameraPreview(camera),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   )
                 else
                   const Center(
@@ -184,7 +187,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                 // ── LAYER 4: Pinch-To-Zoom Badge ──
                 if (_snapCtrl.isZoomVisible)
                   Positioned(
-                    bottom: 230,
+                    bottom: 210,
                     left: 0,
                     right: 0,
                     child: Center(
@@ -209,7 +212,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                 // ── LAYER 5: Translucent Edge Swipe Hints ──
                 _buildEdgeSwipeHints(),
 
-                // ── LAYER 6: Top Bar ──
+                // ── LAYER 6: Top Bar Controls ──
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 8,
                   left: 16,
@@ -247,48 +250,54 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                   ),
                 ),
 
-                // ── LAYER 7: Filter Carousel + Bottom Controls ──
+                // ── LAYER 7: Filter Carousel + Bottom Controls (Safe Overflow Handling) ──
                 Positioned(
-                  bottom: MediaQuery.of(context).padding.bottom + 12,
+                  bottom: 0,
                   left: 0,
                   right: 0,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Filter Carousel Row
-                      _buildFilterCarousel(),
+                  child: SafeArea(
+                    bottom: true,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Filter Carousel Row
+                          _buildFilterCarousel(),
 
-                      const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                      // Bottom Bar (3 Columns: Gallery | Capture Button | Chat)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Left Column: Memories / Gallery Thumbnail
-                            _buildGalleryButton(),
+                          // Bottom Bar (3 Columns: Gallery | Capture Button | Chat)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 28),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Left Column: Memories / Gallery Thumbnail
+                                _buildGalleryButton(),
 
-                            // Center Column: Snapchat 80px Capture Button
-                            SnapCaptureButton(
-                              onTap: _handleTakePhoto,
-                              onLongPressStart: () {
-                                _snapCtrl.startVideoRecording();
-                              },
-                              onLongPressEnd: () {
-                                _snapCtrl.stopVideoRecording();
-                              },
-                              progress: _snapCtrl.recordingProgress,
-                              isRecording: _snapCtrl.isRecording,
+                                // Center Column: Snapchat 80px Capture Button
+                                SnapCaptureButton(
+                                  onTap: _handleTakePhoto,
+                                  onLongPressStart: () {
+                                    _snapCtrl.startVideoRecording();
+                                  },
+                                  onLongPressEnd: () {
+                                    _snapCtrl.stopVideoRecording();
+                                  },
+                                  progress: _snapCtrl.recordingProgress,
+                                  isRecording: _snapCtrl.isRecording,
+                                ),
+
+                                // Right Column: Chat / Send Bubble
+                                _buildChatButton(),
+                              ],
                             ),
-
-                            // Right Column: Chat / Send Bubble
-                            _buildChatButton(),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
 
@@ -364,7 +373,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -378,21 +387,21 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             color: _snapCtrl.flashState == FlashModeState.on ? const Color(0xFFFFFC00) : Colors.white,
             onTap: _snapCtrl.cycleFlashMode,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Flip Camera
           _buildDropShadowIconButton(
             icon: LucideIcons.refreshCw,
             onTap: _snapCtrl.switchCamera,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Settings / Gear
           _buildDropShadowIconButton(
             icon: LucideIcons.settings,
             onTap: () => _snack('Camera Settings'),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Timer
           _buildDropShadowIconButton(
@@ -400,7 +409,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             color: _snapCtrl.timerDuration > 0 ? const Color(0xFFFFFC00) : Colors.white,
             onTap: _snapCtrl.cycleTimer,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Snapchat Ghost
           _buildDropShadowIconButton(
@@ -434,21 +443,22 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   // ── FILTER CAROUSEL ROW ──
   Widget _buildFilterCarousel() {
     return SizedBox(
-      height: 90,
+      height: 76,
       child: ListView.builder(
+        physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: _snapCtrl.filters.length,
         itemBuilder: (context, index) {
           final item = _snapCtrl.filters[index];
           final isSel = _snapCtrl.activeFilterIndex == index;
-          final size = isSel ? 64.0 : 54.0;
+          final size = isSel ? 56.0 : 46.0;
 
           return GestureDetector(
             onTap: () => _snapCtrl.selectFilter(index),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 8),
+              margin: const EdgeInsets.symmetric(horizontal: 6),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -477,7 +487,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                       child: Image.network(
                         item.iconUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, stack) => Container(
+                        errorBuilder: (context, error, stackTrace) => Container(
                           color: Colors.grey.shade900,
                           child: const Icon(LucideIcons.smile, color: Colors.white),
                         ),
@@ -489,7 +499,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                     item.name,
                     style: GoogleFonts.outfit(
                       color: isSel ? Colors.white : Colors.white70,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
                       shadows: const [
                         Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 1)),
@@ -513,8 +523,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white, width: 2),
@@ -566,8 +576,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.black.withValues(alpha: 0.35),
@@ -575,7 +585,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                     BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 1)),
                   ],
                 ),
-                child: const Icon(LucideIcons.messageSquare, color: Colors.white, size: 26),
+                child: const Icon(LucideIcons.messageSquare, color: Colors.white, size: 24),
               ),
               // Unread Badge
               Positioned(

@@ -271,15 +271,17 @@ class _QuantumArcMenuState extends State<QuantumArcMenu>
             Positioned(
               top: arcCenterY - arcRadiusY,
               left: arcCenterX - arcRadiusX,
-              child: AnimatedBuilder(
-                animation: _glowController,
-                builder: (context, _) {
-                  final glowOpacity = 0.1 + _glowController.value * 0.15;
-                  return CustomPaint(
-                    size: const Size(arcRadiusX * 2, arcRadiusY * 2),
-                    painter: _ArcTrackPainter(opacity: glowOpacity),
-                  );
-                },
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _glowController,
+                  builder: (context, _) {
+                    final glowOpacity = 0.1 + _glowController.value * 0.15;
+                    return CustomPaint(
+                      size: const Size(arcRadiusX * 2, arcRadiusY * 2),
+                      painter: _ArcTrackPainter(opacity: glowOpacity),
+                    );
+                  },
+                ),
               ),
             ),
 

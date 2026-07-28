@@ -198,23 +198,25 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
 
           // 2. Orbital Navigation (Visible ONLY in Galaxy mode)
           Positioned.fill(
-            child: GyroParallax(
-              intensity: 1.5,
-              child: Center(
-                child: QuantumArcMenu(
-                  activeTab: 'galaxy', // Always 'galaxy' when visible
-                  onTabChange: (tab) {
-                    debugPrint("Navigate: $tab");
-                    _navigateToDestination(tab);
-                  },
-                  onCameraOpen: () {
-                    debugPrint("Navigate: camera");
-                    _navigateToDestination('camera');
-                  },
-                  onSearchOpen: () {
-                    debugPrint("Navigate: search");
-                    _navigateToDestination('search');
-                  },
+            child: RepaintBoundary(
+              child: GyroParallax(
+                intensity: 1.5,
+                child: Center(
+                  child: QuantumArcMenu(
+                    activeTab: 'galaxy', // Always 'galaxy' when visible
+                    onTabChange: (tab) {
+                      debugPrint("Navigate: $tab");
+                      _navigateToDestination(tab);
+                    },
+                    onCameraOpen: () {
+                      debugPrint("Navigate: camera");
+                      _navigateToDestination('camera');
+                    },
+                    onSearchOpen: () {
+                      debugPrint("Navigate: search");
+                      _navigateToDestination('search');
+                    },
+                  ),
                 ),
               ),
             ),

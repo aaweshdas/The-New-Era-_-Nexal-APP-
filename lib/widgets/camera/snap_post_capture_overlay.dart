@@ -178,59 +178,63 @@ class _SnapPostCaptureOverlayState extends State<SnapPostCaptureOverlay> {
           // 6. Right Side Vertical Edit Toolbar
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
+            bottom: 90,
             right: 16,
-            child: Column(
-              children: [
-                _buildToolBtn(
-                  icon: LucideIcons.pencil,
-                  label: 'Draw',
-                  active: c.isDrawingMode,
-                  onTap: () {
-                    setState(() => c.isDrawingMode = !c.isDrawingMode);
-                  },
-                ),
-                _buildToolBtn(
-                  icon: LucideIcons.type,
-                  label: 'Text',
-                  onTap: () {
-                    setState(() => _isEditingCaption = true);
-                  },
-                ),
-                _buildToolBtn(
-                  icon: LucideIcons.smile,
-                  label: 'Sticker',
-                  onTap: () {
-                    _showStickersModal(context);
-                  },
-                ),
-                _buildToolBtn(
-                  icon: LucideIcons.scissors,
-                  label: 'Cut',
-                  onTap: () {},
-                ),
-                _buildToolBtn(
-                  icon: LucideIcons.link,
-                  label: 'Attach',
-                  onTap: () {},
-                ),
-                _buildToolBtn(
-                  icon: LucideIcons.timer,
-                  label: c.snapTimerSeconds > 0 ? '${c.snapTimerSeconds}s' : '∞',
-                  onTap: () {
-                    setState(() {
-                      c.snapTimerSeconds = c.snapTimerSeconds == 10 ? 3 : 10;
-                    });
-                  },
-                ),
-                if (c.isVideoSnap)
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
                   _buildToolBtn(
-                    icon: c.isAudioMuted ? LucideIcons.volumeX : LucideIcons.volume2,
-                    label: 'Audio',
+                    icon: LucideIcons.pencil,
+                    label: 'Draw',
+                    active: c.isDrawingMode,
                     onTap: () {
-                      setState(() => c.isAudioMuted = !c.isAudioMuted);
+                      setState(() => c.isDrawingMode = !c.isDrawingMode);
                     },
                   ),
-              ],
+                  _buildToolBtn(
+                    icon: LucideIcons.type,
+                    label: 'Text',
+                    onTap: () {
+                      setState(() => _isEditingCaption = true);
+                    },
+                  ),
+                  _buildToolBtn(
+                    icon: LucideIcons.smile,
+                    label: 'Sticker',
+                    onTap: () {
+                      _showStickersModal(context);
+                    },
+                  ),
+                  _buildToolBtn(
+                    icon: LucideIcons.scissors,
+                    label: 'Cut',
+                    onTap: () {},
+                  ),
+                  _buildToolBtn(
+                    icon: LucideIcons.link,
+                    label: 'Attach',
+                    onTap: () {},
+                  ),
+                  _buildToolBtn(
+                    icon: LucideIcons.timer,
+                    label: c.snapTimerSeconds > 0 ? '${c.snapTimerSeconds}s' : '∞',
+                    onTap: () {
+                      setState(() {
+                        c.snapTimerSeconds = c.snapTimerSeconds == 10 ? 3 : 10;
+                      });
+                    },
+                  ),
+                  if (c.isVideoSnap)
+                    _buildToolBtn(
+                      icon: c.isAudioMuted ? LucideIcons.volumeX : LucideIcons.volume2,
+                      label: 'Audio',
+                      onTap: () {
+                        setState(() => c.isAudioMuted = !c.isAudioMuted);
+                      },
+                    ),
+                ],
+              ),
             ),
           ),
 
