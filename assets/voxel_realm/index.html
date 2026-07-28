@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Voxel Realm 3D - Luanti WebGL Engine</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #060913; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+    
+    /* Crosshair */
+    #crosshair {
+      position: absolute; top: 50%; left: 50%; width: 16px; height: 16px;
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 10;
+    }
+    #crosshair::before, #crosshair::after {
+      content: ''; position: absolute; background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 4px rgba(0,229,255,0.8);
+    }
+    #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
+    #crosshair::after { top: 0; left: 7px; width: 2px; height: 16px; }
+
+    /* UI Overlay */
+    #hud {
+      position: absolute; top: 16px; left: 16px; z-index: 10;
+      background: rgba(13, 17, 23, 0.75); backdrop-filter: blur(12px);
+      padding: 12px 18px; border-radius: 16px; border: 1px solid rgba(0, 229, 255, 0.3);
+      font-family: monospace; font-size: 13px; color: #00E5FF;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: none;
+    }
+    #hud span { color: #fff; font-weight: bold; }
+
+    /* Hotbar */
+    #hotbar {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; z-index: 10; background: rgba(13, 17, 23, 0.85);
+      padding: 8px; border-radius: 18px; border: 1px solid rgba(124, 58, 237, 0.4);
+      backdrop-filter: blur(12px); box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+    }
+    .slot {
+      width: 48px; height: 48px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      font-size: 11px; font-weight: bold; text-align: center; transition: all 0.2s ease;
+      background-size: cover; background-position: center; position: relative;
+    }
+    .slot.active { border-color: #00E5FF; transform: scale(1.1); box-shadow: 0 0 16px rgba(0,229,255,0.6); }
+    .slot-label { position: absolute; bottom: 2px; right: 4px; font-size: 9px; color: #fff; text-shadow: 0 1px 2px #000; }
+
+    /* Instructions Overlay */
+    #overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(6, 9, 19, 0.85); backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 100; color: #fff; text-align: center; padding: 20px;
+    }
+    #overlay h1 { font-size: 38px; color: #00E5FF; margin-bottom: 8px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(0,229,255,0.5); }
+    #overlay p { font-size: 15px; color: #a0aec0; margin-bottom: 24px; max-width: 480px; line-height: 1.5; }
+    #start-btn {
+      background: linear-gradient(135deg, #00E5FF, #7C3AED); border: none;
+      color: #fff; padding: 14px 36px; border-radius: 14px; font-size: 16px;
+      font-weight: 900; letter-spacing: 1.5px; cursor: pointer;
+      box-shadow: 0 0 24px rgba(0,229,255,0.4); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 32px rgba(0,229,255,0.7); }
+
+    /* Touch Controls for Mobile */
+    .mobile-btn {
+      position: absolute; z-index: 20; background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25); color: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-weight: bold;
+      backdrop-filter: blur(8px); touch-action: manipulation;
+    }
+    #btn-jump { bottom: 90px; right: 30px; width: 64px; height: 64px; font-size: 14px; background: rgba(0,229,255,0.25); border-color: #00E5FF; }
+    #btn-mine { bottom: 30px; right: 110px; width: 60px; height: 60px; font-size: 12px; background: rgba(239,68,68,0.3); border-color: #EF4444; }
+    #btn-place { bottom: 100px; right: 110px; width: 60px; height: 60px; font-size: 12px; background: rgba(16,185,129,0.3); border-color: #10B981; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="crosshair"></div>
+  
+  <div id="hud">
+    VOXEL REALM 3D WEBGL<br>
+    FPS: <span id="fps">60</span> | BLOCKS: <span id="block-count">0</span><br>
+    POS: <span id="pos">X:0 Y:12 Z:0</span>
+  </div>
+
+  <div id="hotbar">
+    <div class="slot active" data-type="grass" style="background-color: #2e7d32;" onclick="selectSlot(this, 'grass')"><span class="slot-label">Grass</span></div>
+    <div class="slot" data-type="dirt" style="background-color: #795548;" onclick="selectSlot(this, 'dirt')"><span class="slot-label">Dirt</span></div>
+    <div class="slot" data-type="stone" style="background-color: #757575;" onclick="selectSlot(this, 'stone')"><span class="slot-label">Stone</span></div>
+    <div class="slot" data-type="wood" style="background-color: #8d6e63;" onclick="selectSlot(this, 'wood')"><span class="slot-label">Wood</span></div>
+    <div class="slot" data-type="leaves" style="background-color: #388e3c;" onclick="selectSlot(this, 'leaves')"><span class="slot-label">Leaves</span></div>
+    <div class="slot" data-type="gold" style="background-color: #ffb300;" onclick="selectSlot(this, 'gold')"><span class="slot-label">Gold</span></div>
+    <div class="slot" data-type="neon" style="background-color: #00e5ff;" onclick="selectSlot(this, 'neon')"><span class="slot-label">Neon</span></div>
+  </div>
+
+  <div id="overlay">
+    <h1>VOXEL REALM 3D</h1>
+    <p>Procedural Voxel Engine powered by WebGL 3D. Explore, mine blocks, build structures, and create your world.</p>
+    <p style="font-size:12px; color:#00E5FF; margin-bottom: 20px;">[WASD] Move | [SPACE] Jump | [LEFT CLICK] Mine | [RIGHT CLICK] Place | [1-7] Select Block</p>
+    <button id="start-btn" onclick="startGame()">ENTER VOXEL WORLD</button>
+  </div>
+
+  <button id="btn-jump" class="mobile-btn" onclick="mobileJump()">JUMP</button>
+  <button id="btn-mine" class="mobile-btn" onclick="mobileMine()">MINE</button>
+  <button id="btn-place" class="mobile-btn" onclick="mobilePlace()">PLACE</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    let scene, camera, renderer;
+    let voxels = new Map();
+    let selectedBlockType = 'grass';
+    let isPlaying = false;
+    
+    // Player controls
+    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+    let velocity = new THREE.Vector3();
+    let playerPos = new THREE.Vector3(0, 14, 0);
+    let isGrounded = false;
+    let prevTime = performance.now();
+    let blockCount = 0;
+
+    // Camera control angles
+    let pitch = 0, yaw = 0;
+
+    // Materials
+    const blockMaterials = {
+      grass: new THREE.MeshLambertMaterial({ color: 0x4caf50 }),
+      dirt: new THREE.MeshLambertMaterial({ color: 0x8d6e63 }),
+      stone: new THREE.MeshLambertMaterial({ color: 0x9e9e9e }),
+      wood: new THREE.MeshLambertMaterial({ color: 0x5d4037 }),
+      leaves: new THREE.MeshLambertMaterial({ color: 0x2e7d32, transparent: true, opacity: 0.9 }),
+      gold: new THREE.MeshStandardMaterial({ color: 0xffc107, metalness: 0.8, roughness: 0.2 }),
+      neon: new THREE.MeshBasicMaterial({ color: 0x00e5ff })
+    };
+    const blockGeometry = new THREE.BoxGeometry(1, 1, 1);
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+      
+      // 1. Scene setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0e1a);
+      scene.fog = new THREE.FogExp2(0x0a0e1a, 0.025);
+
+      // 2. Camera setup
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.copy(playerPos);
+
+      // 3. Renderer setup
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // 4. Lighting setup
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(40, 60, 20);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      scene.add(dirLight);
+
+      // 5. Generate Procedural Voxel World
+      generateWorld();
+
+      // 6. Listeners
+      window.addEventListener('resize', onWindowResize);
+      setupInputListeners();
+
+      // Animation loop
+      animate();
+    }
+
+    function generateWorld() {
+      const size = 24;
+      for (let x = -size; x <= size; x++) {
+        for (let z = -size; z <= size; z++) {
+          // Simple procedural height map
+          const dist = Math.sqrt(x*x + z*z);
+          const height = Math.floor(Math.sin(x * 0.2) * Math.cos(z * 0.2) * 3 + Math.sin(dist * 0.1) * 2) + 6;
+
+          for (let y = 0; y <= height; y++) {
+            let type = 'stone';
+            if (y === height) type = (dist > 16) ? 'grass' : (y > 7 ? 'grass' : 'dirt');
+            else if (y > height - 3) type = 'dirt';
+
+            createBlock(x, y, z, type);
+          }
+
+          // Random Trees
+          if (Math.random() < 0.02 && Math.abs(x) > 3 && Math.abs(z) > 3) {
+            const trunkH = Math.floor(Math.random() * 2) + 4;
+            for (let ty = height + 1; ty <= height + trunkH; ty++) {
+              createBlock(x, ty, z, 'wood');
+            }
+            // Leaf canopy
+            for (let lx = -2; lx <= 2; lx++) {
+              for (let lz = -2; lz <= 2; lz++) {
+                for (let ly = height + trunkH - 1; ly <= height + trunkH + 1; ly++) {
+                  if (Math.abs(lx) === 2 && Math.abs(lz) === 2) continue;
+                  if (!voxels.has(`${x+lx},${ly},${z+lz}`)) {
+                    createBlock(x+lx, ly, z+lz, 'leaves');
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function createBlock(x, y, z, type) {
+      const key = `${x},${y},${z}`;
+      if (voxels.has(key)) return;
+
+      const mat = blockMaterials[type] || blockMaterials.grass;
+      const mesh = new THREE.Mesh(blockGeometry, mat);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = { type: type, posKey: key };
+
+      scene.add(mesh);
+      voxels.set(key, mesh);
+      blockCount++;
+      document.getElementById('block-count').innerText = blockCount;
+    }
+
+    function removeBlock(mesh) {
+      if (!mesh || !mesh.userData.posKey) return;
+      scene.remove(mesh);
+      voxels.delete(mesh.userData.posKey);
+      blockCount--;
+      document.getElementById('block-count').innerText = blockCount;
+    }
+
+    function setupInputListeners() {
+      document.addEventListener('keydown', (e) => {
+        if (!isPlaying) return;
+        switch (e.code) {
+          case 'KeyW': case 'ArrowUp': moveForward = true; break;
+          case 'KeyS': case 'ArrowDown': moveBackward = true; break;
+          case 'KeyA': case 'ArrowLeft': moveLeft = true; break;
+          case 'KeyD': case 'ArrowRight': moveRight = true; break;
+          case 'Space': if (isGrounded) { velocity.y = 8; isGrounded = false; } break;
+          case 'Digit1': selectSlotByIndex(0); break;
+          case 'Digit2': selectSlotByIndex(1); break;
+          case 'Digit3': selectSlotByIndex(2); break;
+          case 'Digit4': selectSlotByIndex(3); break;
+          case 'Digit5': selectSlotByIndex(4); break;
+          case 'Digit6': selectSlotByIndex(5); break;
+          case 'Digit7': selectSlotByIndex(6); break;
+        }
+      });
+
+      document.addEventListener('keyup', (e) => {
+        switch (e.code) {
+          case 'KeyW': case 'ArrowUp': moveForward = false; break;
+          case 'KeyS': case 'ArrowDown': moveBackward = false; break;
+          case 'KeyA': case 'ArrowLeft': moveLeft = false; break;
+          case 'KeyD': case 'ArrowRight': moveRight = false; break;
+        }
+      });
+
+      // Pointer lock & Mouse Look
+      document.addEventListener('mousemove', (e) => {
+        if (!isPlaying || document.pointerLockElement !== document.body) return;
+        yaw -= e.movementX * 0.0025;
+        pitch -= e.movementY * 0.0025;
+        pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+
+        const euler = new THREE.Euler(pitch, yaw, 0, 'YXZ');
+        camera.quaternion.setFromEuler(euler);
+      });
+
+      document.addEventListener('mousedown', (e) => {
+        if (!isPlaying || document.pointerLockElement !== document.body) return;
+        
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        const intersects = raycaster.intersectObjects(Array.from(voxels.values()));
+
+        if (intersects.length > 0) {
+          const hit = intersects[0];
+          if (hit.distance < 8) {
+            if (e.button === 0) {
+              // Left Click: Mine Block
+              removeBlock(hit.object);
+            } else if (e.button === 2) {
+              // Right Click: Place Block
+              const norm = hit.face.normal;
+              const p = hit.object.position;
+              createBlock(Math.round(p.x + norm.x), Math.round(p.y + norm.y), Math.round(p.z + norm.z), selectedBlockType);
+            }
+          }
+        }
+      });
+
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    function selectSlot(el, type) {
+      document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      selectedBlockType = type;
+    }
+
+    function selectSlotByIndex(idx) {
+      const slots = document.querySelectorAll('.slot');
+      if (slots[idx]) {
+        slots[idx].click();
+      }
+    }
+
+    function startGame() {
+      document.getElementById('overlay').style.display = 'none';
+      isPlaying = true;
+      document.body.requestPointerLock();
+    }
+
+    function mobileJump() {
+      if (isGrounded) { velocity.y = 8; isGrounded = false; }
+    }
+
+    function mobileMine() {
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const intersects = raycaster.intersectObjects(Array.from(voxels.values()));
+      if (intersects.length > 0 && intersects[0].distance < 8) {
+        removeBlock(intersects[0].object);
+      }
+    }
+
+    function mobilePlace() {
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const intersects = raycaster.intersectObjects(Array.from(voxels.values()));
+      if (intersects.length > 0 && intersects[0].distance < 8) {
+        const hit = intersects[0];
+        const norm = hit.face.normal;
+        const p = hit.object.position;
+        createBlock(Math.round(p.x + norm.x), Math.round(p.y + norm.y), Math.round(p.z + norm.z), selectedBlockType);
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const time = performance.now();
+      const delta = (time - prevTime) / 1000;
+      prevTime = time;
+
+      if (isPlaying) {
+        // Simple Physics & Movement
+        velocity.x *= 0.85;
+        velocity.z *= 0.85;
+        velocity.y -= 22 * delta; // Gravity
+
+        const speed = 12;
+        const dir = new THREE.Vector3();
+        if (moveForward) dir.z -= 1;
+        if (moveBackward) dir.z += 1;
+        if (moveLeft) dir.x -= 1;
+        if (moveRight) dir.x += 1;
+        dir.normalize();
+
+        if (moveForward || moveBackward || moveLeft || moveRight) {
+          const rotation = new THREE.Euler(0, yaw, 0, 'YXZ');
+          dir.applyEuler(rotation);
+          velocity.x = dir.x * speed;
+          velocity.z = dir.z * speed;
+        }
+
+        playerPos.x += velocity.x * delta;
+        playerPos.y += velocity.y * delta;
+        playerPos.z += velocity.z * delta;
+
+        // Ground Collision
+        if (playerPos.y <= 12) {
+          playerPos.y = 12;
+          velocity.y = 0;
+          isGrounded = true;
+        }
+
+        camera.position.copy(playerPos);
+
+        // Update HUD
+        document.getElementById('fps').innerText = Math.round(1 / Math.max(delta, 0.001));
+        document.getElementById('pos').innerText = `X:${Math.round(playerPos.x)} Y:${Math.round(playerPos.y)} Z:${Math.round(playerPos.z)}`;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

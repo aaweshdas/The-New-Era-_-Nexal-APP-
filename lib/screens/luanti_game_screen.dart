@@ -266,7 +266,7 @@ class _LuantiGameScreenState extends State<LuantiGameScreen>
       MaterialPageRoute(
         builder: (_) => const GameWebViewScreen(
           gameTitle: 'VOXEL REALM 3D',
-          gameAssetFolder: 'assets/wordl',
+          gameAssetFolder: 'assets/voxel_realm',
         ),
       ),
     );

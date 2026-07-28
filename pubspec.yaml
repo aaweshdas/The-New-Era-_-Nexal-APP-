@@ -112,6 +112,7 @@ flutter:
     - assets/saved_icon.png
     - assets/3d_map.png
     - assets/wordl/
+    - assets/voxel_realm/
 
     - assets/wordl/assets/
     - assets/wordl/assets/audio/ambiances/

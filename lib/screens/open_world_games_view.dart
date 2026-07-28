@@ -13,14 +13,18 @@ import '../services/auth_service.dart';
 import 'game_webview_screen.dart';
 import 'luanti_game_screen.dart';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Color Palette & Styling Tokens ──────────────────────────────────────────
 
-const _kBg = Color(0xFF060913);
-const _kPurple = Color(0xFF7C3AED);
-const _kCyan = Color(0xFF00E5FF);
-const _kPink = Color(0xFFEC4899);
-const _kAmber = Color(0xFFF59E0B);
-const _kGreen = Color(0xFF10B981);
+const Color _kBg = Color(0xFF060913); // Deep Space Obsidian
+const Color _kCardBg = Color(0xFF0F172A);
+const Color _kPurple = Color(0xFF8B5CF6); // Cosmic Violet
+const Color _kCyan = Color(0xFF00E5FF);   // Cyber Cyan
+const Color _kPink = Color(0xFFEC4899);   // Aurora Pink
+const Color _kAmber = Color(0xFFF59E0B);  // Solar Gold
+const Color _kGreen = Color(0xFF10B981);  // Bio Emerald
+const Color _kBlue = Color(0xFF3B82F6);   // Deep Blue
+
+enum ArcadeViewMode { featured, grid, list }
 
 // ─── Arcade Game Model ────────────────────────────────────────────────────────
 
@@ -43,6 +47,8 @@ class ArcadeGame {
   final String playersCount;
   final String rating;
   final List<String> tags;
+  final List<String> controls;
+  final String streamQuality;
 
   const ArcadeGame({
     required this.id,
@@ -63,6 +69,8 @@ class ArcadeGame {
     this.playersCount = '1.4k',
     this.rating = '4.9',
     this.tags = const [],
+    this.controls = const ['Touch / Mouse', 'WASD Movement', 'Space Action'],
+    this.streamQuality = '60 FPS · 4K Stream',
   });
 }
 
@@ -84,6 +92,26 @@ class LeaderboardEntry {
   });
 }
 
+// ─── Arcade Quest Model ───────────────────────────────────────────────────────
+
+class ArcadeQuest {
+  final String id;
+  final String title;
+  final String reward;
+  final double progress;
+  final IconData icon;
+  final bool isCompleted;
+
+  const ArcadeQuest({
+    required this.id,
+    required this.title,
+    required this.reward,
+    required this.progress,
+    required this.icon,
+    this.isCompleted = false,
+  });
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 class OpenWorldGamesView extends StatefulWidget {
@@ -100,9 +128,14 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   bool _isCheckingBackend = true;
   String _selectedCategory = 'ALL';
   bool _showLeaderboard = false;
+  bool _showQuests = false;
+  bool _showSearch = false;
+  String _searchQuery = '';
+  ArcadeViewMode _viewMode = ArcadeViewMode.featured;
   int _latencyMs = 12;
 
-  // Animations
+  // Controllers
+  final TextEditingController _searchCtrl = TextEditingController();
   late AnimationController _pulseCtrl;
   late AnimationController _floatCtrl;
 
@@ -127,7 +160,9 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       gameAssetFolder: 'assets/wordl',
       playersCount: '2.8k',
       rating: '4.9',
-      tags: ['Physics', 'Cloud', 'Zero-Load'],
+      tags: ['Physics', 'Cloud', 'Zero-Load', 'Interactive 3D'],
+      controls: ['Drag to Rotate Globe', 'Tap Cargo to Deliver', 'Space Turbo Boost'],
+      streamQuality: '60 FPS · 0% CPU Load',
     ),
     ArcadeGame(
       id: 'voxel_realm',
@@ -136,6 +171,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       category: 'OPEN WORLD',
       description:
           'Build, mine, craft, and survive in an infinite procedurally generated 3D voxel universe. Powered by the native Luanti C++ engine with Voxelibre & Minetest support.',
+      bannerAsset: 'assets/images/voxel_realm_banner.png',
       engine: 'Luanti C++ · 60 FPS Native',
       difficulty: 'MEDIUM',
       difficultyColor: _kGreen,
@@ -143,9 +179,53 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       icon: LucideIcons.box,
       themeColor: _kPurple,
       gradientColors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
+      gameAssetFolder: 'assets/voxel_realm',
       playersCount: '1.2k',
       rating: '4.8',
       tags: ['Voxel', 'Sandbox', 'Voxelibre', 'Minetest'],
+      controls: ['WASD Move', 'Mouse Look / Touch Drag', 'Left Click Mine', 'Right Click Place'],
+      streamQuality: '60 FPS Native · C++ Core',
+    ),
+    ArcadeGame(
+      id: 'cyber_run',
+      title: 'CYBER RUN 2099',
+      subtitle: 'Zero-G Cloud Runner',
+      category: 'ACTION',
+      description:
+          'Dash through neon-lit futuristic skyscrapers, dodge plasma barriers, and trigger quantum gravity shifts in this high-speed arcade runner.',
+      bannerAsset: 'assets/images/cyber_run_banner.png',
+      engine: 'Cloud Shader 4.0 · WebGL',
+      difficulty: 'INSANE',
+      difficultyColor: _kPink,
+      isPlayable: false,
+      icon: LucideIcons.zap,
+      themeColor: _kPink,
+      gradientColors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
+      playersCount: '3.4k Interested',
+      rating: '5.0',
+      tags: ['Cyberpunk', 'High-Speed', 'Neon', 'Gravity Shift'],
+      controls: ['Swipe/Arrow Left & Right', 'Space Jump', 'Down Slide'],
+      streamQuality: '120 FPS Ultra Stream',
+    ),
+    ArcadeGame(
+      id: 'quantum_arena',
+      title: 'QUANTUM ARENA',
+      subtitle: 'PvP Mech Battle Simulator',
+      category: 'MULTIPLAYER',
+      description:
+          'Engage in real-time tactical mech battles against online pilots. Customize loadouts and dominate the cloud arena.',
+      engine: 'Realtime Netcode · WebGL',
+      difficulty: 'HARD',
+      difficultyColor: _kAmber,
+      isPlayable: false,
+      icon: LucideIcons.swords,
+      themeColor: _kBlue,
+      gradientColors: [Color(0xFF3B82F6), Color(0xFF00E5FF)],
+      playersCount: '4.1k Pre-Reg',
+      rating: '4.9',
+      tags: ['PvP', 'Mechs', 'Multiplayer', 'Tactical'],
+      controls: ['Virtual Dual Joysticks', 'Fire Weapons', 'Shield Deploy'],
+      streamQuality: '60 FPS Low Latency',
     ),
   ];
 
@@ -155,6 +235,31 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     LeaderboardEntry(rank: 3, username: 'CyberVoxel',   score: 39800, level: 35, color: Color(0xFFCD7F32)),
     LeaderboardEntry(rank: 4, username: 'NexusExplorer',score: 31200, level: 29, color: _kCyan),
     LeaderboardEntry(rank: 5, username: 'Starlight_X',  score: 28400, level: 24, color: _kPurple),
+  ];
+
+  final List<ArcadeQuest> _quests = const [
+    ArcadeQuest(
+      id: 'q1',
+      title: 'Complete 3 Quantum Deliveries in WORDL 3D',
+      reward: '+500 EXP · 50 NEX',
+      progress: 0.66,
+      icon: LucideIcons.packageCheck,
+    ),
+    ArcadeQuest(
+      id: 'q2',
+      title: 'Mine 50 Voxel Blocks in VOXEL REALM',
+      reward: '+800 EXP · Rare Skin',
+      progress: 1.0,
+      icon: LucideIcons.pickaxe,
+      isCompleted: true,
+    ),
+    ArcadeQuest(
+      id: 'q3',
+      title: 'Maintain 60 FPS Cloud Session for 10 Mins',
+      reward: '+300 EXP · Cloud Badge',
+      progress: 0.35,
+      icon: LucideIcons.gauge,
+    ),
   ];
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -170,7 +275,20 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache banner images to eliminate white flashes
+    for (final game in _games) {
+      if (game.bannerAsset != null) {
+        precacheImage(AssetImage(game.bannerAsset!), context).catchError((_) {});
+      }
+    }
+    precacheImage(const AssetImage('assets/Arcade BG.png'), context).catchError((_) {});
+  }
+
+  @override
   void dispose() {
+    _searchCtrl.dispose();
     _pulseCtrl.dispose();
     _floatCtrl.dispose();
     super.dispose();
@@ -181,7 +299,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     try {
       final res = await http
           .get(Uri.parse('${AppConfig.gatewayUrl}/game/api/status'))
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 3));
       sw.stop();
       if (mounted) {
         setState(() {
@@ -196,7 +314,10 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   }
 
   void _launchGame(ArcadeGame game) {
-    if (!game.isPlayable) { _toast('Coming soon to Nexal Cloud Arcade!'); return; }
+    if (!game.isPlayable) {
+      _toast('"${game.title}" is coming soon to Nexal Cloud Arcade!');
+      return;
+    }
     HapticFeedback.heavyImpact();
 
     final bool isDesktop = !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
@@ -210,7 +331,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           );
 
     Navigator.push(context, PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 500),
+      transitionDuration: const Duration(milliseconds: 450),
       pageBuilder: (context, anim, secondAnim) => destination,
       transitionsBuilder: (context, animation, _, child) => FadeTransition(
         opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
@@ -221,7 +342,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13)),
+      content: Text(msg, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
       backgroundColor: _kPurple,
       behavior: SnackBarBehavior.floating,
       margin: const EdgeInsets.all(16),
@@ -229,8 +350,16 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     ));
   }
 
-  List<ArcadeGame> get _filtered =>
-      _selectedCategory == 'ALL' ? _games : _games.where((g) => g.category == _selectedCategory).toList();
+  List<ArcadeGame> get _filteredGames {
+    return _games.where((game) {
+      final matchesCategory = _selectedCategory == 'ALL' || game.category == _selectedCategory;
+      final matchesSearch = _searchQuery.isEmpty ||
+          game.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          game.subtitle.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          game.tags.any((t) => t.toLowerCase().contains(_searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    }).toList();
+  }
 
   // ── Build ─────────────────────────────────────────────────────────────────────
 
@@ -245,51 +374,52 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       extendBodyBehindAppBar: true,
       extendBody: true,
       body: Stack(children: [
-        // Full-screen background orbs (behind everything) — isolated layer
+        // Isolated Background Canvas with RepaintBoundary for 60FPS scroll
         RepaintBoundary(child: _buildBgOrbs()),
-        // Full-screen scrollable content
+
+        // Main Scrollable Body
         CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Full-bleed Hero Header (behind status bar)
-            SliverToBoxAdapter(child: _buildHeroHeader(userName, topPad)),
-            // Category Filter
-            SliverToBoxAdapter(child: _buildCategoryStrip()),
-            // Stats Row
-            SliverToBoxAdapter(child: _buildStatsRow()),
-            // Section label
-            SliverToBoxAdapter(child: _buildSectionLabel()),
-            // Game Cards
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (ctx, i) => _buildGameCard(_filtered[i], i),
-                  childCount: _filtered.length,
-                ),
-              ),
-            ),
-            // Leaderboard
+            // Floating Header Bar & Hero Section
+            SliverToBoxAdapter(child: _buildHeaderSection(userName, topPad)),
+
+            // Search Bar (if active)
+            if (_showSearch)
+              SliverToBoxAdapter(child: _buildSearchBar()),
+
+            // Quests Section (if expanded)
+            if (_showQuests)
+              SliverToBoxAdapter(child: _buildQuestsSection()),
+
+            // Category Selector & View Switcher
+            SliverToBoxAdapter(child: _buildCategoryAndControlsRow()),
+
+            // Games Display Grid/List
+            _buildGamesSliver(),
+
+            // Leaderboard Section
             if (_showLeaderboard)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   child: _buildLeaderboard(),
                 ),
               ),
-            const SliverToBoxAdapter(child: SizedBox(height: 60)),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
       ]),
     );
   }
 
-  // ── Background ────────────────────────────────────────────────────────────────
+  // ── Background Layer ──────────────────────────────────────────────────────────
 
   Widget _buildBgOrbs() {
     return Stack(
       children: [
-        // ── Full-Screen Background Image (Arcade BG.png) ──────────────────────────
+        // Arcade Background Image
         Positioned.fill(
           child: Image.asset(
             'assets/Arcade BG.png',
@@ -298,7 +428,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         ),
 
-        // ── Crystal-Clear Gradient & Vignette Overlay ─────────────────────────────
+        // Gradient & Vignette Overlay
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -306,42 +436,44 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  _kBg.withValues(alpha: 0.10),
-                  _kBg.withValues(alpha: 0.25),
+                  _kBg.withValues(alpha: 0.15),
                   _kBg.withValues(alpha: 0.45),
+                  _kBg.withValues(alpha: 0.75),
+                  _kBg,
                 ],
+                stops: const [0.0, 0.35, 0.7, 1.0],
               ),
             ),
           ),
         ),
 
-        // ── Top-left purple glow orb ─────────────────────────────────────────────
+        // Top-left Violet Glow Orb
         AnimatedBuilder(
           animation: _floatCtrl,
           builder: (context, _) => Positioned(
-            top: -80 + 20 * _floatCtrl.value,
-            left: -60,
-            child: _orb(300, _kPurple, 0.12),
+            top: -60 + 15 * _floatCtrl.value,
+            left: -50,
+            child: _orb(320, _kPurple, 0.15),
           ),
         ),
 
-        // ── Top-right cyan glow orb ──────────────────────────────────────────────
+        // Top-right Cyan Glow Orb
         AnimatedBuilder(
           animation: _floatCtrl,
           builder: (context, _) => Positioned(
-            top: 200 - 20 * _floatCtrl.value,
-            right: -80,
-            child: _orb(260, _kCyan, 0.10),
+            top: 180 - 20 * _floatCtrl.value,
+            right: -60,
+            child: _orb(280, _kCyan, 0.14),
           ),
         ),
 
-        // ── Bottom-left pink glow orb ────────────────────────────────────────────
+        // Bottom-left Emerald Glow Orb
         AnimatedBuilder(
           animation: _floatCtrl,
           builder: (context, _) => Positioned(
-            bottom: -60 + 15 * _floatCtrl.value,
+            bottom: 40 + 15 * _floatCtrl.value,
             left: -40,
-            child: _orb(320, _kPink, 0.10),
+            child: _orb(300, _kGreen, 0.12),
           ),
         ),
       ],
@@ -353,154 +485,150 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       color: color.withValues(alpha: alpha),
-      boxShadow: [BoxShadow(color: color.withValues(alpha: alpha * 1.5), blurRadius: size * 0.45, spreadRadius: 24)],
+      boxShadow: [BoxShadow(color: color.withValues(alpha: alpha * 1.6), blurRadius: size * 0.45, spreadRadius: 20)],
     ),
   );
 
-  // ── Full-Bleed Hero Header ────────────────────────────────────────────────────
+  // ── Header & Hero Section ────────────────────────────────────────────────────
 
-  Widget _buildHeroHeader(String userName, double topPad) {
+  Widget _buildHeaderSection(String userName, double topPad) {
     final statusColor = _isCheckingBackend ? _kAmber : (_isBackendOnline ? _kGreen : _kAmber);
     final statusLabel = _isCheckingBackend
         ? 'CONNECTING...'
-        : (_isBackendOnline ? 'LIVE · $_latencyMs ms' : 'OFFLINE');
+        : (_isBackendOnline ? '⚡ LIVE · $_latencyMs ms' : 'OFFLINE');
 
-    return Stack(
-      children: [
-        // Full-bleed transparent background
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.fromLTRB(0, topPad, 0, 0),
-          decoration: const BoxDecoration(
-            color: Colors.transparent,
-          ),
-          child: CustomPaint(
-            painter: _GridPainter(_kCyan.withValues(alpha: 0.04)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Floating nav bar ───────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                  child: Row(children: [
-                    _glassButton(
-                      child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 20),
-                      onTap: () { HapticFeedback.lightImpact(); Navigator.pop(context); },
+    return Container(
+      padding: EdgeInsets.fromLTRB(0, topPad + 10, 0, 0),
+      child: CustomPaint(
+        painter: _GridPainter(_kCyan.withValues(alpha: 0.03)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Floating Command Navigation Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(children: [
+                _glassButton(
+                  child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 20),
+                  onTap: () { HapticFeedback.lightImpact(); Navigator.pop(context); },
+                ),
+                const Spacer(),
+                // Live Status Pill
+                _liveStatusPill(statusColor, statusLabel),
+                const SizedBox(width: 8),
+                // Search Toggle
+                _glassButton(
+                  highlight: _showSearch,
+                  child: Icon(LucideIcons.search,
+                    color: _showSearch ? _kCyan : Colors.white70, size: 18),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _showSearch = !_showSearch);
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Quests Toggle
+                _glassButton(
+                  highlight: _showQuests,
+                  child: Icon(LucideIcons.target,
+                    color: _showQuests ? _kAmber : Colors.white70, size: 18),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _showQuests = !_showQuests);
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Leaderboard Toggle
+                _glassButton(
+                  highlight: _showLeaderboard,
+                  child: Icon(LucideIcons.trophy,
+                    color: _showLeaderboard ? _kPink : Colors.white70, size: 18),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _showLeaderboard = !_showLeaderboard);
+                  },
+                ),
+              ]),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Hero Main Title & Badges
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [_kPink, _kPurple]),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: _kPink.withValues(alpha: 0.4), blurRadius: 12)],
+                      ),
+                      child: Text('NEXAL CLOUD ARCADE',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9.5, fontWeight: FontWeight.w900,
+                          color: Colors.white, letterSpacing: 2.2,
+                        )),
                     ),
-                    const Spacer(),
-                    // Live pill
-                    _liveStatusPill(statusColor, statusLabel),
-                    const SizedBox(width: 10),
-                    // Leaderboard toggle
-                    _glassButton(
-                      highlight: _showLeaderboard,
-                      child: Icon(LucideIcons.trophy,
-                        color: _showLeaderboard ? _kCyan : Colors.white60, size: 19),
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _showLeaderboard = !_showLeaderboard);
-                      },
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: _kGreen.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: _kGreen.withValues(alpha: 0.4)),
+                      ),
+                      child: Text('⚡ 0% CPU LOAD',
+                        style: GoogleFonts.shareTechMono(
+                          fontSize: 8.5, fontWeight: FontWeight.bold,
+                          color: _kGreen, letterSpacing: 1.5,
+                        )),
                     ),
                   ]),
-                ),
 
-                // ── Hero content ───────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Badge row
-                      Row(children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: [_kPink, _kPurple]),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [BoxShadow(color: _kPink.withValues(alpha: 0.4), blurRadius: 12)],
-                          ),
-                          child: Text('NEXAL CLOUD ARCADE',
-                            style: GoogleFonts.outfit(
-                              fontSize: 9, fontWeight: FontWeight.w900,
-                              color: Colors.white, letterSpacing: 2.5,
-                            )),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: _kGreen.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: _kGreen.withValues(alpha: 0.4)),
-                          ),
-                          child: Text('⚡ ZERO CPU',
-                            style: GoogleFonts.shareTechMono(
-                              fontSize: 8.5, fontWeight: FontWeight.bold,
-                              color: _kGreen, letterSpacing: 1.5,
-                            )),
-                        ),
-                      ]),
+                  const SizedBox(height: 10),
 
-                      const SizedBox(height: 14),
-
-                      // Giant ARCADE title
-                      ShaderMask(
-                        shaderCallback: (r) => const LinearGradient(
-                          colors: [Color(0xFFFFFFFF), _kCyan, _kPurple],
-                          stops: [0.0, 0.55, 1.0],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(r),
-                        child: Text('ARCADE',
-                          style: GoogleFonts.bebasNeue(
-                            fontSize: 88,
-                            color: Colors.white,
-                            letterSpacing: 8,
-                            height: 0.9,
-                          )),
-                      ),
-
-                      // Tagline
-                      Text(
-                        'Stream next-gen games live · Zero installs · 0% device load',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.5),
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Player identity card
-                      _buildPlayerChip(userName),
-
-                      const SizedBox(height: 20),
-
-                      // Neon accent divider
-                      Container(
-                        height: 1,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              _kCyan.withValues(alpha: 0.6),
-                              _kPurple.withValues(alpha: 0.4),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-                    ],
+                  // Shader Title
+                  ShaderMask(
+                    shaderCallback: (r) => const LinearGradient(
+                      colors: [Color(0xFFFFFFFF), _kCyan, _kPurple],
+                      stops: [0.0, 0.5, 1.0],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(r),
+                    child: Text('ARCADE',
+                      style: GoogleFonts.bebasNeue(
+                        fontSize: 76,
+                        color: Colors.white,
+                        letterSpacing: 6,
+                        height: 0.95,
+                      )),
                   ),
-                ),
-              ],
+
+                  Text(
+                    'Stream next-gen games live · Zero load · Multi-engine cloud',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.55),
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // Player Pilot Card
+                  _buildPlayerChip(userName),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -542,12 +670,12 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: color.withValues(alpha: 0.45), width: 1.2),
-            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 10)],
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 8)],
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             AnimatedBuilder(
@@ -557,14 +685,14 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: color,
-                  boxShadow: [BoxShadow(color: color, blurRadius: 4 + 5 * _pulseCtrl.value)],
+                  boxShadow: [BoxShadow(color: color, blurRadius: 3 + 4 * _pulseCtrl.value)],
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 7),
             Text(label, style: GoogleFonts.outfit(
-              fontSize: 11, fontWeight: FontWeight.w800,
-              color: Colors.white, letterSpacing: 1.2,
+              fontSize: 10.5, fontWeight: FontWeight.w800,
+              color: Colors.white, letterSpacing: 1.1,
             )),
           ]),
         ),
@@ -574,23 +702,23 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
   Widget _buildPlayerChip(String name) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.circular(36),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+          padding: const EdgeInsets.fromLTRB(6, 6, 14, 6),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(40),
+            borderRadius: BorderRadius.circular(36),
             border: Border.all(color: _kCyan.withValues(alpha: 0.2)),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             // Avatar
             Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
+              width: 32, height: 32,
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [_kPurple, _kPink],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
@@ -598,22 +726,22 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               child: Center(
                 child: Text(
                   name.isNotEmpty ? name[0].toUpperCase() : 'N',
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
             const SizedBox(width: 10),
             Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text(name,
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
               Text('RANK #1  •  48,920 PTS',
                 style: GoogleFonts.shareTechMono(
-                  color: _kCyan, fontSize: 9.5, letterSpacing: 1,
+                  color: _kCyan, fontSize: 9, letterSpacing: 0.8,
                 )),
             ]),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: _kAmber.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
@@ -621,7 +749,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               ),
               child: Text('LVL 42',
                 style: GoogleFonts.shareTechMono(
-                  color: _kAmber, fontSize: 10, fontWeight: FontWeight.bold,
+                  color: _kAmber, fontSize: 9.5, fontWeight: FontWeight.bold,
                 )),
             ),
           ]),
@@ -630,145 +758,304 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     );
   }
 
-  // ── Category Strip ────────────────────────────────────────────────────────────
+  // ── Search Bar Section ────────────────────────────────────────────────────────
 
-  Widget _buildCategoryStrip() {
-    final cats = ['ALL', '3D SIM', 'OPEN WORLD', 'ACTION'];
-    return SizedBox(
-      height: 46,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: cats.length,
-        separatorBuilder: (context, _) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final cat = cats[i];
-          final sel = _selectedCategory == cat;
-          return GestureDetector(
-            onTap: () { HapticFeedback.selectionClick(); setState(() => _selectedCategory = cat); },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              decoration: BoxDecoration(
-                color: sel ? _kCyan.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: sel ? _kCyan : Colors.white.withValues(alpha: 0.08),
-                  width: sel ? 1.5 : 1,
-                ),
-                boxShadow: sel ? [BoxShadow(color: _kCyan.withValues(alpha: 0.3), blurRadius: 12)] : [],
-              ),
-              child: Text(cat,
-                style: GoogleFonts.outfit(
-                  color: sel ? _kCyan : Colors.white54,
-                  fontSize: 11.5,
-                  fontWeight: sel ? FontWeight.w800 : FontWeight.w500,
-                  letterSpacing: 1.5,
-                )),
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _kCyan.withValues(alpha: 0.3)),
             ),
-          );
-        },
+            child: Row(children: [
+              const Icon(LucideIcons.search, color: _kCyan, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Search cloud games, tags, or engines...',
+                    hintStyle: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                ),
+              ),
+              if (_searchQuery.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    _searchCtrl.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  child: const Icon(LucideIcons.x, color: Colors.white54, size: 16),
+                ),
+            ]),
+          ),
+        ),
       ),
-    );
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.2, end: 0);
   }
 
-  // ── Stats Row ─────────────────────────────────────────────────────────────────
+  // ── Arcade Daily Quests Widget ───────────────────────────────────────────────
 
-  Widget _buildStatsRow() {
+  Widget _buildQuestsSection() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-      child: Row(children: [
-        _statChip(LucideIcons.activity, '$_latencyMs ms', 'LATENCY', _kGreen),
-        const SizedBox(width: 10),
-        _statChip(LucideIcons.cpu, 'WebGL 2.0', 'GPU ENGINE', _kCyan),
-        const SizedBox(width: 10),
-        _statChip(LucideIcons.server, 'Cloud', 'POWERED BY', _kPurple),
-        const Spacer(),
-        Text('${_filtered.length} GAMES',
-          style: GoogleFonts.shareTechMono(
-            color: Colors.white24, fontSize: 10, letterSpacing: 1,
-          )),
-      ]),
-    );
-  }
-
-  Widget _statChip(IconData icon, String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _kCardBg.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _kAmber.withValues(alpha: 0.35), width: 1.2),
+          boxShadow: [BoxShadow(color: _kAmber.withValues(alpha: 0.1), blurRadius: 16)],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(LucideIcons.target, color: _kAmber, size: 18),
+              const SizedBox(width: 8),
+              Text('DAILY ARCADE QUESTS',
+                style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 18, letterSpacing: 1.5)),
+              const Spacer(),
+              Text('RESETS IN 14H', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 9.5)),
+            ]),
+            const SizedBox(height: 10),
+            Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
+            const SizedBox(height: 10),
+            ..._quests.map((q) => _buildQuestTile(q)),
+          ],
+        ),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 11, color: color),
-        const SizedBox(width: 5),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Text(value, style: GoogleFonts.shareTechMono(
-            color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold,
-          )),
-          Text(label, style: GoogleFonts.outfit(
-            color: Colors.white38, fontSize: 8, letterSpacing: 0.8,
-          )),
-        ]),
-      ]),
-    );
+    ).animate().fadeIn(duration: 300.ms);
   }
 
-  // ── Section Label ─────────────────────────────────────────────────────────────
-
-  Widget _buildSectionLabel() {
+  Widget _buildQuestTile(ArcadeQuest q) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(children: [
-        Container(width: 3, height: 16, decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [_kPink, _kPurple], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-          borderRadius: BorderRadius.circular(2),
-        )),
+        Icon(q.icon, color: q.isCompleted ? _kGreen : Colors.white60, size: 16),
         const SizedBox(width: 10),
-        Text('AVAILABLE ENGINES',
-          style: GoogleFonts.outfit(
-            color: Colors.white, fontSize: 12,
-            fontWeight: FontWeight.w800, letterSpacing: 2,
-          )),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(q.title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: q.progress,
+                minHeight: 4,
+                backgroundColor: Colors.white10,
+                valueColor: AlwaysStoppedAnimation<Color>(q.isCompleted ? _kGreen : _kCyan),
+              ),
+            ),
+          ]),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: q.isCompleted ? _kGreen.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: q.isCompleted ? _kGreen : Colors.white24),
+          ),
+          child: Text(
+            q.isCompleted ? 'CLAIMED' : q.reward,
+            style: GoogleFonts.shareTechMono(
+              color: q.isCompleted ? _kGreen : _kAmber,
+              fontSize: 9.5, fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ]),
     );
   }
 
-  // ── Game Card ─────────────────────────────────────────────────────────────────
+  // ── Category & View Controls Row ─────────────────────────────────────────────
 
-  Widget _buildGameCard(ArcadeGame game, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D1117).withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: game.themeColor.withValues(alpha: 0.35), width: 1.2),
-        boxShadow: [
-          BoxShadow(color: game.themeColor.withValues(alpha: 0.14), blurRadius: 24, spreadRadius: -4),
+  Widget _buildCategoryAndControlsRow() {
+    final categories = ['ALL', '3D SIM', 'OPEN WORLD', 'ACTION', 'MULTIPLAYER'];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Column(
+        children: [
+          Row(children: [
+            // Category horizontal list
+            Expanded(
+              child: SizedBox(
+                height: 40,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length,
+                  separatorBuilder: (context, _) => const SizedBox(width: 6),
+                  itemBuilder: (_, i) {
+                    final cat = categories[i];
+                    final sel = _selectedCategory == cat;
+                    return GestureDetector(
+                      onTap: () { HapticFeedback.selectionClick(); setState(() => _selectedCategory = cat); },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: sel ? _kCyan.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: sel ? _kCyan : Colors.white.withValues(alpha: 0.08),
+                            width: sel ? 1.4 : 1,
+                          ),
+                          boxShadow: sel ? [BoxShadow(color: _kCyan.withValues(alpha: 0.25), blurRadius: 10)] : [],
+                        ),
+                        child: Text(cat,
+                          style: GoogleFonts.outfit(
+                            color: sel ? _kCyan : Colors.white60,
+                            fontSize: 11,
+                            fontWeight: sel ? FontWeight.w800 : FontWeight.w500,
+                            letterSpacing: 1.2,
+                          )),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // View Mode Switcher
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Row(children: [
+                _viewModeBtn(ArcadeViewMode.featured, LucideIcons.layoutTemplate),
+                _viewModeBtn(ArcadeViewMode.grid, LucideIcons.layoutGrid),
+                _viewModeBtn(ArcadeViewMode.list, LucideIcons.list),
+              ]),
+            ),
+          ]),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Banner
-            _buildCardBanner(game),
-            // Body
-            _buildCardBody(game),
-          ]),
+    );
+  }
+
+  Widget _viewModeBtn(ArcadeViewMode mode, IconData icon) {
+    final sel = _viewMode == mode;
+    return GestureDetector(
+      onTap: () { HapticFeedback.selectionClick(); setState(() => _viewMode = mode); },
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: sel ? _kPurple.withValues(alpha: 0.3) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, size: 15, color: sel ? _kCyan : Colors.white38),
+      ),
+    );
+  }
+
+  // ── Games Sliver Display Switcher ───────────────────────────────────────────
+
+  Widget _buildGamesSliver() {
+    final games = _filteredGames;
+    if (games.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Center(
+            child: Text('No cloud games matching "$_searchQuery"',
+              style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
+          ),
+        ),
+      );
+    }
+
+    if (_viewMode == ArcadeViewMode.grid) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.76,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) => _buildGridCard(games[i], i),
+            childCount: games.length,
+          ),
+        ),
+      );
+    } else if (_viewMode == ArcadeViewMode.list) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) => _buildListCard(games[i], i),
+            childCount: games.length,
+          ),
+        ),
+      );
+    }
+
+    // Default Featured Mode
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (ctx, i) => _buildFeaturedCard(games[i], i),
+          childCount: games.length,
         ),
       ),
-    ).animate().fadeIn(delay: (index * 120).ms, duration: 450.ms)
-     .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic, duration: 400.ms);
+    );
+  }
+
+  // ── Featured Game Card ───────────────────────────────────────────────────────
+
+  Widget _buildFeaturedCard(ArcadeGame game, int index) {
+    return GestureDetector(
+      onTap: () => _showGameDetailsSheet(game),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: _kCardBg.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: game.themeColor.withValues(alpha: 0.35), width: 1.2),
+          boxShadow: [
+            BoxShadow(color: game.themeColor.withValues(alpha: 0.12), blurRadius: 20, spreadRadius: -2),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // Card Banner
+              _buildCardBanner(game),
+              // Card Body
+              _buildCardBody(game),
+            ]),
+          ),
+        ),
+      ).animate().fadeIn(delay: (index * 80).ms, duration: 350.ms)
+       .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic, duration: 350.ms),
+    );
   }
 
   Widget _buildCardBanner(ArcadeGame game) {
     return SizedBox(
-      height: 170,
+      height: 160,
       child: Stack(fit: StackFit.expand, children: [
-        // Gradient background
+        // Fallback Gradient background
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -784,10 +1071,10 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           Positioned.fill(child: Image.asset(
             game.bannerAsset!,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stack) => const SizedBox(),
+            errorBuilder: (ctx, err, st) => const SizedBox(),
           )),
 
-        // Dark overlay
+        // Dark Vignette
         Positioned.fill(child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -795,59 +1082,62 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               end: Alignment.bottomCenter,
               colors: [
                 Colors.black.withValues(alpha: 0.1),
-                Colors.black.withValues(alpha: 0.75),
+                Colors.black.withValues(alpha: 0.8),
               ],
             ),
           ),
         )),
 
-        // Grid pattern overlay
+        // Grid painter overlay
         Positioned.fill(child: CustomPaint(painter: _GridPainter(game.themeColor.withValues(alpha: 0.06)))),
 
-        // Top badges
-        Positioned(top: 14, left: 14, right: 14, child: Row(children: [
+        // Top Badges
+        Positioned(top: 12, left: 12, right: 12, child: Row(children: [
           _badge(game.category, game.themeColor),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           _badge(game.difficulty, game.difficultyColor),
           const Spacer(),
           if (game.isPlayable)
-            _badge('● LIVE', _kGreen)
+            _badge('● LIVE STREAM', _kGreen)
           else
             _badge('⏳ SOON', Colors.white38),
         ])),
 
-        // Bottom: icon + title
-        Positioned(bottom: 14, left: 14, right: 14, child: Row(children: [
+        // Bottom Icon & Title
+        Positioned(bottom: 12, left: 12, right: 12, child: Row(children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
               color: game.themeColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: game.themeColor.withValues(alpha: 0.5)),
-              boxShadow: [BoxShadow(color: game.themeColor.withValues(alpha: 0.4), blurRadius: 16)],
+              boxShadow: [BoxShadow(color: game.themeColor.withValues(alpha: 0.3), blurRadius: 12)],
             ),
-            child: Icon(game.icon, color: game.themeColor, size: 24),
+            child: Icon(game.icon, color: game.themeColor, size: 22),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(game.title,
               style: GoogleFonts.bebasNeue(
-                color: Colors.white, fontSize: 28, letterSpacing: 2,
+                color: Colors.white, fontSize: 26, letterSpacing: 2,
               )),
             Text(game.subtitle,
               style: GoogleFonts.outfit(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 11.5, fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 11, fontWeight: FontWeight.w500,
               )),
           ])),
-          // Rating
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(game.rating,
-              style: GoogleFonts.outfit(
-                color: _kAmber, fontSize: 18, fontWeight: FontWeight.w800,
-              )),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(LucideIcons.star, color: _kAmber, size: 14),
+              const SizedBox(width: 4),
+              Text(game.rating,
+                style: GoogleFonts.outfit(
+                  color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800,
+                )),
+            ]),
             Text('RATING', style: GoogleFonts.outfit(
-              color: Colors.white38, fontSize: 8.5, letterSpacing: 1,
+              color: Colors.white38, fontSize: 8, letterSpacing: 0.8,
             )),
           ]),
         ])),
@@ -857,55 +1147,51 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
   Widget _buildCardBody(ArcadeGame game) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Description
         Text(game.description,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: GoogleFonts.outfit(
-            fontSize: 13, color: Colors.white.withValues(alpha: 0.65), height: 1.55,
+            fontSize: 12.5, color: Colors.white.withValues(alpha: 0.65), height: 1.5,
           )),
 
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
 
-        // Info row: engine + players
+        // Specs row
         Row(children: [
-          Icon(LucideIcons.cpu, size: 13, color: Colors.white38),
-          const SizedBox(width: 6),
-          Text(game.engine, style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 10.5)),
+          Icon(LucideIcons.cpu, size: 12, color: Colors.white38),
+          const SizedBox(width: 5),
+          Text(game.engine, style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 10)),
           const Spacer(),
-          Icon(LucideIcons.users, size: 13, color: Colors.white38),
-          const SizedBox(width: 6),
+          Icon(LucideIcons.users, size: 12, color: Colors.white38),
+          const SizedBox(width: 5),
           Text(game.playersCount, style: GoogleFonts.outfit(
-            color: Colors.white54, fontSize: 11.5, fontWeight: FontWeight.w600,
+            color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w600,
           )),
         ]),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         // Tags
         if (game.tags.isNotEmpty) Wrap(spacing: 6, runSpacing: 6, children: game.tags.map((t) =>
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: game.themeColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(color: game.themeColor.withValues(alpha: 0.2)),
             ),
             child: Text(t, style: GoogleFonts.outfit(
               color: game.themeColor.withValues(alpha: 0.9),
-              fontSize: 10, fontWeight: FontWeight.w600,
+              fontSize: 9.5, fontWeight: FontWeight.w600,
             )),
           )
         ).toList()),
 
-        const SizedBox(height: 16),
-
-        // Divider
-        Divider(color: Colors.white.withValues(alpha: 0.06), height: 1),
-
         const SizedBox(height: 14),
 
-        // Launch Button
+        // Launch CTA
         _buildLaunchButton(game),
       ]),
     );
@@ -915,7 +1201,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
     return GestureDetector(
       onTap: () => _launchGame(game),
       child: Container(
-        height: 50,
+        height: 46,
         decoration: BoxDecoration(
           gradient: game.isPlayable
               ? LinearGradient(colors: game.gradientColors)
@@ -928,127 +1214,328 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 : Colors.white.withValues(alpha: 0.1),
           ),
           boxShadow: game.isPlayable
-              ? [BoxShadow(color: game.themeColor.withValues(alpha: 0.4), blurRadius: 18, spreadRadius: -4)]
+              ? [BoxShadow(color: game.themeColor.withValues(alpha: 0.35), blurRadius: 16, spreadRadius: -3)]
               : [],
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(
             game.isPlayable ? LucideIcons.play : LucideIcons.clock,
             color: game.isPlayable ? Colors.black : Colors.white38,
-            size: 18,
+            size: 16,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Text(
             game.isPlayable ? 'LAUNCH CLOUD ENGINE' : 'COMING SOON',
             style: GoogleFonts.outfit(
               color: game.isPlayable ? Colors.black : Colors.white38,
-              fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 2,
+              fontSize: 12.5, fontWeight: FontWeight.w900, letterSpacing: 1.8,
             ),
           ),
-          if (game.isPlayable) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text('🚀', style: const TextStyle(fontSize: 13)),
-            ),
-          ],
         ]),
       ),
     );
   }
 
+  // ── Grid Layout Card ────────────────────────────────────────────────────────
+
+  Widget _buildGridCard(ArcadeGame game, int index) {
+    return GestureDetector(
+      onTap: () => _showGameDetailsSheet(game),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _kCardBg.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: game.themeColor.withValues(alpha: 0.3)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Top Thumbnail
+            Expanded(
+              flex: 5,
+              child: Stack(fit: StackFit.expand, children: [
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: game.gradientColors),
+                  ),
+                ),
+                if (game.bannerAsset != null)
+                  Image.asset(game.bannerAsset!, fit: BoxFit.cover, errorBuilder: (ctx, err, st) => const SizedBox()),
+                Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.35))),
+                Positioned(top: 8, left: 8, child: _badge(game.category, game.themeColor)),
+              ]),
+            ),
+            // Bottom Info
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(game.title,
+                    style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 18, letterSpacing: 1),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(game.engine,
+                    style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 8.5),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => _launchGame(game),
+                    child: Container(
+                      height: 28,
+                      decoration: BoxDecoration(
+                        gradient: game.isPlayable ? LinearGradient(colors: game.gradientColors) : null,
+                        color: game.isPlayable ? null : Colors.white10,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(game.isPlayable ? 'PLAY' : 'SOON',
+                          style: GoogleFonts.outfit(color: game.isPlayable ? Colors.black : Colors.white38,
+                            fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    ).animate().fadeIn(delay: (index * 60).ms);
+  }
+
+  // ── List Layout Card ────────────────────────────────────────────────────────
+
+  Widget _buildListCard(ArcadeGame game, int index) {
+    return GestureDetector(
+      onTap: () => _showGameDetailsSheet(game),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: _kCardBg.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: game.themeColor.withValues(alpha: 0.25)),
+        ),
+        child: Row(children: [
+          Container(
+            width: 50, height: 50,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(colors: game.gradientColors),
+            ),
+            child: Icon(game.icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(game.title, style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 19, letterSpacing: 1.2)),
+              Text('${game.category} · ${game.engine}', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 9.5)),
+            ]),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () => _launchGame(game),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: game.isPlayable ? game.themeColor : Colors.white10,
+              foregroundColor: game.isPlayable ? Colors.black : Colors.white38,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(game.isPlayable ? 'LAUNCH' : 'SOON',
+              style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          ),
+        ]),
+      ),
+    ).animate().fadeIn(delay: (index * 50).ms);
+  }
+
   Widget _badge(String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
       child: Text(label, style: GoogleFonts.outfit(
-        color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 1,
+        color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1,
       )),
     );
   }
 
-  // ── Leaderboard ───────────────────────────────────────────────────────────────
+  // ── Interactive Game Details Modal Sheet ────────────────────────────────────
+
+  void _showGameDetailsSheet(ArcadeGame game) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.72,
+          decoration: BoxDecoration(
+            color: const Color(0xFF0A0F1D).withValues(alpha: 0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: game.themeColor.withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Handle bar
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+                children: [
+                  // Banner Header
+                  SizedBox(
+                    height: 150,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Stack(fit: StackFit.expand, children: [
+                        Container(decoration: BoxDecoration(gradient: LinearGradient(colors: game.gradientColors))),
+                        if (game.bannerAsset != null)
+                          Image.asset(game.bannerAsset!, fit: BoxFit.cover, errorBuilder: (ctx, err, st) => const SizedBox()),
+                        Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.4))),
+                        Positioned(bottom: 14, left: 14, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(game.title, style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 32, letterSpacing: 2)),
+                          Text(game.subtitle, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
+                        ])),
+                      ]),
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // Description
+                  Text('GAME OVERVIEW', style: GoogleFonts.bebasNeue(color: _kCyan, fontSize: 16, letterSpacing: 1.5)),
+                  const SizedBox(height: 6),
+                  Text(game.description, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, height: 1.5)),
+
+                  const SizedBox(height: 20),
+
+                  // Cloud Specs
+                  Text('LIVE CLOUD SPECS', style: GoogleFonts.bebasNeue(color: _kPurple, fontSize: 16, letterSpacing: 1.5)),
+                  const SizedBox(height: 10),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    _specBadge(LucideIcons.gauge, 'Stream Quality', game.streamQuality, _kGreen),
+                    _specBadge(LucideIcons.cpu, 'Engine Architecture', game.engine, _kCyan),
+                    _specBadge(LucideIcons.activity, 'Netcode Latency', '$_latencyMs ms Live Ping', _kAmber),
+                    _specBadge(LucideIcons.users, 'Active Pilots', game.playersCount, _kPink),
+                  ]),
+
+                  const SizedBox(height: 20),
+
+                  // Controls
+                  Text('CONTROLS OVERVIEW', style: GoogleFonts.bebasNeue(color: _kAmber, fontSize: 16, letterSpacing: 1.5)),
+                  const SizedBox(height: 8),
+                  ...game.controls.map((c) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(children: [
+                      const Icon(LucideIcons.gamepad2, color: Colors.white54, size: 14),
+                      const SizedBox(width: 8),
+                      Text(c, style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.8), fontSize: 12.5)),
+                    ]),
+                  )),
+
+                  const SizedBox(height: 28),
+
+                  // Launch Button
+                  _buildLaunchButton(game),
+                ],
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _specBadge(IconData icon, String label, String value, Color color) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - 56) / 2,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 9)),
+            Text(value, style: GoogleFonts.shareTechMono(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+              maxLines: 1, overflow: TextOverflow.ellipsis),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  // ── Leaderboard Section ───────────────────────────────────────────────────────
 
   Widget _buildLeaderboard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1117).withValues(alpha: 0.55),
+        color: _kCardBg.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _kAmber.withValues(alpha: 0.35), width: 1.2),
-        boxShadow: [BoxShadow(color: _kAmber.withValues(alpha: 0.12), blurRadius: 24)],
+        boxShadow: [BoxShadow(color: _kAmber.withValues(alpha: 0.12), blurRadius: 20)],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Header
             Row(children: [
               ShaderMask(
-                shaderCallback: (r) => const LinearGradient(
-                  colors: [_kAmber, _kPink],
-                ).createShader(r),
+                shaderCallback: (r) => const LinearGradient(colors: [_kAmber, _kPink]).createShader(r),
                 child: const Icon(LucideIcons.trophy, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 10),
-              Text('HALL OF FAME', style: GoogleFonts.bebasNeue(
-                color: Colors.white, fontSize: 22, letterSpacing: 2,
-              )),
+              Text('HALL OF FAME', style: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 22, letterSpacing: 2)),
               const Spacer(),
-              Text('GLOBAL', style: GoogleFonts.shareTechMono(
-                color: Colors.white24, fontSize: 10, letterSpacing: 1,
-              )),
+              Text('GLOBAL PILOTS', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 9.5)),
             ]),
-
-            const SizedBox(height: 4),
-            Divider(color: Colors.white.withValues(alpha: 0.06)),
             const SizedBox(height: 8),
-
-            // Entries
+            Divider(color: Colors.white.withValues(alpha: 0.08)),
+            const SizedBox(height: 6),
             ..._leaderboard.map((e) => _buildLeaderboardRow(e)),
           ]),
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms);
+    ).animate().fadeIn(duration: 350.ms);
   }
 
   Widget _buildLeaderboardRow(LeaderboardEntry e) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(children: [
-        // Rank
         Container(
-          width: 32, height: 32,
+          width: 30, height: 30,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: e.color.withValues(alpha: 0.12),
-            border: Border.all(color: e.color.withValues(alpha: 0.4)),
+            color: e.color.withValues(alpha: 0.14),
+            border: Border.all(color: e.color.withValues(alpha: 0.45)),
           ),
           child: Center(child: Text(
             e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank - 1] : '#${e.rank}',
-            style: TextStyle(fontSize: e.rank <= 3 ? 14 : 10),
+            style: TextStyle(fontSize: e.rank <= 3 ? 13 : 9.5, fontWeight: FontWeight.bold, color: Colors.white),
           )),
         ),
         const SizedBox(width: 12),
-        // Name + Level
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(e.username, style: GoogleFonts.outfit(
-            color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w700,
-          )),
-          Text('LEVEL ${e.level}', style: GoogleFonts.shareTechMono(
-            color: Colors.white38, fontSize: 9.5, letterSpacing: 1,
-          )),
+          Text(e.username, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+          Text('LEVEL ${e.level}', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 9)),
         ])),
-        // Score
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
@@ -1056,7 +1543,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text('${e.score} PTS', style: GoogleFonts.shareTechMono(
-            color: e.color, fontSize: 12, fontWeight: FontWeight.bold,
+            color: e.color, fontSize: 11.5, fontWeight: FontWeight.bold,
           )),
         ),
       ]),
