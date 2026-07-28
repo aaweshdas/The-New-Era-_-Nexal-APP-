@@ -5,6 +5,7 @@ import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_theme.dart';
+import 'video_player_screen.dart';
 
 class VideoItem {
   final String id, title, category, imageUrl, duration;
@@ -739,7 +740,20 @@ class _VideoDetailSheet extends StatelessWidget {
               const SizedBox(height: 20),
               // Action buttons
               Row(children: [
-                Expanded(child: _sheetButton('Play Now', LucideIcons.play, AppTheme.purple500, () { Navigator.pop(context); })),
+                Expanded(
+                  child: _sheetButton('Play Now', LucideIcons.play, AppTheme.purple500, () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => VideoPlayerScreen(
+                          title: video.title,
+                          category: video.category,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
                 const SizedBox(width: 12),
                 Expanded(child: _sheetButton(isBookmarked ? 'Saved' : 'Save', isBookmarked ? LucideIcons.bookmarkMinus : LucideIcons.bookmark, AppTheme.cyan500, onBookmark)),
               ]),
