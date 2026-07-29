@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
+import '../services/auth_service.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -41,17 +42,22 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     }
   }
 
-  /// Resolves the display name: local edit > Supabase user > fallback
-  String _displayName(UserModel? user) =>
-      _overrideName ?? user?.name ?? 'Neural Nexus';
+  String _displayName(UserModel? user) {
+    final cur = AuthService.instance.currentUser;
+    return _overrideName ?? user?.name ?? cur?.name ?? 'Nexal User';
+  }
 
   String _displayBio(UserModel? user) =>
-      _overrideBio ?? user?.bio ?? 'Exploring the quantum realm of digital consciousness ✨';
+      _overrideBio ?? user?.bio ?? 'Nexal Creator ✨';
 
   String _displayLink(UserModel? user) =>
-      _overrideLink ?? user?.website ?? 'nexal.space/neural';
+      _overrideLink ?? user?.website ?? 'nexal.app';
 
-  String _displayUsername(UserModel? user) => user?.username ?? 'neuralnexus';
+  String _displayUsername(UserModel? user) {
+    final cur = AuthService.instance.currentUser;
+    return user?.username ?? cur?.username ?? 'user';
+  }
+
   @override
   void dispose() { _tabCtrl.dispose(); super.dispose(); }
 
@@ -67,11 +73,12 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
+    final cur = AuthService.instance.currentUser;
     final displayName = _displayName(user);
     final displayBio = _displayBio(user);
     final displayLink = _displayLink(user);
     final displayUsername = _displayUsername(user);
-    final avatarUrl = user?.avatarUrl ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200';
+    final avatarUrl = cur?.avatarUrl ?? user?.avatarUrl ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(children: [

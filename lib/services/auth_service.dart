@@ -203,13 +203,17 @@ class AuthService {
         final u = res.session?.user ?? res.user;
         if (u != null) {
           final meta = u.userMetadata ?? {};
+          final name = googleUser.displayName ?? (meta['full_name'] ?? meta['name'] ?? googleUser.email.split('@').first);
+          final avatar = googleUser.photoUrl ?? (meta['avatar_url'] ?? meta['picture'] ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200');
+          final email = googleUser.email;
+          final username = googleUser.email.split('@').first.toLowerCase();
+
           _currentUser = UserSession(
             uid: u.id,
-            name: (meta['full_name'] ?? meta['name'] ?? u.email?.split('@').first ?? 'Nexal User') as String,
-            email: u.email ?? '',
-            username: (meta['user_name'] ?? u.email!.split('@').first.toLowerCase()) as String,
-            avatarUrl: (meta['avatar_url'] ?? meta['picture'] ??
-                'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200') as String,
+            name: name,
+            email: email,
+            username: username,
+            avatarUrl: avatar,
           );
           final p = await SharedPreferences.getInstance();
           await p.setBool('is_logged_in', true);
@@ -218,6 +222,21 @@ class AuthService {
           await p.setString('user_email', _currentUser!.email);
           await p.setString('user_username', _currentUser!.username);
           await p.setString('user_avatar', _currentUser!.avatarUrl);
+
+          // Upsert Google user profile into Supabase profiles database
+          try {
+            await _supabase.from('profiles').upsert({
+              'id': u.id,
+              'name': name,
+              'username': username,
+              'avatar_url': avatar,
+              'email': email,
+              'updated_at': DateTime.now().toIso8601String(),
+            });
+          } catch (e) {
+            debugPrint('[AuthService] Profile upsert notice: $e');
+          }
+
           _authStateController.add(_currentUser);
           debugPrint('[AuthService] Native Google Sign-In successful for ${_currentUser!.email}!');
           return true;
