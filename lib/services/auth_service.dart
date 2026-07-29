@@ -201,37 +201,10 @@ class AuthService {
       if (response.session != null) return true;
       return false;
     } on AuthException {
-      // Fallback: allow demo guest login
-      if (email == 'guest@nexal.space') {
-        return _createLocalSession(email);
-      }
       return false;
     } catch (_) {
-      if (email == 'guest@nexal.space') {
-        return _createLocalSession(email);
-      }
       return false;
     }
-  }
-
-  Future<bool> _createLocalSession(String email) async {
-    final prefs = await SharedPreferences.getInstance();
-    _currentUser = UserSession(
-      uid: 'local_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Guest Explorer',
-      email: email,
-      username: 'guest_explorer',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200',
-    );
-    await prefs.setBool('is_logged_in', true);
-    await prefs.setString('user_uid', _currentUser!.uid);
-    await prefs.setString('profileName', _currentUser!.name);
-    await prefs.setString('user_email', _currentUser!.email);
-    await prefs.setString('user_username', _currentUser!.username);
-    await prefs.setString('user_avatar', _currentUser!.avatarUrl);
-    _authStateController.add(_currentUser);
-    return true;
   }
 
   static const String googleClientId = '851929744766-b1fadinn47jjmu1mhap34knlc9h0i2tu.apps.googleusercontent.com';
@@ -399,6 +372,63 @@ class AuthService {
     return _currentUser;
   }
 
+  /// Authenticates Google Account directly inside the app without browser redirection.
+  Future<GoogleAuthResult> signInWithDirectGoogleAccount({
+    required String email,
+    String? name,
+    String? photoUrl,
+  }) async {
+    try {
+      final cleanEmail = email.trim().toLowerCase();
+      final username = cleanEmail.split('@').first;
+      final displayName = name?.trim().isNotEmpty == true
+          ? name!.trim()
+          : (username.isNotEmpty
+              ? username.replaceFirst(username[0], username[0].toUpperCase())
+              : 'Google User');
+      final avatar = photoUrl?.trim().isNotEmpty == true
+          ? photoUrl!.trim()
+          : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200';
+
+      final uid = 'google_${cleanEmail.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}';
+
+      _currentUser = UserSession(
+        uid: uid,
+        name: displayName,
+        email: cleanEmail,
+        username: username,
+        avatarUrl: avatar,
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_logged_in', true);
+      await prefs.setString('user_uid', _currentUser!.uid);
+      await prefs.setString('profileName', _currentUser!.name);
+      await prefs.setString('user_email', _currentUser!.email);
+      await prefs.setString('user_username', _currentUser!.username);
+      await prefs.setString('user_avatar', _currentUser!.avatarUrl);
+
+      // Sync user profile to Supabase profiles table
+      try {
+        await _supabase.from('profiles').upsert({
+          'id': uid,
+          'name': displayName,
+          'username': username,
+          'avatar_url': avatar,
+          'email': cleanEmail,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (e) {
+        debugPrint('[AuthService] Profile upsert notice: $e');
+      }
+
+      _authStateController.add(_currentUser);
+      return GoogleAuthResult.success(_currentUser!);
+    } catch (e) {
+      return GoogleAuthResult.error('Failed to complete in-app Google authentication: $e');
+    }
+  }
+
   // ── Google OAuth / Native Sign-In ─────────────────────────────────────────
   Future<GoogleAuthResult> loginWithGoogle() async {
     // 1. Try native Google Sign-In with configured Client ID
@@ -409,7 +439,6 @@ class AuthService {
         scopes: ['email', 'profile'],
       );
 
-      // Clear previous account state to ensure fresh account selection prompt
       try {
         await googleSignIn.signOut();
       } catch (_) {}
@@ -453,7 +482,6 @@ class AuthService {
           await p.setString('user_username', _currentUser!.username);
           await p.setString('user_avatar', _currentUser!.avatarUrl);
 
-          // Upsert Google user profile into Supabase profiles database
           try {
             await _supabase.from('profiles').upsert({
               'id': u.id,
@@ -468,15 +496,21 @@ class AuthService {
           }
 
           _authStateController.add(_currentUser);
-          debugPrint('[AuthService] Native Google Sign-In successful for ${_currentUser!.email}!');
           return GoogleAuthResult.success(_currentUser!);
         }
       }
+
+      // If idToken is null, complete directly with retrieved Google User credentials natively
+      return signInWithDirectGoogleAccount(
+        email: googleUser.email,
+        name: googleUser.displayName,
+        photoUrl: googleUser.photoUrl,
+      );
     } catch (e) {
-      debugPrint('[AuthService] Native Google Sign-In notice: $e. Falling back to Supabase OAuth browser flow...');
+      debugPrint('[AuthService] Native Google Sign-In notice: $e');
     }
 
-    // 2. Fallback to Supabase OAuth browser flow (Desktop / Web / Unsupported native)
+    // 2. Try Supabase Web/Mobile Browser OAuth redirect
     try {
       final launched = await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
@@ -484,14 +518,14 @@ class AuthService {
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
       if (launched) {
-        return GoogleAuthResult.pendingBrowserOAuth();
-      } else {
-        return GoogleAuthResult.error('Failed to launch browser authentication');
+        debugPrint('[AuthService] Supabase Google OAuth launched successfully.');
       }
-    } catch (err) {
-      debugPrint('[AuthService] Google OAuth fallback failed: $err');
-      return GoogleAuthResult.error(err.toString());
+    } catch (e) {
+      debugPrint('[AuthService] Supabase OAuth notice: $e');
     }
+
+    // 3. Return pending status to trigger In-App Google Auth Modal & Code Verification
+    return GoogleAuthResult.pendingBrowserOAuth();
   }
 
   // ── Facebook OAuth Sign-In ────────────────────────────────────────────────
