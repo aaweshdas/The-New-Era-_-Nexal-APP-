@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../controllers/snap_camera_controller.dart';
+import '../../services/api_service.dart';
 
 class SnapPostCaptureOverlay extends StatefulWidget {
   final SnapCameraController controller;
@@ -47,6 +48,38 @@ class _SnapPostCaptureOverlayState extends State<SnapPostCaptureOverlay> {
   void dispose() {
     _captionCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _generateAiCaption() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✨ AI Vision analyzing scene...', style: GoogleFonts.outfit(color: Colors.white)),
+        backgroundColor: const Color(0xFF0088FF),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      final response = await ApiService.instance.post('/camera/api/analyze-vision', {});
+      if (response != null && response['caption'] != null) {
+        final String aiCaption = response['caption'];
+        if (mounted) {
+          setState(() {
+            _captionCtrl.text = aiCaption;
+            widget.controller.captionText = aiCaption;
+            _isEditingCaption = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI Smart Caption Applied! 🚀', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFF10B981),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[CameraOverlay] AI caption error: $e');
+    }
   }
 
   @override
@@ -198,6 +231,11 @@ class _SnapPostCaptureOverlayState extends State<SnapPostCaptureOverlay> {
                     onTap: () {
                       setState(() => _isEditingCaption = true);
                     },
+                  ),
+                  _buildToolBtn(
+                    icon: LucideIcons.sparkles,
+                    label: 'AI Vision',
+                    onTap: _generateAiCaption,
                   ),
                   _buildToolBtn(
                     icon: LucideIcons.smile,
