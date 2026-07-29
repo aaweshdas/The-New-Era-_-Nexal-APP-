@@ -92,6 +92,11 @@ class _SignupScreenState extends State<SignupScreen>
       _showSnackBar('Please fill in all fields', isError: true);
       return;
     }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      _showSnackBar('Please enter a valid email address', isError: true);
+      return;
+    }
     if (pass.length < 6) {
       _showSnackBar('Password must be at least 6 characters', isError: true);
       return;

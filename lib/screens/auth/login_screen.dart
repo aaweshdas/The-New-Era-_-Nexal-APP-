@@ -93,6 +93,12 @@ class _LoginScreenState extends State<LoginScreen>
     final email = _emailCtrl.text.trim();
     final pass = _passCtrl.text.trim();
 
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      _showSnackBar('Please enter a valid email address', isError: true);
+      return;
+    }
+
     if (_isSignUpMode) {
       final name = _nameCtrl.text.trim();
       final confirm = _confirmPassCtrl.text.trim();

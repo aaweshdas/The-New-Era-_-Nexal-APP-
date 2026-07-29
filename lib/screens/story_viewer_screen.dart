@@ -103,6 +103,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
+        onLongPressStart: (_) => _animController.stop(),
+        onLongPressEnd: (_) => _animController.forward(),
+        onLongPressCancel: () => _animController.forward(),
         onTapDown: (details) {
           final screenWidth = MediaQuery.of(context).size.width;
           if (details.globalPosition.dx < screenWidth / 3) {
@@ -123,6 +126,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                 return Image.network(
                   widget.stories[index].imageUrl,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: const Color(0xFF0F172A),
+                      child: const Center(
+                        child: Icon(LucideIcons.image, size: 64, color: Colors.white38),
+                      ),
+                    );
+                  },
                 );
               },
             ),
