@@ -107,8 +107,10 @@ class _SearchViewState extends State<SearchView>
 
   // ─── Network ──────────────────────────────────────────────────────────────
 
-  Future<http.Response> _get(String path) =>
-      _client.get(Uri.parse('$_baseUrl$path')).timeout(8.seconds);
+  Future<http.Response> _get(String path) {
+    final uri = Uri.tryParse('$_baseUrl$path') ?? Uri.parse('http://127.0.0.1:10000$path');
+    return _client.get(uri).timeout(8.seconds);
+  }
 
   Future<void> _resolveBaseUrl() async {
     _baseUrl = await AppConfig.resolveGatewayUrl();

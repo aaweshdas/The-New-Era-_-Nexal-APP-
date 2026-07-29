@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -23,16 +24,19 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
   bool _isPlaying = false;
   Duration _position = Duration.zero;
 
+  StreamSubscription? _stateSub;
+  StreamSubscription? _posSub;
+
   @override
   void initState() {
     super.initState();
-    _player.onPlayerStateChanged.listen((state) {
+    _stateSub = _player.onPlayerStateChanged.listen((state) {
       if (mounted) {
         setState(() => _isPlaying = state == PlayerState.playing);
       }
     });
 
-    _player.onPositionChanged.listen((pos) {
+    _posSub = _player.onPositionChanged.listen((pos) {
       if (mounted) {
         setState(() => _position = pos);
       }
@@ -41,6 +45,8 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
 
   @override
   void dispose() {
+    _stateSub?.cancel();
+    _posSub?.cancel();
     _player.dispose();
     super.dispose();
   }

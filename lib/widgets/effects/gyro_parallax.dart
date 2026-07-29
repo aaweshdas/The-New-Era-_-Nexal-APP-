@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
+import 'dart:io' show Platform;
 
 class GyroParallax extends StatefulWidget {
   final Widget child;
@@ -29,10 +31,11 @@ class _GyroParallaxState extends State<GyroParallax> {
   void initState() {
     super.initState();
     // sensors_plus is only available on Android/iOS — guard for desktop/web
-    try {
-      _subscription = accelerometerEventStream().listen((
-        AccelerometerEvent event,
-      ) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      try {
+        _subscription = accelerometerEventStream().listen((
+          AccelerometerEvent event,
+        ) {
         if (!mounted) return;
 
         final now = DateTime.now().millisecondsSinceEpoch;
@@ -57,9 +60,12 @@ class _GyroParallaxState extends State<GyroParallax> {
             });
           });
         }
+      }, onError: (_) {
+        _subscription?.cancel();
       });
-    } catch (_) {
-      // Sensors not available on this platform (Windows, web, etc.) — ignore
+      } catch (_) {
+        // Sensors not available on this platform (Windows, web, etc.) — ignore
+      }
     }
   }
 

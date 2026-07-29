@@ -80,9 +80,12 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
     }
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 800));
+    final uid = AuthService.instance.currentUser?.uid ?? '';
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('2fa_enabled', true);
-    await prefs.setString('2fa_secret', _totpSecret!);
+    if (uid.isNotEmpty) {
+      await prefs.setBool('2fa_enabled_$uid', true);
+      await prefs.setString('2fa_secret_$uid', _totpSecret!);
+    }
     setState(() { _is2FAEnabled = true; _setupComplete = true; _isLoading = false; });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
@@ -78,6 +80,11 @@ class SnapCameraController extends ChangeNotifier {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> initCamera() async {
+    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+      debugPrint("[SnapCameraController] Camera not supported on this platform.");
+      return;
+    }
+
     var camStatus = await Permission.camera.status;
     if (!camStatus.isGranted) {
       camStatus = await Permission.camera.request();
@@ -149,7 +156,9 @@ class SnapCameraController extends ChangeNotifier {
     selectedCameraIndex = (selectedCameraIndex + 1) % cameras.length;
     isInitialized = false;
     notifyListeners();
-    await cameraController?.dispose();
+    final oldCtrl = cameraController;
+    cameraController = null;
+    await oldCtrl?.dispose();
     await _setCamera(selectedCameraIndex);
   }
 

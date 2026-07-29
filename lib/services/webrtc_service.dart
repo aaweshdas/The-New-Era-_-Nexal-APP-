@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'socket_service.dart';
@@ -32,6 +33,10 @@ class WebRtcService {
 
   /// Initialize hardware camera for HD video calling
   Future<void> initCamera() async {
+    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+      debugPrint('[WebRtcService] Camera not supported on this platform.');
+      return;
+    }
     try {
       final cameras = await availableCameras();
       if (cameras.isNotEmpty) {

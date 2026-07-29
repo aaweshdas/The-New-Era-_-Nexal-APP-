@@ -107,8 +107,13 @@ class AriaService {
     _socket!.on('tts_end', (_) => _onTtsEndCtrl.add(null));
 
     _socket!.on('tts_audio', (data) {
-      if (data is List) {
-        _onTtsAudioCtrl.add(List<int>.from(data));
+      try {
+        if (data is List) {
+          final bytes = data.map((e) => (e as num).toInt()).toList();
+          _onTtsAudioCtrl.add(bytes);
+        }
+      } catch (e) {
+        debugPrint('[AriaService] Error parsing tts_audio payload: $e');
       }
     });
 

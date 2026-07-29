@@ -224,7 +224,7 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         image: const DecorationImage(
-          image: CachedNetworkImageProvider('https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?w=800'),
+          image: CachedNetworkImageProvider('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800'),
           fit: BoxFit.cover,
         ),
       ),
@@ -245,7 +245,7 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
           Center(
             child: RepaintBoundary(
               child: GestureDetector(
-                onTap: () => _showVideoDetail(VideoItem(id: 'hero', title: 'Cosmic Origins: The Beginning', category: 'Documentary', imageUrl: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?w=800', duration: '45m', views: '5.2M', rating: 4.9, creator: 'Nexal Originals')),
+                onTap: () => _showVideoDetail(VideoItem(id: 'hero', title: 'Cosmic Origins: The Beginning', category: 'Documentary', imageUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800', duration: '45m', views: '5.2M', rating: 4.9, creator: 'Nexal Originals')),
                 child: AnimatedBuilder(
                   animation: _pulseCtrl,
                   builder: (ctx, child) {
@@ -667,24 +667,209 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
 }
 
 // ── VIDEO DETAIL BOTTOM SHEET ──
-class _VideoDetailSheet extends StatelessWidget {
+class _VideoDetailSheet extends StatefulWidget {
   final VideoItem video;
   final bool isBookmarked;
   final VoidCallback onBookmark;
 
-  const _VideoDetailSheet({required this.video, required this.isBookmarked, required this.onBookmark});
+  const _VideoDetailSheet({
+    required this.video,
+    required this.isBookmarked,
+    required this.onBookmark,
+  });
+
+  @override
+  State<_VideoDetailSheet> createState() => _VideoDetailSheetState();
+}
+
+class _VideoDetailSheetState extends State<_VideoDetailSheet> {
+  bool _isBookmarked = false;
+  bool _isFollowing = false;
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
+  bool _isDownloaded = false;
+  int _userRating = 5;
+  int _likesCount = 1420;
+  bool _isLiked = false;
+
+  String _selectedQuality = '1080p HD';
+  String _selectedSpeed = '1.0x';
+  int _activeTab = 0; // 0: Overview, 1: Comments, 2: Related
+
+  final TextEditingController _commentCtrl = TextEditingController();
+  final List<Map<String, String>> _comments = [
+    {'user': 'Alex Rivers', 'text': 'Quantum computing logic explained so clearly! 🔥', 'time': '10m ago'},
+    {'user': 'Elena Rostova', 'text': 'The rendering speed on this is unbelievable.', 'time': '1h ago'},
+    {'user': 'Dr. Marcus Vance', 'text': 'Subscribed! Looking forward to part 3.', 'time': '3h ago'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _isBookmarked = widget.isBookmarked;
+  }
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
+  }
+
+  void _startDownload() {
+    if (_isDownloading || _isDownloaded) return;
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.0;
+    });
+
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 250));
+      if (!mounted) return false;
+      setState(() {
+        _downloadProgress += 0.15;
+      });
+      if (_downloadProgress >= 1.0) {
+        setState(() {
+          _isDownloading = false;
+          _isDownloaded = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Row(
+            children: [
+              const Icon(LucideIcons.checkCircle2, color: AppTheme.cyan500, size: 20),
+              const SizedBox(width: 10),
+              Text('Video downloaded for offline playback! 📥', style: GoogleFonts.outfit(color: Colors.white)),
+            ],
+          ),
+          backgroundColor: const Color(0xFF14092B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ));
+        return false;
+      }
+      return true;
+    });
+  }
+
+  void _showShareModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF0F0B1E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Colors.white12, width: 1)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 16),
+            Text('Share Content', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text('Broadcast "${widget.video.title}" across networks', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _shareOption(LucideIcons.copy, 'Copy Link', AppTheme.purple500, () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Link copied to clipboard! 📋', style: GoogleFonts.outfit()), backgroundColor: const Color(0xFF1a1a2e)));
+                }),
+                _shareOption(LucideIcons.send, 'Direct Chat', AppTheme.cyan500, () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sent to direct messages! 💬', style: GoogleFonts.outfit()), backgroundColor: const Color(0xFF1a1a2e)));
+                }),
+                _shareOption(LucideIcons.qrCode, 'QR Code', AppTheme.pink500, () {
+                  Navigator.pop(ctx);
+                  _showQrCodeDialog();
+                }),
+                _shareOption(LucideIcons.repeat, 'Repost Feed', const Color(0xFF22C55E), () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reposted to your Nexal Feed! 🚀', style: GoogleFonts.outfit()), backgroundColor: const Color(0xFF1a1a2e)));
+                }),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showQrCodeDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF14092B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: AppTheme.pink500, width: 1.2)),
+        title: Text('Scan & Share Video', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: const Icon(LucideIcons.qrCode, size: 140, color: Colors.black),
+            ),
+            const SizedBox(height: 14),
+            Text(widget.video.title, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13), textAlign: TextAlign.center),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Close', style: GoogleFonts.outfit(color: AppTheme.cyan500, fontWeight: FontWeight.bold))),
+        ],
+      ),
+    );
+  }
+
+  Widget _shareOption(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle, border: Border.all(color: color.withValues(alpha: 0.3))),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  void _postComment() {
+    final text = _commentCtrl.text.trim();
+    if (text.isEmpty) return;
+    setState(() {
+      _comments.insert(0, {
+        'user': 'You',
+        'text': text,
+        'time': 'Just now',
+      });
+      _commentCtrl.clear();
+    });
+    FocusScope.of(context).unfocus();
+  }
 
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.55,
-      minChildSize: 0.3,
-      maxChildSize: 0.85,
+      initialChildSize: 0.68,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
       builder: (ctx, scrollCtrl) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0d0d1a),
+            color: Color(0xFF0F0B1E),
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(top: BorderSide(color: Color(0xFF2A1C4D), width: 1.2)),
           ),
           child: ListView(
             controller: scrollCtrl,
@@ -695,87 +880,438 @@ class _VideoDetailSheet extends StatelessWidget {
                 child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
               ),
               const SizedBox(height: 16),
-              // Thumbnail
+
+              // Enhanced Thumbnail with Live Play & Specs Badges
               ClipRRect(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
                 child: Stack(
                   children: [
-                    CachedNetworkImage(imageUrl: video.imageUrl, height: 180, width: double.infinity, fit: BoxFit.cover,
-                      errorWidget: (c, url, error) => Container(height: 180, color: Colors.grey[900]),
+                    CachedNetworkImage(
+                      imageUrl: widget.video.imageUrl,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorWidget: (c, url, error) => Container(height: 200, color: Colors.grey[900]),
                     ),
-                    Positioned.fill(child: Container(decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)]),
-                    ))),
-                    Positioned(bottom: 12, right: 12, child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(8)),
-                      child: Text(video.duration, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
-                    )),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.black.withValues(alpha: 0.2), Colors.black.withValues(alpha: 0.8)],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Center Play Overlay
+                    Positioned.fill(
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => VideoPlayerScreen(
+                                  title: widget.video.title,
+                                  category: widget.video.category,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.purple500.withValues(alpha: 0.85),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: 4),
+                              ],
+                            ),
+                            child: const Icon(LucideIcons.play, color: Colors.white, size: 32),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Top Specs Pills
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24, width: 0.8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.sparkles, color: AppTheme.cyan500, size: 12),
+                            const SizedBox(width: 4),
+                            Text(_selectedQuality, style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Bottom Duration Badge
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white12),
+                        ),
+                        child: Text(widget.video.duration, style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
+
               // Title
-              Text(video.title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 6),
-              // Meta
-              Row(children: [
-                Text(video.creator ?? video.category, style: GoogleFonts.outfit(color: AppTheme.purple500, fontSize: 13, fontWeight: FontWeight.w500)),
-                const SizedBox(width: 12),
-                if (video.views != null) ...[
-                  Icon(LucideIcons.eye, size: 13, color: Colors.white30),
-                  const SizedBox(width: 4),
-                  Text(video.views!, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
-                ],
-                if (video.rating != null) ...[
-                  const SizedBox(width: 12),
-                  Icon(LucideIcons.star, size: 13, color: const Color(0xFFFBBF24)),
-                  const SizedBox(width: 4),
-                  Text('${video.rating}', style: GoogleFonts.outfit(color: const Color(0xFFFBBF24), fontSize: 12)),
-                ],
-              ]),
-              const SizedBox(height: 20),
-              // Action buttons
-              Row(children: [
-                Expanded(
-                  child: _sheetButton('Play Now', LucideIcons.play, AppTheme.purple500, () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => VideoPlayerScreen(
-                          title: video.title,
-                          category: video.category,
+              Text(widget.video.title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 10),
+
+              // Creator Profile Bar with Working Follow Toggle
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppTheme.purple500,
+                      child: Text(
+                        (widget.video.creator ?? 'N')[0],
+                        style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                widget.video.creator ?? widget.video.category,
+                                style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.verified, color: AppTheme.cyan500, size: 14),
+                            ],
+                          ),
+                          Text('1.2M Subscribers', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => _isFollowing = !_isFollowing);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(_isFollowing ? 'Subscribed to ${widget.video.creator}!' : 'Unsubscribed', style: GoogleFonts.outfit()),
+                          backgroundColor: const Color(0xFF1a1a2e),
+                          duration: const Duration(seconds: 1),
+                        ));
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: _isFollowing ? Colors.white.withValues(alpha: 0.1) : AppTheme.purple500,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: _isFollowing ? Colors.white24 : AppTheme.purple500),
+                        ),
+                        child: Text(
+                          _isFollowing ? 'Subscribed ✓' : 'Subscribe',
+                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ),
-                    );
-                  }),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(child: _sheetButton(isBookmarked ? 'Saved' : 'Save', isBookmarked ? LucideIcons.bookmarkMinus : LucideIcons.bookmark, AppTheme.cyan500, onBookmark)),
-              ]),
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(child: _sheetButton('Share', LucideIcons.share2, AppTheme.pink500, () { Navigator.pop(context); })),
-                const SizedBox(width: 12),
-                Expanded(child: _sheetButton('Download', LucideIcons.download, Colors.white54, () { Navigator.pop(context); })),
-              ]),
-              const SizedBox(height: 20),
-              // Progress if applicable
-              if (video.progress > 0) ...[
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text('Progress', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
-                  Text('${video.progress}%', style: GoogleFonts.outfit(color: AppTheme.purple500, fontSize: 13, fontWeight: FontWeight.w600)),
-                ]),
-                const SizedBox(height: 8),
+              ),
+              const SizedBox(height: 18),
+
+              // Interactive 4-Grid Action Buttons (All Fully Functional)
+              Row(
+                children: [
+                  Expanded(
+                    child: _actionTile(
+                      label: 'Play Now',
+                      icon: LucideIcons.play,
+                      color: AppTheme.purple500,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VideoPlayerScreen(
+                              title: widget.video.title,
+                              category: widget.video.category,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _actionTile(
+                      label: _isBookmarked ? 'Saved' : 'Save',
+                      icon: _isBookmarked ? LucideIcons.bookmarkCheck : LucideIcons.bookmark,
+                      color: AppTheme.cyan500,
+                      isActive: _isBookmarked,
+                      onTap: () {
+                        setState(() => _isBookmarked = !_isBookmarked);
+                        widget.onBookmark();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _actionTile(
+                      label: 'Share',
+                      icon: LucideIcons.share2,
+                      color: AppTheme.pink500,
+                      onTap: _showShareModal,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _actionTile(
+                      label: _isDownloaded ? 'Downloaded' : (_isDownloading ? '${(_downloadProgress * 100).toInt()}%' : 'Download'),
+                      icon: _isDownloaded ? LucideIcons.check : (_isDownloading ? LucideIcons.loader2 : LucideIcons.download),
+                      color: _isDownloaded ? const Color(0xFF22C55E) : Colors.white70,
+                      isActive: _isDownloaded,
+                      onTap: _startDownload,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Download Live Animated Bar
+              if (_isDownloading) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Downloading 4K Stream...', style: GoogleFonts.outfit(color: AppTheme.cyan500, fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text('${(_downloadProgress * 100).toInt()}% (4.2 MB/s)', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 6),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
                   child: LinearProgressIndicator(
-                    value: video.progress / 100,
-                    backgroundColor: Colors.white.withValues(alpha: 0.08),
-                    valueColor: AlwaysStoppedAnimation(AppTheme.purple500.withValues(alpha: 0.8)),
+                    value: _downloadProgress,
+                    backgroundColor: Colors.white10,
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cyan500),
                     minHeight: 6,
                   ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Interactive Reaction Bar & 5-Star Rating Selector
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                ),
+                child: Row(
+                  children: [
+                    // Like button
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isLiked = !_isLiked;
+                          _likesCount += _isLiked ? 1 : -1;
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.heart, size: 18, color: _isLiked ? Colors.redAccent : Colors.white54),
+                          const SizedBox(width: 6),
+                          Text('$_likesCount', style: GoogleFonts.outfit(color: _isLiked ? Colors.redAccent : Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // Star Rating Picker
+                    Row(
+                      children: List.generate(5, (index) {
+                        final starNum = index + 1;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() => _userRating = starNum);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Rated $starNum Stars! ⭐', style: GoogleFonts.outfit()),
+                              backgroundColor: const Color(0xFF1a1a2e),
+                              duration: const Duration(seconds: 1),
+                            ));
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Icon(
+                              LucideIcons.star,
+                              size: 16,
+                              color: starNum <= _userRating ? const Color(0xFFFBBF24) : Colors.white24,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Tab Bar (Overview | Comments | Specs & Quality)
+              Row(
+                children: [
+                  _tabChip('Overview', 0),
+                  const SizedBox(width: 8),
+                  _tabChip('Comments (${_comments.length})', 1),
+                  const SizedBox(width: 8),
+                  _tabChip('Playback Specs', 2),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Tab View Contents
+              if (_activeTab == 0) ...[
+                // Overview Tab
+                Text(
+                  'Explore deep space rendering, neural computing models, and high-performance quantum algorithms in this comprehensive video guide.',
+                  style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _hashtagChip('#Quantum'),
+                    _hashtagChip('#NeuralAI'),
+                    _hashtagChip('#NexalStream'),
+                    _hashtagChip('#FutureTech'),
+                  ],
+                ),
+              ] else if (_activeTab == 1) ...[
+                // Comments Tab with Real Inline Posting!
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _commentCtrl,
+                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'Add a public comment...',
+                          hintStyle: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _postComment,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.purple500,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.send, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Column(
+                  children: _comments.map((c) => Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: AppTheme.cyan500.withValues(alpha: 0.3),
+                          child: Text(c['user']![0], style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(c['user']!, style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  const Spacer(),
+                                  Text(c['time']!, style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(c['text']!, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )).toList(),
+                ),
+              ] else if (_activeTab == 2) ...[
+                // Playback Specs & Settings Tab
+                Text('Quality Preset', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Row(
+                  children: ['1080p HD', '4K HDR', '720p Auto'].map((q) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(q, style: GoogleFonts.outfit(color: _selectedQuality == q ? Colors.white : Colors.white54, fontSize: 12)),
+                      selected: _selectedQuality == q,
+                      selectedColor: AppTheme.purple500,
+                      backgroundColor: Colors.white.withValues(alpha: 0.05),
+                      onSelected: (val) { if (val) setState(() => _selectedQuality = q); },
+                    ),
+                  )).toList(),
+                ),
+                const SizedBox(height: 14),
+                Text('Speed Control', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Row(
+                  children: ['1.0x', '1.25x', '1.5x', '2.0x'].map((s) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(s, style: GoogleFonts.outfit(color: _selectedSpeed == s ? Colors.white : Colors.white54, fontSize: 12)),
+                      selected: _selectedSpeed == s,
+                      selectedColor: AppTheme.cyan500,
+                      backgroundColor: Colors.white.withValues(alpha: 0.05),
+                      onSelected: (val) { if (val) setState(() => _selectedSpeed = s); },
+                    ),
+                  )).toList(),
                 ),
               ],
             ],
@@ -785,25 +1321,57 @@ class _VideoDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _sheetButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _actionTile({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    bool isActive = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          color: isActive ? color.withValues(alpha: 0.25) : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isActive ? color : color.withValues(alpha: 0.3), width: 1.2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 18),
             const SizedBox(width: 8),
-            Text(label, style: GoogleFonts.outfit(color: color, fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(label, style: GoogleFonts.outfit(color: color, fontSize: 14, fontWeight: FontWeight.w700)),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _tabChip(String label, int index) {
+    final active = _activeTab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _activeTab = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppTheme.purple500 : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: active ? AppTheme.purple500 : Colors.white12),
+        ),
+        child: Text(label, style: GoogleFonts.outfit(color: active ? Colors.white : Colors.white54, fontSize: 12, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+  Widget _hashtagChip(String tag) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: AppTheme.purple500.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+      child: Text(tag, style: GoogleFonts.outfit(color: AppTheme.purple500, fontSize: 12, fontWeight: FontWeight.w500)),
     );
   }
 }

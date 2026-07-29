@@ -58,6 +58,15 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
   }
 
   @override
+  void deactivate() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     // Shutdown local server and clear asset cache
     _server?.close(force: true);

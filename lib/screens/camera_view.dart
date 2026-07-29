@@ -34,6 +34,7 @@ class CameraView extends StatefulWidget {
 class _CameraViewState extends State<CameraView> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late SnapCameraController _snapCtrl;
   bool _isShutterFlashing = false;
+  bool _isPinching = false;
 
   @override
   void initState() {
@@ -55,6 +56,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver, Si
     if (state == AppLifecycleState.resumed) {
       _snapCtrl.initCamera();
     }
+  }
+
+  @override
+  void deactivate() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.deactivate();
   }
 
   @override
@@ -110,42 +117,50 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver, Si
       body: LayoutBuilder(
         builder: (context, constraints) {
           return GestureDetector(
+            onScaleStart: (details) {
+              _isPinching = details.pointerCount > 1;
+            },
             onScaleUpdate: (details) {
-              if (details.scale != 1.0) {
+              if (details.pointerCount > 1 || (details.scale - 1.0).abs() > 0.02) {
+                _isPinching = true;
                 _snapCtrl.setZoom(details.scale);
               }
             },
+            onScaleEnd: (details) {
+              if (!_isPinching) {
+                final vx = details.velocity.pixelsPerSecond.dx;
+                final vy = details.velocity.pixelsPerSecond.dy;
+                if (vx.abs() > vy.abs()) {
+                  if (vx < -300) {
+                    // Swipe Left -> Open Chat
+                    if (widget.onOpenChat != null) {
+                      widget.onOpenChat!();
+                    } else {
+                      _snapCtrl.swipeFilter(1);
+                    }
+                  } else if (vx > 300) {
+                    // Swipe Right -> Open Discover
+                    if (widget.onOpenDiscover != null) {
+                      widget.onOpenDiscover!();
+                    } else {
+                      _snapCtrl.swipeFilter(-1);
+                    }
+                  }
+                } else {
+                  if (vy > 300) {
+                    // Swipe Down -> Open Memories
+                    if (widget.onOpenMemories != null) {
+                      widget.onOpenMemories!();
+                    } else {
+                      _snapCtrl.pickGalleryImage();
+                    }
+                  }
+                }
+              }
+              _isPinching = false;
+            },
             onTapUp: (details) {
               _snapCtrl.setFocus(details, constraints);
-            },
-            onHorizontalDragEnd: (details) {
-              if (details.primaryVelocity != null) {
-                if (details.primaryVelocity! < -300) {
-                  // Swipe Left -> Open Chat
-                  if (widget.onOpenChat != null) {
-                    widget.onOpenChat!();
-                  } else {
-                    _snapCtrl.swipeFilter(1);
-                  }
-                } else if (details.primaryVelocity! > 300) {
-                  // Swipe Right -> Open Discover
-                  if (widget.onOpenDiscover != null) {
-                    widget.onOpenDiscover!();
-                  } else {
-                    _snapCtrl.swipeFilter(-1);
-                  }
-                }
-              }
-            },
-            onVerticalDragEnd: (details) {
-              if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
-                // Swipe Down -> Open Memories
-                if (widget.onOpenMemories != null) {
-                  widget.onOpenMemories!();
-                } else {
-                  _snapCtrl.pickGalleryImage();
-                }
-              }
             },
             child: Stack(
               fit: StackFit.expand,

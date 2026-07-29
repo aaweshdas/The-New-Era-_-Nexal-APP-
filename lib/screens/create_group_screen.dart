@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/messages_provider.dart';
+import '../services/auth_service.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -15,29 +17,45 @@ class CreateGroupScreen extends StatefulWidget {
 class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final TextEditingController _nameCtrl = TextEditingController();
   final Set<String> _selectedUsers = {};
+  List<Map<String, String>> _contacts = [];
 
-  final List<Map<String, String>> _contacts = [
-    {
-      'id': 'u1',
-      'name': 'Aria Storm',
-      'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'
-    },
-    {
-      'id': 'u2',
-      'name': 'Kai Cyber',
-      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'
-    },
-    {
-      'id': 'u3',
-      'name': 'Luna Ray',
-      'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'
-    },
-    {
-      'id': 'u4',
-      'name': 'Nova Chen',
-      'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    try {
+      final currentUid = AuthService.instance.currentUser?.uid ?? '';
+      final List<dynamic> res = await Supabase.instance.client
+          .from('profiles')
+          .select('id, name, avatar_url, username')
+          .neq('id', currentUid)
+          .limit(20);
+
+      if (mounted && res.isNotEmpty) {
+        setState(() {
+          _contacts = res.map((u) => {
+            'id': u['id']?.toString() ?? '',
+            'name': (u['name'] ?? u['username'] ?? 'Nexal User').toString(),
+            'avatar': (u['avatar_url'] ?? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100').toString(),
+          }).toList();
+        });
+      }
+    } catch (_) {
+      // Fallback sample contacts if network is unavailable
+      if (mounted && _contacts.isEmpty) {
+        setState(() {
+          _contacts = [
+            {'id': 'u1', 'name': 'Aria Storm', 'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'},
+            {'id': 'u2', 'name': 'Kai Cyber', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'},
+            {'id': 'u3', 'name': 'Luna Ray', 'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'},
+          ];
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {

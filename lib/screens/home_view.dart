@@ -14,6 +14,7 @@ import '../widgets/common/post_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'messages_view.dart';
 import '../widgets/notifications/notification_view.dart';
+// ignore: unused_import
 import 'create_post_screen.dart';
 import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
@@ -1603,211 +1604,392 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // CREATE CONTENT MODAL (Triggered by + Floating Button)
   // ═══════════════════════════════════════════════════════
   void _showCreateContentModal() {
+    final user = AuthService.instance.currentUser;
+    final userName = user?.name ?? 'Alex Quantum';
+    final userHandle = user?.username ?? 'alex_quantum';
+    final userAvatar = user?.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+
+    final textCtrl = TextEditingController();
+    String selectedAudience = 'Public Broadcast 🌐';
+    bool isAiEnhancing = false;
+    bool isPhotoAttached = false;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF070412).withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(30),
-          image: const DecorationImage(
-            image: AssetImage('assets/normal_bg.png'),
-            fit: BoxFit.cover,
-            opacity: 0.35,
-          ),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.purple500.withValues(alpha: 0.35),
-              blurRadius: 36,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Drag handle indicator
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white38,
-                  borderRadius: BorderRadius.circular(2),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: const Color(0xFF090518).withValues(alpha: 0.96),
+                borderRadius: BorderRadius.circular(30),
+                image: const DecorationImage(
+                  image: AssetImage('assets/normal_bg.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.3,
                 ),
+                border: Border.all(
+                  color: AppTheme.purple500.withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.purple500.withValues(alpha: 0.4),
+                    blurRadius: 36,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // User Header Row
-            Row(
-              children: [
-                Stack(
-                  children: [
-                    const CircleAvatar(
-                      radius: 20,
-                      backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF22C55E),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFF0F0B1E), width: 2),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Column(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Create Content',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      '@alex_quantum • Public Broadcast',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white.withValues(alpha: 0.75),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(ctx),
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(LucideIcons.x, color: Colors.white, size: 18),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Quick Post Composer Bar (Primary Action)
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen()));
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF14092B).withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppTheme.purple500.withValues(alpha: 0.5),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.penTool, color: AppTheme.purple500, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        "What's on your mind?",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                    // Drag handle indicator
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white38,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // User Header Row with Real User Details & Privacy Dropdown Selector
+                    Row(
+                      children: [
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: CachedNetworkImageProvider(userAvatar),
+                              backgroundColor: AppTheme.purple500,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF22C55E),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFF0F0B1E), width: 2),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                userName,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  final options = ['Public Broadcast 🌐', 'Followers Only 🔒', 'Close Friends ⭐️', 'AI Assistant 🤖'];
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: const Color(0xFF14092B),
+                                    builder: (sheetCtx) => Container(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: options.map((opt) => ListTile(
+                                          title: Text(opt, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600)),
+                                          trailing: selectedAudience == opt ? const Icon(LucideIcons.check, color: AppTheme.cyan500) : null,
+                                          onTap: () {
+                                            setModalState(() => selectedAudience = opt);
+                                            Navigator.pop(sheetCtx);
+                                          },
+                                        )).toList(),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      '@$userHandle • $selectedAudience',
+                                      style: GoogleFonts.outfit(
+                                        color: AppTheme.cyan500,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(LucideIcons.chevronDown, color: AppTheme.cyan500, size: 14),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(ctx),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.x, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Interactive Quick Post Composer Card
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppTheme.purple500,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.purple500.withValues(alpha: 0.4),
-                            blurRadius: 8,
+                        color: const Color(0xFF14092B).withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: AppTheme.purple500.withValues(alpha: 0.5),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: textCtrl,
+                            maxLines: 3,
+                            minLines: 1,
+                            onChanged: (_) => setModalState(() {}),
+                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: "What's on your mind?",
+                              hintStyle: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.5), fontSize: 14),
+                              border: InputBorder.none,
+                              isDense: true,
+                            ),
+                          ),
+                          if (isPhotoAttached) ...[
+                            const SizedBox(height: 10),
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600', height: 100, width: double.infinity, fit: BoxFit.cover),
+                                ),
+                                Positioned(
+                                  top: 6, right: 6,
+                                  child: GestureDetector(
+                                    onTap: () => setModalState(() => isPhotoAttached = false),
+                                    child: Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), shape: BoxShape.circle), child: const Icon(LucideIcons.x, color: Colors.white, size: 14)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              // Quick Attach Pills
+                              _quickToolChip(
+                                icon: LucideIcons.image,
+                                label: isPhotoAttached ? 'Photo ✓' : 'Photo',
+                                color: AppTheme.cyan500,
+                                onTap: () => setModalState(() => isPhotoAttached = !isPhotoAttached),
+                              ),
+                              const SizedBox(width: 8),
+                              _quickToolChip(
+                                icon: LucideIcons.sparkles,
+                                label: isAiEnhancing ? 'Refining...' : 'AI Refine',
+                                color: AppTheme.pink500,
+                                onTap: () {
+                                  setModalState(() => isAiEnhancing = true);
+                                  Future.delayed(const Duration(milliseconds: 600), () {
+                                    if (mounted) {
+                                      setModalState(() {
+                                        isAiEnhancing = false;
+                                        if (textCtrl.text.isEmpty) {
+                                          textCtrl.text = "Exploring quantum frontiers in AI architecture ✨ #Nexal";
+                                        } else {
+                                          textCtrl.text = "${textCtrl.text} ✨ #Nexal #AI";
+                                        }
+                                      });
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _quickToolChip(
+                                icon: LucideIcons.hash,
+                                label: 'Tags',
+                                color: AppTheme.purple500,
+                                onTap: () {
+                                  setModalState(() {
+                                    textCtrl.text = "${textCtrl.text} #Nexal #Cyber";
+                                  });
+                                },
+                              ),
+                              const Spacer(),
+                              // Working Submit Post Button
+                              GestureDetector(
+                                onTap: () {
+                                  final content = textCtrl.text.trim();
+                                  if (content.isEmpty && !isPhotoAttached) {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text('Please write a message or attach media first!', style: GoogleFonts.outfit()),
+                                      backgroundColor: Colors.redAccent,
+                                      behavior: SnackBarBehavior.floating,
+                                    ));
+                                    return;
+                                  }
+                                  // Dispatch new post to FeedProvider
+                                  Provider.of<FeedProvider>(context, listen: false).addPost(
+                                    PostModel(
+                                      id: 'post_${DateTime.now().millisecondsSinceEpoch}',
+                                      userId: user?.uid ?? 'user_1',
+                                      userName: userName,
+                                      userAvatar: userAvatar,
+                                      content: content.isNotEmpty ? content : 'New photo update ✨',
+                                      imageUrl: isPhotoAttached ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' : null,
+                                      timeAgo: 'Just now',
+                                      isVerified: true,
+                                    ),
+                                  );
+                                  setState(() {
+                                    _forYouPosts.insert(
+                                      0,
+                                      Post(
+                                        id: 'post_${DateTime.now().millisecondsSinceEpoch}',
+                                        userName: userName,
+                                        userAvatar: userAvatar,
+                                        content: content.isNotEmpty ? content : 'New photo update ✨',
+                                        image: isPhotoAttached ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' : null,
+                                        timeAgo: 'Just now',
+                                        likes: 0,
+                                        comments: 0,
+                                        shares: 0,
+                                        views: 1,
+                                        isVerified: true,
+                                      ),
+                                    );
+                                  });
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(LucideIcons.checkCircle2, color: AppTheme.cyan500, size: 20),
+                                        const SizedBox(width: 10),
+                                        Text('Post published to Nexal Feed! 🚀', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF14092B),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  ));
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: textCtrl.text.isNotEmpty || isPhotoAttached ? AppTheme.purple500 : AppTheme.purple500.withValues(alpha: 0.4),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.purple500.withValues(alpha: 0.4),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    'Post',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      child: Text(
-                        'Post',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Feature-Packed Action Suite Banners (All 5 Fully Interactive)
+                    _buildActionBanner(
+                      icon: LucideIcons.aperture,
+                      title: 'Add to Story',
+                      subtitle: 'Share 24-hour visual update or moment',
+                      accentColor: AppTheme.cyan500,
+                      buttonText: 'Create',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showAddStoryModal();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    _buildActionBanner(
+                      icon: LucideIcons.playCircle,
+                      title: 'Create Reel',
+                      subtitle: 'Broadcast short video clip with audio',
+                      accentColor: AppTheme.pink500,
+                      buttonText: 'Record',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showCreateReelModal();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    _buildActionBanner(
+                      icon: LucideIcons.radio,
+                      title: 'Go Live Stream',
+                      subtitle: 'Broadcast real-time stream to followers',
+                      accentColor: const Color(0xFFEF4444),
+                      buttonText: 'Go Live',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showGoLiveModal();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // NEW FEATURE: AI Art Studio Generator
+                    _buildActionBanner(
+                      icon: LucideIcons.wand2,
+                      title: 'AI Art Generator',
+                      subtitle: 'Create futuristic digital artwork from text',
+                      accentColor: const Color(0xFFA855F7),
+                      buttonText: 'Generate',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showAiArtGeneratorModal();
+                      },
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-
-            // 3 Hand-Crafted Premium Action Banners
-            _buildActionBanner(
-              icon: LucideIcons.aperture,
-              title: 'Add to Story',
-              subtitle: 'Share 24-hour visual update or moment',
-              accentColor: AppTheme.cyan500,
-              buttonText: 'Create',
-              onTap: () {
-                Navigator.pop(ctx);
-                _showAddStoryModal();
-              },
-            ),
-            const SizedBox(height: 10),
-
-            _buildActionBanner(
-              icon: LucideIcons.playCircle,
-              title: 'Create Reel',
-              subtitle: 'Broadcast short video clip with audio',
-              accentColor: AppTheme.pink500,
-              buttonText: 'Record',
-              onTap: () {
-                Navigator.pop(ctx);
-                _showCreateReelModal();
-              },
-            ),
-            const SizedBox(height: 10),
-
-            _buildActionBanner(
-              icon: LucideIcons.radio,
-              title: 'Go Live Stream',
-              subtitle: 'Broadcast real-time stream to followers',
-              accentColor: const Color(0xFFEF4444),
-              buttonText: 'Go Live',
-              onTap: () {
-                Navigator.pop(ctx);
-                _showGoLiveModal();
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1894,8 +2076,267 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+  // ═══════════════════════════════════════════════════════
+  // 5. AI ART STUDIO GENERATOR MODAL
+  // ═══════════════════════════════════════════════════════
+  void _showAiArtGeneratorModal() {
+    final promptCtrl = TextEditingController(text: 'Cyberpunk futuristic metropolis floating in deep space');
+    String selectedStyle = 'Cyberpunk 🌃';
+    bool isGenerating = false;
+    String generatedImageUrl = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800';
 
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setArtState) {
+          return Container(
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 14,
+              left: 14,
+              right: 14,
+            ),
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B061A).withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: const Color(0xFFA855F7).withValues(alpha: 0.45),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFA855F7).withValues(alpha: 0.3),
+                  blurRadius: 36,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFA855F7).withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(LucideIcons.wand2, color: Color(0xFFA855F7), size: 20),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'AI Neural Art Studio',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.x, color: Colors.white70, size: 18),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
+                // Prompt Input Box
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF14092B),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: TextField(
+                    controller: promptCtrl,
+                    maxLines: 2,
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 13.5),
+                    decoration: InputDecoration(
+                      hintText: 'Describe your artwork prompt...',
+                      hintStyle: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Style Selector Chips
+                Text('Select Art Style', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: ['Cyberpunk 🌃', 'Sci-Fi Neon ⚡', 'Neural Dream 🔮', 'Hyper-Realistic 📸', 'Anime Glow ✨'].map((style) {
+                      final isSel = selectedStyle == style;
+                      return GestureDetector(
+                        onTap: () => setArtState(() => selectedStyle = style),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isSel ? const Color(0xFFA855F7).withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: isSel ? const Color(0xFFA855F7) : Colors.white10),
+                          ),
+                          child: Text(style, style: GoogleFonts.outfit(color: isSel ? Colors.white : Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Live Art Preview Frame
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    height: 160,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.4)),
+                    ),
+                    child: isGenerating
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(color: Color(0xFFA855F7)),
+                                const SizedBox(height: 12),
+                                Text('Synthesizing Neural Art...', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          )
+                        : Image.network(generatedImageUrl, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Action Buttons Row: Generate / Publish
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFA855F7)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () {
+                          setArtState(() => isGenerating = true);
+                          Future.delayed(const Duration(milliseconds: 800), () {
+                            if (mounted) {
+                              setArtState(() {
+                                isGenerating = false;
+                                generatedImageUrl = 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800';
+                              });
+                            }
+                          });
+                        },
+                        child: Text('Re-Generate 🪄', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFA855F7),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () {
+                          final user = AuthService.instance.currentUser;
+                          final userName = user?.name ?? 'Alex Quantum';
+                          final userAvatar = user?.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+
+                          Provider.of<FeedProvider>(context, listen: false).addPost(
+                            PostModel(
+                              id: 'ai_art_${DateTime.now().millisecondsSinceEpoch}',
+                              userId: user?.uid ?? 'user_1',
+                              userName: userName,
+                              userAvatar: userAvatar,
+                              content: 'Generated AI Art [$selectedStyle]: ${promptCtrl.text}',
+                              imageUrl: generatedImageUrl,
+                              timeAgo: 'Just now',
+                              isVerified: true,
+                            ),
+                          );
+                          setState(() {
+                            _forYouPosts.insert(
+                              0,
+                              Post(
+                                id: 'ai_art_${DateTime.now().millisecondsSinceEpoch}',
+                                userName: userName,
+                                userAvatar: userAvatar,
+                                content: 'Generated AI Art [$selectedStyle]: ${promptCtrl.text}',
+                                image: generatedImageUrl,
+                                timeAgo: 'Just now',
+                                likes: 0,
+                                comments: 0,
+                                shares: 0,
+                                views: 1,
+                                isVerified: true,
+                              ),
+                            );
+                          });
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: const Color(0xFF2C0B4D),
+                              content: Text('AI Artwork published to Nexal Feed! 🎨✨', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                          );
+                        },
+                        child: Text('Publish Art 🚀', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _quickToolChip({required IconData icon, required String label, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 13),
+            const SizedBox(width: 4),
+            Text(label, style: GoogleFonts.outfit(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ═══════════════════════════════════════════════════════
   // 1. POST COMPOSER STUDIO (New Post)
