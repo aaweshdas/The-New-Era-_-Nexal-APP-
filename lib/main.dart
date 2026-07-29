@@ -73,10 +73,6 @@ class NexalApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
-        ChangeNotifierProvider(create: (_) {
-          final mp = MessagesProvider();
-          return mp;
-        }),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => NotificationsProvider()),
         ChangeNotifierProvider(create: (_) {
@@ -84,14 +80,19 @@ class NexalApp extends StatelessWidget {
           p.load(); // load persisted background on startup
           return p;
         }),
-        // Wire AuthProvider changes → connect Socket.IO
+        // Wire AuthProvider changes → connect Socket.IO & trigger conversation fetch
         ChangeNotifierProxyProvider<AuthProvider, MessagesProvider>(
           create: (_) => MessagesProvider(),
           update: (ctx, auth, prev) {
+            final mp = prev ?? MessagesProvider();
             if (auth.user != null) {
               SocketService.instance.connect(auth.user!.uid);
+              mp.fetchConversations();
+            } else {
+              mp.reset();
+              SocketService.instance.disconnect();
             }
-            return prev ?? MessagesProvider();
+            return mp;
           },
         ),
       ],

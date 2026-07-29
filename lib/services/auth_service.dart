@@ -250,11 +250,61 @@ class AuthService {
     }
   }
 
+  Future<UserSession> _buildSessionFromSupabaseUser(User u) async {
+    final meta = u.userMetadata ?? {};
+    final email = u.email ?? '';
+    final name = (meta['full_name'] ?? meta['name'] ?? (email.isNotEmpty ? email.split('@').first : 'Nexal User')) as String;
+    final username = (meta['user_name'] ?? (email.isNotEmpty ? email.split('@').first.toLowerCase() : 'user')) as String;
+    final avatar = (meta['avatar_url'] ?? meta['picture'] ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200') as String;
+
+    _currentUser = UserSession(
+      uid: u.id,
+      name: name,
+      email: email,
+      username: username,
+      avatarUrl: avatar,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_logged_in', true);
+    await prefs.setString('user_uid', _currentUser!.uid);
+    await prefs.setString('profileName', _currentUser!.name);
+    await prefs.setString('user_email', _currentUser!.email);
+    await prefs.setString('user_username', _currentUser!.username);
+    await prefs.setString('user_avatar', _currentUser!.avatarUrl);
+
+    try {
+      await _supabase.from('profiles').upsert({
+        'id': u.id,
+        'name': name,
+        'username': username,
+        'avatar_url': avatar,
+        'email': email,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (_) {}
+
+    _authStateController.add(_currentUser);
+    return _currentUser!;
+  }
+
   void _initDeepLinks() {
     try {
       final appLinks = AppLinks();
+
+      // Handle initial link when app opens from protocol scheme
+      appLinks.getInitialLink().then((uri) async {
+        if (uri != null) {
+          debugPrint('[AuthService] Initial deep link captured: $uri');
+          await handleAuthCallbackUrl(uri.toString());
+        }
+      }).catchError((e) {
+        debugPrint('[AuthService] Initial deep link error: $e');
+      });
+
+      // Handle stream links
       appLinks.uriLinkStream.listen((uri) async {
-        debugPrint('[AuthService] Deep link captured: $uri');
+        debugPrint('[AuthService] Deep link stream captured: $uri');
         await handleAuthCallbackUrl(uri.toString());
       });
     } catch (e) {
@@ -288,45 +338,19 @@ class AuthService {
 
       if (code.isNotEmpty) {
         debugPrint('[AuthService] Exchanging auth code for session: $code');
-        final res = await _supabase.auth.exchangeCodeForSession(code);
-        final u = res.session.user;
-        final meta = u.userMetadata ?? {};
-          final name = (meta['full_name'] ?? meta['name'] ?? u.email?.split('@').first ?? 'Nexal User') as String;
-          final avatar = (meta['avatar_url'] ?? meta['picture'] ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200') as String;
-          final email = u.email ?? '';
-          final username = email.contains('@') ? email.split('@').first.toLowerCase() : name.replaceAll(' ', '').toLowerCase();
-
-          _currentUser = UserSession(
-            uid: u.id,
-            name: name,
-            email: email,
-            username: username,
-            avatarUrl: avatar,
-          );
-
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('is_logged_in', true);
-          await prefs.setString('user_uid', _currentUser!.uid);
-          await prefs.setString('profileName', _currentUser!.name);
-          await prefs.setString('user_email', _currentUser!.email);
-          await prefs.setString('user_username', _currentUser!.username);
-          await prefs.setString('user_avatar', _currentUser!.avatarUrl);
-
-          try {
-            await _supabase.from('profiles').upsert({
-              'id': u.id,
-              'name': name,
-              'username': username,
-              'avatar_url': avatar,
-              'email': email,
-              'updated_at': DateTime.now().toIso8601String(),
-            });
-          } catch (_) {}
-
-          _authStateController.add(_currentUser);
-          debugPrint('[AuthService] Callback exchange successful for ${_currentUser!.email}!');
+        try {
+          final res = await _supabase.auth.exchangeCodeForSession(code);
+          await _buildSessionFromSupabaseUser(res.session.user);
           return true;
+        } catch (err) {
+          debugPrint('[AuthService] exchangeCodeForSession notice: $err');
+          final supaUser = _supabase.auth.currentUser;
+          if (supaUser != null) {
+            await _buildSessionFromSupabaseUser(supaUser);
+            return true;
+          }
         }
+      }
     } catch (e) {
       debugPrint('[AuthService] Auth callback exchange error: $e');
     }
@@ -334,23 +358,45 @@ class AuthService {
   }
 
   /// Listens for a valid authenticated session until [timeout].
-  Future<UserSession?> waitForAuthSession({Duration timeout = const Duration(seconds: 30)}) async {
+  Future<UserSession?> waitForAuthSession({Duration timeout = const Duration(seconds: 35)}) async {
     if (_currentUser != null) return _currentUser;
-    final completer = Completer<UserSession?>();
-    StreamSubscription<UserSession?>? sub;
-    sub = authStateChanges.listen((session) {
-      if (session != null && !completer.isCompleted) {
-        completer.complete(session);
-        sub?.cancel();
-      }
-    });
+    final end = DateTime.now().add(timeout);
 
-    try {
-      return await completer.future.timeout(timeout);
-    } catch (_) {
-      sub.cancel();
-      return null;
+    while (DateTime.now().isBefore(end)) {
+      if (_currentUser != null) return _currentUser;
+
+      // 1. Check active Supabase session
+      final supaSession = _supabase.auth.currentSession;
+      final supaUser = _supabase.auth.currentUser;
+      if (supaSession != null && supaUser != null && _isSessionValid(supaSession)) {
+        await _buildSessionFromSupabaseUser(supaUser);
+        return _currentUser;
+      }
+
+      // 2. Check SharedPreferences (in case another process / deep-link handler saved session)
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('is_logged_in') == true) {
+        final uid = prefs.getString('user_uid') ?? '';
+        final name = prefs.getString('profileName') ?? 'Nexal User';
+        final email = prefs.getString('user_email') ?? '';
+        final username = prefs.getString('user_username') ?? 'user';
+        final avatar = prefs.getString('user_avatar') ?? '';
+        if (uid.isNotEmpty) {
+          _currentUser = UserSession(
+            uid: uid,
+            name: name,
+            email: email,
+            username: username,
+            avatarUrl: avatar,
+          );
+          _authStateController.add(_currentUser);
+          return _currentUser;
+        }
+      }
+
+      await Future.delayed(const Duration(milliseconds: 1000));
     }
+    return _currentUser;
   }
 
   // ── Google OAuth / Native Sign-In ─────────────────────────────────────────
