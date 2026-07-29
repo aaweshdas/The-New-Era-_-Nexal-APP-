@@ -206,52 +206,109 @@ class _LoginScreenState extends State<LoginScreen>
     if (result.status == GoogleAuthStatus.pendingBrowserOAuth) {
       // Show glass authenticating dialog while waiting for OAuth completion
       bool cancelledByDialog = false;
+      final codeController = TextEditingController();
+      bool isVerifyingCode = false;
+
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (dialogCtx) => PopScope(
-          canPop: false,
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F1424).withValues(alpha: 0.90),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3), width: 1.2),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFF00E5FF).withValues(alpha: 0.15), blurRadius: 20),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: CircularProgressIndicator(color: Color(0xFF00E5FF), strokeWidth: 3),
-                      ),
-                      const SizedBox(height: 20),
-                      Text('Authenticating with Google',
-                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Text('Please complete sign-in in your browser window...',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13)),
-                      const SizedBox(height: 20),
-                      TextButton(
-                        onPressed: () {
-                          cancelledByDialog = true;
-                          Navigator.pop(dialogCtx);
-                        },
-                        child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold)),
-                      ),
-                    ],
+        builder: (dialogCtx) => StatefulBuilder(
+          builder: (context, setDialogState) => PopScope(
+            canPop: false,
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F1424).withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(color: const Color(0xFF00E5FF).withValues(alpha: 0.15), blurRadius: 20),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: CircularProgressIndicator(color: Color(0xFF00E5FF), strokeWidth: 3),
+                        ),
+                        const SizedBox(height: 18),
+                        Text('Authenticating with Google',
+                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 6),
+                        Text('Complete sign-in in your browser window. If browser fails to open app, paste the URL or code below:',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12.5)),
+                        const SizedBox(height: 14),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                          child: TextField(
+                            controller: codeController,
+                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'Paste callback URL or code here...',
+                              hintStyle: GoogleFonts.outfit(color: Colors.white38, fontSize: 12),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFFEF4444)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: () {
+                                  cancelledByDialog = true;
+                                  Navigator.pop(dialogCtx);
+                                },
+                                child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF00E5FF),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: isVerifyingCode
+                                    ? null
+                                    : () async {
+                                        final txt = codeController.text.trim();
+                                        if (txt.isEmpty) return;
+                                        setDialogState(() => isVerifyingCode = true);
+                                        final ok = await AuthService.instance.handleAuthCallbackUrl(txt);
+                                        setDialogState(() => isVerifyingCode = false);
+                                        if (ok && dialogCtx.mounted) {
+                                          Navigator.pop(dialogCtx);
+                                        }
+                                      },
+                                child: isVerifyingCode
+                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                                    : Text('Verify Code', style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

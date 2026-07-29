@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,6 +100,8 @@ class AuthService {
   SupabaseClient get _supabase => Supabase.instance.client;
 
   Future<void> init() async {
+    await _registerWindowsProtocol();
+    _initDeepLinks();
     final prefs = await SharedPreferences.getInstance();
 
     // ── Check real Supabase session first ──────────────────────────────────
@@ -231,6 +235,103 @@ class AuthService {
   }
 
   static const String googleClientId = '851929744766-b1fadinn47jjmu1mhap34knlc9h0i2tu.apps.googleusercontent.com';
+
+  Future<void> _registerWindowsProtocol() async {
+    if (kIsWeb || !Platform.isWindows) return;
+    try {
+      final exePath = Platform.resolvedExecutable;
+      const regPath = r'HKCU\Software\Classes\io.nexal.app';
+      await Process.run('reg', ['add', regPath, '/ve', '/d', 'URL:Nexal App Protocol', '/f']);
+      await Process.run('reg', ['add', regPath, '/v', 'URL Protocol', '/d', '', '/f']);
+      await Process.run('reg', ['add', '$regPath\\shell\\open\\command', '/ve', '/d', '"$exePath" "%1"', '/f']);
+      debugPrint('[AuthService] Windows protocol io.nexal.app:// registered successfully to $exePath');
+    } catch (e) {
+      debugPrint('[AuthService] Windows protocol registration notice: $e');
+    }
+  }
+
+  void _initDeepLinks() {
+    try {
+      final appLinks = AppLinks();
+      appLinks.uriLinkStream.listen((uri) async {
+        debugPrint('[AuthService] Deep link captured: $uri');
+        await handleAuthCallbackUrl(uri.toString());
+      });
+    } catch (e) {
+      debugPrint('[AuthService] AppLinks init notice: $e');
+    }
+  }
+
+  /// Exchanges redirect URL or raw authorization code for an active session.
+  Future<bool> handleAuthCallbackUrl(String rawInput) async {
+    final input = rawInput.trim();
+    if (input.isEmpty) return false;
+
+    try {
+      Uri? uri;
+      try {
+        if (input.contains('://') || input.contains('?') || input.contains('#')) {
+          uri = Uri.parse(input);
+        }
+      } catch (_) {}
+
+      String? code;
+      if (uri != null) {
+        code = uri.queryParameters['code'];
+        if (code == null && uri.fragment.isNotEmpty) {
+          final fragParams = Uri.splitQueryString(uri.fragment);
+          code = fragParams['code'];
+        }
+      }
+
+      code ??= input.split('code=').last.split('&').first.trim();
+
+      if (code.isNotEmpty) {
+        debugPrint('[AuthService] Exchanging auth code for session: $code');
+        final res = await _supabase.auth.exchangeCodeForSession(code);
+        final u = res.session.user;
+        final meta = u.userMetadata ?? {};
+          final name = (meta['full_name'] ?? meta['name'] ?? u.email?.split('@').first ?? 'Nexal User') as String;
+          final avatar = (meta['avatar_url'] ?? meta['picture'] ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200') as String;
+          final email = u.email ?? '';
+          final username = email.contains('@') ? email.split('@').first.toLowerCase() : name.replaceAll(' ', '').toLowerCase();
+
+          _currentUser = UserSession(
+            uid: u.id,
+            name: name,
+            email: email,
+            username: username,
+            avatarUrl: avatar,
+          );
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('is_logged_in', true);
+          await prefs.setString('user_uid', _currentUser!.uid);
+          await prefs.setString('profileName', _currentUser!.name);
+          await prefs.setString('user_email', _currentUser!.email);
+          await prefs.setString('user_username', _currentUser!.username);
+          await prefs.setString('user_avatar', _currentUser!.avatarUrl);
+
+          try {
+            await _supabase.from('profiles').upsert({
+              'id': u.id,
+              'name': name,
+              'username': username,
+              'avatar_url': avatar,
+              'email': email,
+              'updated_at': DateTime.now().toIso8601String(),
+            });
+          } catch (_) {}
+
+          _authStateController.add(_currentUser);
+          debugPrint('[AuthService] Callback exchange successful for ${_currentUser!.email}!');
+          return true;
+        }
+    } catch (e) {
+      debugPrint('[AuthService] Auth callback exchange error: $e');
+    }
+    return false;
+  }
 
   /// Listens for a valid authenticated session until [timeout].
   Future<UserSession?> waitForAuthSession({Duration timeout = const Duration(seconds: 30)}) async {
