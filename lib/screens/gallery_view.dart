@@ -416,11 +416,12 @@ class _GalleryViewState extends State<GalleryView> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        children: [
             // Background Image
             Positioned.fill(
               child: Image.asset(
@@ -583,7 +584,7 @@ class _GalleryViewState extends State<GalleryView> {
 
             // Premium 4-Pod Floating Glass Header
             Positioned(
-              top: 24,
+              top: topPadding + 10,
               left: 14,
               right: 14,
               child: Row(
@@ -745,7 +746,6 @@ class _GalleryViewState extends State<GalleryView> {
             ),
           ],
         ),
-      ),
     );
   }
 }

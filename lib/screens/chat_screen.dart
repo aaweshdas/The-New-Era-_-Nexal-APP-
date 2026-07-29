@@ -318,59 +318,79 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF080810),
-      body: Column(
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          _buildAppBar(),
-          Expanded(child: _buildMessageList()),
-          // Pending image preview
-          if (_pendingImage != null)
-            Container(
-              color: const Color(0xFF0d0d1a),
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(_pendingImage!, width: 60, height: 60, fit: BoxFit.cover),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text('Photo ready to send', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13))),
-                  GestureDetector(
-                    onTap: () => setState(() => _pendingImage = null),
-                    child: const Icon(LucideIcons.x, color: Colors.white38, size: 20),
-                  ),
-                ],
-              ),
+          // Message Page Background Image (MSG BG.jpg)
+          Positioned.fill(
+            child: Image.asset(
+              'assets/MSG BG.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (c, e, s) => const SizedBox.shrink(),
             ),
-          // Reply preview bar
-          if (_replyingTo != null)
-            Container(
-              color: const Color(0xFF0d0d1a),
-              padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
-              child: Row(
-                children: [
-                  Container(width: 3, height: 36, decoration: BoxDecoration(color: AppTheme.cyan500, borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Replying to ${_replyingTo!.isSent ? 'you' : widget.item.name}',
-                            style: GoogleFonts.outfit(color: AppTheme.cyan500, fontSize: 11, fontWeight: FontWeight.w600)),
-                        Text(_replyingTo!.text, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() => _replyingTo = null),
-                    child: const Icon(LucideIcons.x, color: Colors.white38, size: 18),
-                  ),
-                ],
-              ),
+          ),
+          // Dark glass vignette overlay for message readability
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.65),
             ),
-          if (_showEmoji) _buildEmojiPicker(),
-          _buildInputBar(),
+          ),
+          Column(
+            children: [
+              _buildAppBar(),
+              Expanded(child: _buildMessageList()),
+              // Pending image preview
+              if (_pendingImage != null)
+                Container(
+                  color: const Color(0xFF0d0d1a),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(_pendingImage!, width: 60, height: 60, fit: BoxFit.cover),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text('Photo ready to send', style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13))),
+                      GestureDetector(
+                        onTap: () => setState(() => _pendingImage = null),
+                        child: const Icon(LucideIcons.x, color: Colors.white38, size: 20),
+                      ),
+                    ],
+                  ),
+                ),
+              // Reply preview bar
+              if (_replyingTo != null)
+                Container(
+                  color: const Color(0xFF0d0d1a),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
+                  child: Row(
+                    children: [
+                      Container(width: 3, height: 36, decoration: BoxDecoration(color: AppTheme.cyan500, borderRadius: BorderRadius.circular(2))),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Replying to ${_replyingTo!.isSent ? 'you' : widget.item.name}',
+                                style: GoogleFonts.outfit(color: AppTheme.cyan500, fontSize: 11, fontWeight: FontWeight.w600)),
+                            Text(_replyingTo!.text, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() => _replyingTo = null),
+                        child: const Icon(LucideIcons.x, color: Colors.white38, size: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_showEmoji) _buildEmojiPicker(),
+              _buildInputBar(),
+            ],
+          ),
         ],
       ),
     );

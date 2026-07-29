@@ -421,8 +421,25 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
           child: const Icon(LucideIcons.edit2, color: Colors.white),
         ),
       ).animate().scale(duration: 500.ms, curve: Curves.elasticOut, delay: 400.ms),
-      body: CustomScrollView(
-        slivers: [
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Message Page Background Image (MSG BG.jpg)
+          Positioned.fill(
+            child: Image.asset(
+              'assets/MSG BG.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (c, e, s) => const SizedBox.shrink(),
+            ),
+          ),
+          // Dark glass vignette overlay
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.60),
+            ),
+          ),
+          CustomScrollView(
+            slivers: [
           // ── PREMIUM HEADER ──
           SliverToBoxAdapter(
             child: Padding(
@@ -781,7 +798,9 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
           ),
         ],
       ),
-    );
+    ],
+  ),
+);
   }
 
   Widget _buildPrimaryList() {
@@ -900,6 +919,11 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
 
   Widget _buildRequestsList() {
     final requests = _filteredRequests;
+    if (requests.isEmpty) {
+      return Center(
+        child: Text('No connection requests', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14)),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       itemCount: requests.length,
