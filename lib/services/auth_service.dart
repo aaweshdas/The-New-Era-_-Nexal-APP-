@@ -10,6 +10,9 @@ class UserSession {
   final String email;
   final String username;
   final String avatarUrl;
+  final String bio;
+
+  String get handle => username;
 
   UserSession({
     required this.uid,
@@ -17,12 +20,41 @@ class UserSession {
     required this.email,
     required this.username,
     required this.avatarUrl,
+    this.bio = '',
   });
+
+  UserSession copyWith({
+    String? name,
+    String? username,
+    String? avatarUrl,
+    String? bio,
+  }) {
+    return UserSession(
+      uid: uid,
+      name: name ?? this.name,
+      email: email,
+      username: username ?? this.username,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      bio: bio ?? this.bio,
+    );
+  }
 }
 
 class AuthService {
   static final AuthService instance = AuthService._internal();
   AuthService._internal();
+
+  void updateProfile({String? name, String? handle, String? avatarUrl, String? bio}) {
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
+        name: name,
+        username: handle,
+        avatarUrl: avatarUrl,
+        bio: bio,
+      );
+      _authStateController.add(_currentUser);
+    }
+  }
 
   UserSession? _currentUser;
   UserSession? get currentUser => _currentUser;

@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../services/auth_service.dart';
-import '../home_screen.dart';
+import 'profile_setup_screen.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Signup Screen
@@ -111,7 +111,10 @@ class _SignupScreenState extends State<SignupScreen>
       HapticFeedback.mediumImpact();
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
-          pageBuilder: (context, animation, _) => const HomeScreen(),
+          pageBuilder: (context, animation, _) => ProfileSetupScreen(
+            initialName: name,
+            initialEmail: email,
+          ),
           transitionsBuilder: (context, animation, _, child) =>
               FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 500),

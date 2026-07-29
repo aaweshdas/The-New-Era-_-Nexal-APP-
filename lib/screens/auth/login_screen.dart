@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../services/auth_service.dart';
 import '../home_screen.dart';
+import 'profile_setup_screen.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Unified Auth Screen - Monochrome Black & White Glassmorphism
@@ -117,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (success) {
         HapticFeedback.mediumImpact();
-        _navigateToHome();
+        _navigateToProfileSetup(name, email);
       } else {
         _showSnackBar('Signup failed. Please try again.', isError: true);
       }
@@ -146,6 +147,20 @@ class _LoginScreenState extends State<LoginScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, _) => const HomeScreen(),
+        transitionsBuilder: (context, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
+  }
+
+  void _navigateToProfileSetup(String name, String email) {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, _) => ProfileSetupScreen(
+          initialName: name,
+          initialEmail: email,
+        ),
         transitionsBuilder: (context, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 500),
