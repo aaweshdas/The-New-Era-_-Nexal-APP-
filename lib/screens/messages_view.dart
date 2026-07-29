@@ -7,10 +7,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import 'chat_screen.dart'; // To use ChatScreen
 import 'story_viewer_screen.dart'; // To view stories
 import '../services/auth_service.dart';
+import '../providers/messages_provider.dart';
 
 class MessageItem {
   final String name, avatar, message, time;
@@ -103,20 +105,19 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
     );
   }
 
-  final List<MessageItem> _primary = [
-    MessageItem(name: 'Aria Storm', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', message: 'Sent a photo', time: '2m ago', unreadCount: 2, isOnline: true, isMedia: true),
-    MessageItem(name: 'Kai Cyber', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100', message: 'Did you see the new quantum engine update? 🚀', time: '14m ago', isOnline: true),
-    MessageItem(name: 'Nova Glitch', avatar: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=100', message: 'Let\'s meet at the digital plaza tonight.', time: '1h ago'),
-    MessageItem(name: 'Zenith Prime', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', message: 'Project nebula is ready for launch.', time: '3h ago', unreadCount: 1),
-    MessageItem(name: 'Echo Vibe', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100', message: 'Listening to Deep Space Mix 🎵', time: '5h ago', isOnline: true),
-    MessageItem(name: 'Luna Ray', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', message: 'See you tomorrow!', time: '1d ago'),
-  ];
+  List<MessageItem> get _primary {
+    final msgProvider = Provider.of<MessagesProvider>(context, listen: false);
+    return msgProvider.conversations.map((c) => MessageItem(
+      name: c.name,
+      avatar: c.avatar,
+      message: c.lastMessage,
+      time: c.time,
+      unreadCount: c.unreadCount,
+      isOnline: c.isOnline,
+    )).toList();
+  }
 
-  final List<RequestItem> _requests = [
-    RequestItem(name: 'Orion Seeker', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', mutualConnections: 12),
-    RequestItem(name: 'Sol Flare', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100', mutualConnections: 5),
-    RequestItem(name: 'Lyra Star', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', mutualConnections: 24),
-  ];
+  final List<RequestItem> _requests = [];
 
   @override
   void initState() {

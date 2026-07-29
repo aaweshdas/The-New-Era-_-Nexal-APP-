@@ -171,10 +171,19 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleDemoLogin() async {
     HapticFeedback.lightImpact();
     setState(() => _isLoading = true);
-    await AuthService.instance.login('guest@nexal.space', 'demo1234');
+    final isSuccess = await AuthService.instance.login('guest@nexal.space', 'demo1234');
     if (!mounted) return;
     setState(() => _isLoading = false);
-    _navigateToHome();
+    if (isSuccess) {
+      _navigateToHome();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sign in with a real account or create a new account to continue.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   Future<void> _handleGoogleLogin() async {

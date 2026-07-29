@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/post_model.dart';
 import '../widgets/common/comment_tile.dart';
+import '../services/auth_service.dart';
+import '../services/api_service.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final PostModel post;
@@ -20,26 +22,27 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _comments.addAll([
-      CommentModel(
-        id: 'c1',
-        userName: 'Aria Storm',
-        userAvatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-        text: 'This is absolutely mind blowing! 🚀 The future is here.',
-        timeAgo: '15m ago',
-        likes: 12,
-      ),
-      CommentModel(
-        id: 'c2',
-        userName: 'Kai Cyber',
-        userAvatar:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-        text: 'Quantum engine performance looks solid ⚡',
-        timeAgo: '42m ago',
-        likes: 5,
-      ),
-    ]);
+    _fetchComments();
+  }
+
+  Future<void> _fetchComments() async {
+    try {
+      final res = await ApiService.instance.get('/api/posts/${widget.post.id}/comments');
+      if (res.statusCode == 200 && res.data is List && mounted) {
+        final list = (res.data as List).map((c) => CommentModel(
+          id: c['id'] ?? 'c_${DateTime.now().millisecondsSinceEpoch}',
+          userName: c['userName'] ?? 'User',
+          userAvatar: c['userAvatar'] ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+          text: c['text'] ?? '',
+          timeAgo: c['timeAgo'] ?? 'Just now',
+          likes: c['likes'] ?? 0,
+        )).toList();
+        setState(() {
+          _comments.clear();
+          _comments.addAll(list);
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -52,14 +55,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final text = _commentCtrl.text.trim();
     if (text.isEmpty) return;
 
+    final curUser = AuthService.instance.currentUser;
+    final name = (curUser?.name.isNotEmpty == true) ? curUser!.name : ((curUser?.username.isNotEmpty == true) ? '@${curUser!.username}' : 'You');
+    final avatar = (curUser?.avatarUrl.isNotEmpty == true) ? curUser!.avatarUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+
     setState(() {
       _comments.insert(
         0,
         CommentModel(
           id: 'c_${DateTime.now().millisecondsSinceEpoch}',
-          userName: 'Neural Nexus',
-          userAvatar:
-              'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200',
+          userName: name,
+          userAvatar: avatar,
           text: text,
           timeAgo: 'Just now',
         ),
@@ -67,6 +73,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       widget.post.commentsCount++;
       _commentCtrl.clear();
     });
+    ApiService.instance.post('/api/posts/${widget.post.id}/comments', {'text': text}).catchError((_) => null);
   }
 
   @override

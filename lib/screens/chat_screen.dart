@@ -60,8 +60,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _socketSub = SocketService.instance.onMessageReceived.listen((data) {
       final senderId = data['senderId'] as String?;
       final text = data['text'] as String?;
-      // Only show messages from the current conversation partner
-      if (senderId == widget.item.name && text != null && mounted) {
+      if ((senderId == widget.item.name || senderId == widget.item.avatar) && text != null && mounted) {
         final incoming = ChatMessage(text: text, isSent: false, time: DateTime.now());
         setState(() => _messages.add(incoming));
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());

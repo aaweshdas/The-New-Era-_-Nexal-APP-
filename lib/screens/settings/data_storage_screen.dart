@@ -11,11 +11,31 @@ class DataStorageScreen extends StatefulWidget {
 }
 
 class _DataStorageScreenState extends State<DataStorageScreen> {
-  String _cacheSize = '42.8 MB';
+  String _cacheSize = '0.0 KB';
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateCacheSize();
+  }
+
+  void _calculateCacheSize() {
+    final cache = PaintingBinding.instance.imageCache;
+    final bytes = cache.currentSizeBytes;
+    if (bytes >= 1024 * 1024) {
+      setState(() => _cacheSize = '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB');
+    } else if (bytes >= 1024) {
+      setState(() => _cacheSize = '${(bytes / 1024).toStringAsFixed(1)} KB');
+    } else {
+      setState(() => _cacheSize = '$bytes Bytes');
+    }
+  }
 
   void _clearCache() async {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
     await LocalCacheService.instance.clearCache();
-    setState(() => _cacheSize = '0.0 KB');
+    _calculateCacheSize();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

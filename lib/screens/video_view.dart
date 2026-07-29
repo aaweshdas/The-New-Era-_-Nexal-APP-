@@ -43,9 +43,17 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
 
   final _categories = ['🔥 Trending', '🎬 Sci-Fi', '📚 Documentary', '🔴 Live', '🎮 Gaming', '🎵 Music'];
 
-  final List<VideoItem> _continueWatching = [];
-  final List<VideoItem> _trending = [];
-  final List<VideoItem> _recommended = [];
+  final List<VideoItem> _continueWatching = [
+    VideoItem(id: 'v1', title: 'Quantum Neural Computing 2.0', category: 'Sci-Fi', imageUrl: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800', duration: '14:20', progress: 65, creator: 'Quantum Labs', rating: 4.9, views: '1.2M'),
+    VideoItem(id: 'v2', title: 'Deep Space Galaxy Exploration', category: 'Documentary', imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800', duration: '28:15', progress: 30, creator: 'Cosmo Horizon', rating: 4.8, views: '840K'),
+  ];
+  final List<VideoItem> _trending = [
+    VideoItem(id: 'v3', title: 'Metaverse VR World Build', category: 'Gaming', imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800', duration: '19:45', progress: 0, creator: 'Neo Nexus', rating: 4.9, views: '2.4M'),
+    VideoItem(id: 'v4', title: 'Cyberpunk Soundscapes Live', category: 'Music', imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800', duration: '45:00', progress: 0, creator: 'Synth Audio', rating: 4.7, views: '512K'),
+  ];
+  final List<VideoItem> _recommended = [
+    VideoItem(id: 'v5', title: 'AI Autonomous Agents Guide', category: 'Technology', imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800', duration: '12:10', progress: 0, creator: 'Aria Tech', rating: 5.0, views: '3.1M'),
+  ];
 
   @override
   void initState() {
@@ -142,7 +150,11 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
         children: [
-          _headerIcon(LucideIcons.arrowLeft, () => Navigator.pop(context)),
+          _headerIcon(LucideIcons.arrowLeft, () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          }),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

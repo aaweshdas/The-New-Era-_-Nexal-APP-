@@ -133,9 +133,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final newPost = PostModel(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
       userId: user?.uid ?? 'guest',
-      userName: user?.name ?? 'Neural Nexus',
-      userAvatar: user?.avatarUrl ??
-          'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200',
+      userName: (user?.name.isNotEmpty == true) ? user!.name : ((user?.username.isNotEmpty == true) ? '@${user!.username}' : 'Nexal User'),
+      userAvatar: (user?.avatarUrl.isNotEmpty == true) ? user!.avatarUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
       isVerified: true,
       content: text.isEmpty ? 'Shared a new memory ⚡' : text,
       imageUrl: imageUrl,

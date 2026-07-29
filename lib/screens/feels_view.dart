@@ -12,24 +12,34 @@ class Feel {
   final String id, userName, userAvatar, videoImage, caption, sound;
   final int likes, comments, shares;
   final bool isVerified;
-  Feel({required this.id, required this.userName, required this.userAvatar, required this.videoImage, required this.caption, required this.sound, required this.likes, required this.comments, required this.shares, this.isVerified = false});
+  Feel({
+    required this.id,
+    required this.userName,
+    required this.userAvatar,
+    required this.videoImage,
+    required this.caption,
+    required this.sound,
+    required this.likes,
+    required this.comments,
+    required this.shares,
+    this.isVerified = false,
+  });
 }
 
 class FeelsView extends StatefulWidget {
   const FeelsView({super.key});
+
   @override
   State<FeelsView> createState() => _FeelsViewState();
 }
 
 class _FeelsViewState extends State<FeelsView> {
   int _currentPage = 0;
-  /// Like indices persist in widget state — never reset unless widget disposed
   final Set<int> _likedIndices = {};
   final Set<int> _followedIndices = {};
   final Set<String> _savedFeelIds = {};
   bool _isMuted = false;
 
-  // Double-tap heart animation state
   bool _showHeart = false;
   Offset _heartPos = Offset.zero;
 
@@ -61,7 +71,43 @@ class _FeelsViewState extends State<FeelsView> {
     await _prefs?.setStringList('saved_feels', _savedFeelIds.toList());
   }
 
-  final List<Feel> _feels = [];
+  final List<Feel> _feels = [
+    Feel(
+      id: 'f1',
+      userName: 'Aria Storm',
+      userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+      videoImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000',
+      caption: 'Exploring quantum dimensions in the neural space ✨ #Nexal #AI',
+      sound: 'Original Audio - Aria Storm 🎵',
+      likes: 14200,
+      comments: 382,
+      shares: 124,
+      isVerified: true,
+    ),
+    Feel(
+      id: 'f2',
+      userName: 'Kai Cyber',
+      userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+      videoImage: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1000',
+      caption: 'Cyberpunk cityscape rendering test with raytracing enabled 🌃🚀',
+      sound: 'Cyberpunk Beats 2077 ⚡',
+      likes: 28900,
+      comments: 912,
+      shares: 430,
+      isVerified: true,
+    ),
+    Feel(
+      id: 'f3',
+      userName: 'Luna Ray',
+      userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
+      videoImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1000',
+      caption: 'Virtual reality flight dynamics in 120FPS ultra resolution 🎮✨',
+      sound: 'Deep Space Soundscape 🌌',
+      likes: 9500,
+      comments: 210,
+      shares: 88,
+    ),
+  ];
 
   String _fmtNum(int n) {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
@@ -69,213 +115,223 @@ class _FeelsViewState extends State<FeelsView> {
     return '$n';
   }
 
-  void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: GoogleFonts.outfit()), backgroundColor: const Color(0xFF1a1a2e), behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))));
+  void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg, style: GoogleFonts.outfit()),
+          backgroundColor: const Color(0xFF1a1a2e),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+
+  Widget _sideAction(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 26, color: color, shadows: const [Shadow(color: Colors.black, blurRadius: 6)]),
+          if (label.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(label, style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600, shadows: [const Shadow(color: Colors.black, blurRadius: 4)])),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _glassBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _feels.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(LucideIcons.film, color: Colors.white24, size: 56),
-                  const SizedBox(height: 16),
-                  Text('No Feels Reels Yet', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text('Tap camera to record & share your first video reel!', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
-                ],
-              ),
-            )
-          : NotificationListener<ScrollUpdateNotification>(
-              onNotification: (notif) {
-                final newPage = (notif.metrics.pixels / screenHeight).round();
-                if (newPage != _currentPage && newPage >= 0 && newPage < _feels.length) {
-                  setState(() => _currentPage = newPage);
-                }
-                return false;
-              },
-              child: ListView.builder(
-                physics: const PageScrollPhysics(),
-                itemExtent: screenHeight,
-                itemCount: _feels.length,
-          itemBuilder: (context, index) {
-          final feel = _feels[index];
-          final isLiked = _likedIndices.contains(index);
-          final isFollowed = _followedIndices.contains(index);
-          return RepaintBoundary(child: Stack(fit: StackFit.expand, children: [
-            // ── Background image ──
-            CachedNetworkImage(imageUrl: feel.videoImage, fit: BoxFit.cover, errorWidget: (c, url, error) => Container(color: Colors.grey[900], child: const Center(child: Icon(LucideIcons.film, color: Colors.white24, size: 48)))),
-
-            // ── Gradient overlays ──
-            Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.center, colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent]))),
-            Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.center, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.85)]))),
-
-            // ── Double-tap to like (with heart animation) ──
-            Positioned.fill(child: GestureDetector(
-              onDoubleTapDown: (details) {
-                HapticFeedback.mediumImpact();
-                final pos = details.localPosition;
-                setState(() {
-                  _likedIndices.add(index);
-                  _heartPos = pos;
-                  _showHeart = true;
-                });
-                Future.delayed(const Duration(milliseconds: 800), () {
-                  if (mounted) setState(() => _showHeart = false);
-                });
-              },
-              onDoubleTap: () {},
-              child: Container(color: Colors.transparent),
-            )),
-
-            // ── Heart burst animation ──
-            if (_showHeart && _currentPage == index)
-              Positioned(
-                left: _heartPos.dx - 40,
-                top: _heartPos.dy - 40,
-                child: const Icon(LucideIcons.heart, color: Colors.redAccent, size: 80)
-                    .animate()
-                    .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.3, 1.3), duration: 300.ms, curve: Curves.easeOut)
-                    .then()
-                    .fadeOut(duration: 400.ms),
-              ),
-
-            // ── Top bar ──
-            Positioned(top: 0, left: 0, right: 0, child: SafeArea(bottom: false, child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(children: [
-                _glassBtn(LucideIcons.arrowLeft, () { if (Navigator.canPop(context)) Navigator.pop(context); }),
-                const Spacer(),
-                Text('Reels', style: GoogleFonts.rye(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-                const Spacer(),
-                _glassBtn(_isMuted ? LucideIcons.volumeX : LucideIcons.volume2, () => setState(() => _isMuted = !_isMuted)),
-              ]),
-            ).animate().fadeIn(duration: 400.ms))),
-
-            // ── Right sidebar ──
-            Positioned(right: 12, bottom: 160, child: Column(mainAxisSize: MainAxisSize.min, children: [
-              // Avatar + follow
-              Stack(clipBehavior: Clip.none, children: [
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: [AppTheme.purple500, AppTheme.pink500])),
-                  child: CircleAvatar(radius: 20, backgroundImage: CachedNetworkImageProvider(feel.userAvatar), backgroundColor: Colors.grey[900]),
-                ),
-                if (!isFollowed) Positioned(bottom: -6, left: 0, right: 0, child: Center(child: GestureDetector(
-                  onTap: () => setState(() { _followedIndices.add(index); _snack('Following ${feel.userName}'); }),
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(color: AppTheme.cyan500, shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
-                    child: const Icon(LucideIcons.plus, color: Colors.white, size: 10),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          _feels.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.film, color: Colors.white24, size: 56),
+                      const SizedBox(height: 16),
+                      Text('No Feels Reels Yet', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Text('Tap camera to record & share your first video reel!', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
+                    ],
                   ),
-                ))),
-              ]),
-              const SizedBox(height: 22),
-
-              // Like
-              _sideAction(isLiked ? LucideIcons.heart : LucideIcons.heart, _fmtNum(feel.likes + (isLiked ? 1 : 0)), isLiked ? AppTheme.pink500 : Colors.white, () => setState(() {
-                if (isLiked) {
-                  _likedIndices.remove(index);
-                } else {
-                  _likedIndices.add(index);
-                }
-              })),
-              const SizedBox(height: 18),
-
-              // Comment
-              _sideAction(LucideIcons.messageCircle, _fmtNum(feel.comments), Colors.white, () => _showComments(feel)),
-              const SizedBox(height: 18),
-
-              // Share
-              _sideAction(LucideIcons.share2, _fmtNum(feel.shares), Colors.white, () => _showShareSheet(feel)),
-              const SizedBox(height: 18),
-
-              // Bookmark — now persisted
-              (() {
-                final isSaved = _savedFeelIds.contains(feel.id);
-                return _sideAction(
-                  LucideIcons.bookmark,
-                  isSaved ? 'Saved' : 'Save',
-                  isSaved ? AppTheme.cyan500 : Colors.white,
-                  () async {
-                    await _toggleSaveFeel(feel.id);
-                    if (mounted) _snack(_savedFeelIds.contains(feel.id) ? '✅ Saved to collection' : 'Removed from saved');
+                )
+              : NotificationListener<ScrollUpdateNotification>(
+                  onNotification: (notif) {
+                    final newPage = (notif.metrics.pixels / screenHeight).round();
+                    if (newPage != _currentPage && newPage >= 0 && newPage < _feels.length) {
+                      setState(() => _currentPage = newPage);
+                    }
+                    return false;
                   },
-                );
-              })(),
-              const SizedBox(height: 18),
+                  child: ListView.builder(
+                    physics: const PageScrollPhysics(),
+                    itemExtent: screenHeight,
+                    itemCount: _feels.length,
+                    itemBuilder: (context, index) {
+                      final feel = _feels[index];
+                      final isLiked = _likedIndices.contains(index);
+                      final isFollowed = _followedIndices.contains(index);
+                      return RepaintBoundary(child: Stack(fit: StackFit.expand, children: [
+                        // ── Background image ──
+                        CachedNetworkImage(imageUrl: feel.videoImage, fit: BoxFit.cover, errorWidget: (c, url, error) => Container(color: Colors.grey[900], child: const Center(child: Icon(LucideIcons.film, color: Colors.white24, size: 48)))),
 
-              // More
-              _sideAction(LucideIcons.moreHorizontal, '', Colors.white, () => _showMoreOptions(feel)),
-            ]).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.3, end: 0, duration: 400.ms)),
+                        // ── Gradient overlays ──
+                        Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.center, colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent]))),
+                        Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.center, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.85)]))),
 
-            // ── Bottom info ──
-            Positioned(left: 14, right: 70, bottom: 90, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Username
-              Row(children: [
-                CircleAvatar(radius: 14, backgroundImage: CachedNetworkImageProvider(feel.userAvatar), backgroundColor: Colors.grey[900]),
-                const SizedBox(width: 8),
-                Text(feel.userName, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white, shadows: [const Shadow(color: Colors.black, blurRadius: 4)])),
-                if (feel.isVerified) ...[const SizedBox(width: 4), Container(padding: const EdgeInsets.all(1), decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.cyan500), child: const Icon(LucideIcons.check, color: Colors.white, size: 10))],
-                if (isFollowed) ...[const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Text('Following', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 10)))],
-              ]),
-              const SizedBox(height: 8),
-              // Caption
-              Text(feel.caption, style: GoogleFonts.outfit(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), height: 1.3, shadows: [const Shadow(color: Colors.black, blurRadius: 4)])),
-              const SizedBox(height: 10),
-              // Sound
-              GestureDetector(
-                onTap: () => _snack('🎵 ${feel.sound}'),
-                child: Row(children: [
-                  const Icon(LucideIcons.music, color: Colors.white54, size: 12),
-                  const SizedBox(width: 6),
-                  Expanded(child: Text(feel.sound, style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11), overflow: TextOverflow.ellipsis)),
-                ]),
+                        // ── Double-tap to like ──
+                        Positioned.fill(child: GestureDetector(
+                          onDoubleTapDown: (details) {
+                            HapticFeedback.mediumImpact();
+                            final pos = details.localPosition;
+                            setState(() {
+                              _likedIndices.add(index);
+                              _heartPos = pos;
+                              _showHeart = true;
+                            });
+                            Future.delayed(const Duration(milliseconds: 800), () {
+                              if (mounted) setState(() => _showHeart = false);
+                            });
+                          },
+                          onDoubleTap: () {},
+                          child: Container(color: Colors.transparent),
+                        )),
+
+                        // ── Heart burst animation ──
+                        if (_showHeart && _currentPage == index)
+                          Positioned(
+                            left: _heartPos.dx - 40,
+                            top: _heartPos.dy - 40,
+                            child: const Icon(LucideIcons.heart, color: Colors.redAccent, size: 80)
+                                .animate()
+                                .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.3, 1.3), duration: 300.ms, curve: Curves.easeOut)
+                                .then()
+                                .fadeOut(duration: 400.ms),
+                          ),
+
+                        // ── Right sidebar ──
+                        Positioned(right: 12, bottom: 160, child: Column(mainAxisSize: MainAxisSize.min, children: [
+                          _avatarWithFollow(feel, isFollowed, index),
+                          const SizedBox(height: 20),
+                          _sideAction(isLiked ? LucideIcons.heart : LucideIcons.heart, _fmtNum(feel.likes + (isLiked ? 1 : 0)), isLiked ? Colors.redAccent : Colors.white, () {
+                            setState(() { isLiked ? _likedIndices.remove(index) : _likedIndices.add(index); });
+                          }),
+                          const SizedBox(height: 18),
+                          _sideAction(LucideIcons.messageCircle, _fmtNum(feel.comments), Colors.white, () => _showComments(feel)),
+                          const SizedBox(height: 18),
+                          _sideAction(LucideIcons.send, _fmtNum(feel.shares), Colors.white, () => _showShareSheet(feel)),
+                          const SizedBox(height: 18),
+                          _sideAction(_savedFeelIds.contains(feel.id) ? LucideIcons.bookmarkCheck : LucideIcons.bookmark, 'Save', _savedFeelIds.contains(feel.id) ? AppTheme.cyan500 : Colors.white, () => _toggleSaveFeel(feel.id)),
+                          const SizedBox(height: 18),
+                          _sideAction(LucideIcons.ellipsis, 'More', Colors.white, () => _showMoreOptions(feel)),
+                        ])),
+
+                        // ── Bottom left caption & audio ──
+                        Positioned(left: 16, right: 80, bottom: 40, child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                          Row(children: [
+                            Text('@${feel.userName}', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                            if (feel.isVerified) ...[const SizedBox(width: 4), const Icon(Icons.verified, color: AppTheme.cyan500, size: 16)],
+                          ]),
+                          const SizedBox(height: 8),
+                          Text(feel.caption, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
+                          const SizedBox(height: 10),
+                          Row(children: [
+                            const Icon(LucideIcons.music2, color: Colors.white70, size: 14),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(feel.sound, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12))),
+                          ]),
+                        ])),
+                      ]));
+                    },
+                  ),
+                ),
+
+          // ── Persistent Always-Visible Top Bar with Guaranteed Back Button ──
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    _glassBtn(LucideIcons.arrowLeft, () {
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    }),
+                    const Spacer(),
+                    Text('Feels Reels', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    _glassBtn(_isMuted ? LucideIcons.volumeX : LucideIcons.volume2, () => setState(() => _isMuted = !_isMuted)),
+                  ],
+                ),
               ),
-            ]).animate().fadeIn(delay: 150.ms, duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms)),
-
-            // ── Progress bar ──
-            Positioned(bottom: 76, left: 0, right: 0, child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: ClipRRect(borderRadius: BorderRadius.circular(2), child: LinearProgressIndicator(value: 0.65, minHeight: 2, backgroundColor: Colors.white.withValues(alpha: 0.15), color: AppTheme.cyan500)),
-            )),
-
-            // ── Page indicator ──
-            Positioned(right: 4, top: MediaQuery.paddingOf(context).top + 50, child: Column(children: List.generate(_feels.length, (i) => Container(
-              width: 3, height: i == _currentPage ? 16 : 6,
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              decoration: BoxDecoration(color: i == _currentPage ? AppTheme.cyan500 : Colors.white24, borderRadius: BorderRadius.circular(2)),
-            )))),
-          ]));
-        },
-      ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ── SIDE ACTION ──
-  Widget _sideAction(IconData icon, String label, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 26, color: color, shadows: const [Shadow(color: Colors.black, blurRadius: 6)]),
-        if (label.isNotEmpty) ...[const SizedBox(height: 3), Text(label, style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600, shadows: [const Shadow(color: Colors.black, blurRadius: 4)]))],
-      ]),
-    );
-  }
-
-  // ── GLASS BUTTON ──
-  Widget _glassBtn(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(borderRadius: BorderRadius.circular(30), child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3), shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ))),
+  Widget _avatarWithFollow(Feel feel, bool isFollowed, int index) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(2),
+          decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [AppTheme.purple500, AppTheme.pink500])),
+          child: CircleAvatar(radius: 20, backgroundImage: CachedNetworkImageProvider(feel.userAvatar), backgroundColor: Colors.grey[900]),
+        ),
+        if (!isFollowed)
+          Positioned(
+            bottom: -6,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  _followedIndices.add(index);
+                  _snack('Following ${feel.userName}');
+                }),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(color: AppTheme.cyan500, shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
+                  child: const Icon(LucideIcons.plus, color: Colors.white, size: 10),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -288,9 +344,12 @@ class _FeelsViewState extends State<FeelsView> {
       {'user': 'VoidRunner', 'text': 'Song name please? 🎵', 'likes': '456', 'time': '7h'},
       {'user': 'StarChild', 'text': 'Making this my wallpaper', 'likes': '234', 'time': '12h'},
     ];
-    showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) => DraggableScrollableSheet(
-      initialChildSize: 0.55, minChildSize: 0.3, maxChildSize: 0.85,
-      builder: (c, ctrl) => Container(
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        builder: (c, ctrl) => Container(
         decoration: const BoxDecoration(color: Color(0xFF0d0d1a), borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
         child: Column(children: [
           const SizedBox(height: 10),

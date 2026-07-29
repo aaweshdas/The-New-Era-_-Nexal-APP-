@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../services/socket_service.dart';
 
 class StoryItem {
   final String userName;
@@ -270,7 +271,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         icon: const Icon(LucideIcons.send,
                             color: Color(0xFF00E5FF)),
                         onPressed: () {
-                          if (_replyCtrl.text.isNotEmpty) {
+                          final replyText = _replyCtrl.text.trim();
+                          if (replyText.isNotEmpty) {
+                            if (SocketService.instance.isConnected) {
+                              SocketService.instance.sendMessage(story.userName, 'Replied to story: "$replyText"');
+                            }
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Reply sent to ${story.userName}',

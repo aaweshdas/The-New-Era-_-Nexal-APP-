@@ -7,7 +7,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/app_theme.dart';
 import '../theme/cached_styles.dart';
@@ -22,6 +21,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import '../models/post_model.dart';
 import '../providers/feed_provider.dart';
+import '../services/auth_service.dart';
 // ignore: unused_import
 import '../providers/messages_provider.dart';
 
@@ -96,29 +96,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _pulseController;
   late AnimationController _headerGlowController;
-  Timer? _newPostsTimer;
-
-  Future<void> _loadBookmarks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList('home_bookmarked_posts') ?? [];
-    if (mounted) {
-      setState(() {
-        _bookmarkedPosts.addAll(list);
-      });
-    }
-  }
-
-  Future<void> _saveBookmarks() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('home_bookmarked_posts', _bookmarkedPosts.toList());
-  }
 
   final List<Post> _pendingNewPosts = [];
-  final List<_Story> _stories = [
-    _Story(name: 'Your Story', avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', isOwn: true),
-  ];
-  final List<_SuggestedUser> _suggestedUsers = [];
+  
+  List<_Story> get _stories {
+    final cur = AuthService.instance.currentUser;
+    final avatar = cur?.avatarUrl.isNotEmpty == true ? cur!.avatarUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+    return [
+      _Story(name: 'Your Story', avatarUrl: avatar, isOwn: true),
+    ];
+  }
 
+  final List<_SuggestedUser> _suggestedUsers = [];
   final List<Post> _forYouPosts = [];
 
   /// Converts live PostModel objects from FeedProvider to local Post objects
@@ -154,26 +143,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _loadBookmarks();
-    // Use FeedProvider's loading state; stop shimmer after initial fetch
-    // Capture provider reference synchronously to avoid BuildContext across async gaps
     final feedProvider = Provider.of<FeedProvider>(context, listen: false);
     Future.microtask(() {
       if (!feedProvider.isLoading) {
         if (mounted) setState(() => _isLoading = false);
       } else {
-        // Listen for when feed finishes loading
         feedProvider.addListener(_onFeedLoaded);
-      }
-    });
-    // Schedule new-posts banner wave after 30s (simulates real new content arriving)
-    _newPostsTimer = Timer(const Duration(seconds: 30), () {
-      if (mounted) {
-        final count = math.Random().nextInt(3) + 1;
-        setState(() {
-          _pendingNewPostsCount = count;
-          _showNewPostsBanner = true;
-        });
       }
     });
     _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))..repeat(reverse: true);
@@ -217,16 +192,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       _showNewPostsBanner = false;
     });
     _scrollToTop();
-    // Schedule next banner wave
-    _newPostsTimer = Timer(const Duration(seconds: 30), () {
-      if (mounted) {
-        final count = math.Random().nextInt(4) + 1;
-        setState(() {
-          _pendingNewPostsCount = count;
-          _showNewPostsBanner = true;
-        });
-      }
-    });
   }
 
   Future<void> _onRefresh() async {
@@ -283,7 +248,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _pulseController.dispose();
     _headerGlowController.dispose();
     _searchController.dispose();
-    _newPostsTimer?.cancel();
     super.dispose();
   }
 
@@ -957,15 +921,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     label: isBookmarked ? 'Bookmarked' : 'Save Post',
                     accentColor: isBookmarked ? AppTheme.cyan500 : AppTheme.purple500,
                     isActive: isBookmarked,
-                    onTap: () async {
+                    onTap: () {
                       HapticFeedback.lightImpact();
-                      if (isBookmarked) {
-                        _bookmarkedPosts.remove(post.id);
-                      } else {
-                        _bookmarkedPosts.add(post.id);
-                      }
-                      await _saveBookmarks();
-                      setState(() {});
+                      Provider.of<FeedProvider>(context, listen: false).toggleBookmark(post.id);
                       if (mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(

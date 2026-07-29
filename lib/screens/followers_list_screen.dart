@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../services/supabase_service.dart';
 
 class FollowersListScreen extends StatefulWidget {
   final String title;
@@ -16,32 +17,36 @@ class FollowersListScreen extends StatefulWidget {
 class _FollowersListScreenState extends State<FollowersListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
-
-  final List<Map<String, String>> _users = [
-    {
-      'id': 'u1',
-      'name': 'Aria Storm',
-      'handle': '@ariastorm',
-      'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    },
-    {
-      'id': 'u2',
-      'name': 'Kai Cyber',
-      'handle': '@kaicyber',
-      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    },
-    {
-      'id': 'u3',
-      'name': 'Luna Ray',
-      'handle': '@lunaray',
-      'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-    },
-  ];
+  final List<Map<String, String>> _users = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      final res = await SupabaseService.client.from('profiles').select().limit(20);
+      if (mounted) {
+        setState(() {
+          _users.clear();
+          for (var item in res) {
+            _users.add({
+              'id': item['id']?.toString() ?? 'u_${DateTime.now().millisecondsSinceEpoch}',
+              'name': item['name']?.toString() ?? 'Nexal User',
+              'handle': '@${item['username'] ?? "user"}',
+              'avatar': item['avatar_url']?.toString() ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+            });
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -120,6 +125,11 @@ class _FollowersListScreenState extends State<FollowersListScreen>
   }
 
   Widget _buildUserList(UserProvider userProvider) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF00E5FF)),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _users.length,

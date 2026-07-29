@@ -14,7 +14,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:largeHeap="true"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
         <!-- Force Impeller to use OpenGL ES instead of Vulkan.
              Fixes SIGABRT crash in libGLES_mali.so (pthread_mutex_lock on
              destroyed mutex) that occurs on Mali GPU devices (Redmi/Xiaomi)

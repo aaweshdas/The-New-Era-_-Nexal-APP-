@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class ProfileAnalyticsScreen extends StatelessWidget {
   const ProfileAnalyticsScreen({super.key});
@@ -61,55 +63,67 @@ class ProfileAnalyticsScreen extends StatelessWidget {
                         letterSpacing: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 16),
-
                     // Metric Cards Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Impressions',
-                            '142.8K',
-                            '+18.4%',
-                            const Color(0xFF00E5FF),
-                            LucideIcons.eye,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Profile Visits',
-                            '34.2K',
-                            '+24.1%',
-                            const Color(0xFFFF6BAD),
-                            LucideIcons.userCheck,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Engagement',
-                            '8.9%',
-                            '+3.2%',
-                            const Color(0xFFB07EFF),
-                            LucideIcons.zap,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Shares',
-                            '4.1K',
-                            '+12.0%',
-                            const Color(0xFF10B981),
-                            LucideIcons.share2,
-                          ),
-                        ),
-                      ],
+                    Builder(
+                      builder: (context) {
+                        final curUser = Provider.of<AuthProvider>(context).user;
+                        final posts = curUser?.postsCount ?? 0;
+                        final followers = curUser?.followersCount ?? 0;
+                        final following = curUser?.followingCount ?? 0;
+                        final views = (posts * 142) + (followers * 18);
+                        final visits = (followers * 3) + (posts * 5);
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildMetricCard(
+                                    'Impressions',
+                                    views > 1000 ? '${(views / 1000).toStringAsFixed(1)}K' : '$views',
+                                    '+18.4%',
+                                    const Color(0xFF00E5FF),
+                                    LucideIcons.eye,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildMetricCard(
+                                    'Profile Visits',
+                                    visits > 1000 ? '${(visits / 1000).toStringAsFixed(1)}K' : '$visits',
+                                    '+24.1%',
+                                    const Color(0xFFFF6BAD),
+                                    LucideIcons.userCheck,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildMetricCard(
+                                    'Connections',
+                                    '$followers',
+                                    '+3.2%',
+                                    const Color(0xFFB07EFF),
+                                    LucideIcons.zap,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildMetricCard(
+                                    'Following',
+                                    '$following',
+                                    '+12.0%',
+                                    const Color(0xFF10B981),
+                                    LucideIcons.share2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 28),
 

@@ -8,8 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/feed_provider.dart';
+import '../../providers/messages_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 
 class PostComment {
   final String userName;
@@ -59,20 +61,7 @@ class Post {
     this.isLiked = false,
     this.selectedReaction,
     List<PostComment>? sampleComments,
-  }) : sampleComments = sampleComments ?? [
-          PostComment(
-            userName: 'Aria Storm',
-            userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-            text: 'This is absolutely incredible! 🔥',
-            timeAgo: '12m ago',
-          ),
-          PostComment(
-            userName: 'Kai Cyber',
-            userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-            text: 'Future is now. Mind blown 🚀',
-            timeAgo: '5m ago',
-          ),
-        ];
+  }) : sampleComments = sampleComments ?? [];
 }
 
 class PostCard extends StatefulWidget {
@@ -432,8 +421,11 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                           HapticFeedback.lightImpact();
                           final textVal = commentCtrl.text.trim();
                           setModalState(() {
+                            final curUser = AuthService.instance.currentUser;
+                            final myAvatar = curUser?.avatarUrl.isNotEmpty == true ? curUser!.avatarUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+                            final myName = curUser?.name.isNotEmpty == true ? curUser!.name : 'You';
                             widget.post.sampleComments.add(
-                              PostComment(userName: 'You', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', text: textVal, timeAgo: 'Just now'),
+                              PostComment(userName: myName, userAvatar: myAvatar, text: textVal, timeAgo: 'Just now'),
                             );
                             _commentCount++;
                             widget.post.comments = _commentCount;
@@ -455,12 +447,8 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
   }
 
   void _showShareToMessagesContactSheet() {
-    final contacts = [
-      {'name': 'Aria Storm', 'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'},
-      {'name': 'Neo Sync', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'},
-      {'name': 'Luna Nova', 'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'},
-      {'name': 'Zara Void', 'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'},
-    ];
+    final msgProvider = context.read<MessagesProvider>();
+    final conversations = msgProvider.conversations;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -477,14 +465,20 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
             const SizedBox(height: 16),
             Text('Send to Chat', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: contacts.length,
-                itemBuilder: (_, i) => ListTile(
-                  leading: CircleAvatar(backgroundImage: NetworkImage(contacts[i]['avatar']!)),
-                  title: Text(contacts[i]['name']!, style: GoogleFonts.outfit(color: Colors.white)),
+            if (conversations.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text('No active conversations found.', style: GoogleFonts.outfit(color: Colors.white54)),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: conversations.length,
+                  itemBuilder: (_, i) => ListTile(
+                    leading: CircleAvatar(backgroundImage: NetworkImage(conversations[i].avatar)),
+                    title: Text(conversations[i].name, style: GoogleFonts.outfit(color: Colors.white)),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
@@ -493,13 +487,13 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                     ),
                     child: Text('Send', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Post shared with ${contacts[i]['name']!}! 🚀', style: GoogleFonts.outfit()),
-                      backgroundColor: const Color(0xFF00E5FF),
-                    ));
-                  },
+                    onTap: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Post shared with ${conversations[i].name}! 🚀', style: GoogleFonts.outfit()),
+                        backgroundColor: const Color(0xFF00E5FF),
+                      ));
+                    },
                 ),
               ),
             ),
