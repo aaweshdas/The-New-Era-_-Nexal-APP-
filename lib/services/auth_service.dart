@@ -40,6 +40,37 @@ class UserSession {
   }
 }
 
+enum GoogleAuthStatus {
+  success,
+  cancelled,
+  pendingBrowserOAuth,
+  error,
+}
+
+class GoogleAuthResult {
+  final GoogleAuthStatus status;
+  final String? message;
+  final UserSession? user;
+
+  const GoogleAuthResult({
+    required this.status,
+    this.message,
+    this.user,
+  });
+
+  factory GoogleAuthResult.success(UserSession user) =>
+      GoogleAuthResult(status: GoogleAuthStatus.success, user: user);
+
+  factory GoogleAuthResult.cancelled() =>
+      const GoogleAuthResult(status: GoogleAuthStatus.cancelled, message: 'Google Sign-In was cancelled.');
+
+  factory GoogleAuthResult.pendingBrowserOAuth() =>
+      const GoogleAuthResult(status: GoogleAuthStatus.pendingBrowserOAuth, message: 'OAuth launched in browser. Awaiting authentication response...');
+
+  factory GoogleAuthResult.error(String message) =>
+      GoogleAuthResult(status: GoogleAuthStatus.error, message: message);
+}
+
 class AuthService {
   static final AuthService instance = AuthService._internal();
   AuthService._internal();
@@ -198,37 +229,6 @@ class AuthService {
     _authStateController.add(_currentUser);
     return true;
   }
-
-enum GoogleAuthStatus {
-  success,
-  cancelled,
-  pendingBrowserOAuth,
-  error,
-}
-
-class GoogleAuthResult {
-  final GoogleAuthStatus status;
-  final String? message;
-  final UserSession? user;
-
-  const GoogleAuthResult({
-    required this.status,
-    this.message,
-    this.user,
-  });
-
-  factory GoogleAuthResult.success(UserSession user) =>
-      GoogleAuthResult(status: GoogleAuthStatus.success, user: user);
-
-  factory GoogleAuthResult.cancelled() =>
-      const GoogleAuthResult(status: GoogleAuthStatus.cancelled, message: 'Google Sign-In was cancelled.');
-
-  factory GoogleAuthResult.pendingBrowserOAuth() =>
-      const GoogleAuthResult(status: GoogleAuthStatus.pendingBrowserOAuth, message: 'OAuth launched in browser. Awaiting authentication response...');
-
-  factory GoogleAuthResult.error(String message) =>
-      GoogleAuthResult(status: GoogleAuthStatus.error, message: message);
-}
 
   static const String googleClientId = '851929744766-b1fadinn47jjmu1mhap34knlc9h0i2tu.apps.googleusercontent.com';
 
