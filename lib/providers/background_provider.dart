@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/auth_service.dart';
+
 // Background types supported
 enum BackgroundType { defaultVideo, customVideo, customImage, assetVideo, assetImage }
 
@@ -37,9 +39,18 @@ class BackgroundItem {
 }
 
 class BackgroundProvider extends ChangeNotifier {
-  static const String _activeKey   = 'bg_active_path';
-  static const String _activeType  = 'bg_active_type';
-  static const String _libraryKey  = 'bg_library';
+  String get _activeKey {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    return uid.isNotEmpty ? 'bg_active_path_$uid' : 'bg_active_path';
+  }
+  String get _activeType {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    return uid.isNotEmpty ? 'bg_active_type_$uid' : 'bg_active_type';
+  }
+  String get _libraryKey {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    return uid.isNotEmpty ? 'bg_library_$uid' : 'bg_library';
+  }
 
   // Active background
   BackgroundType activeType   = BackgroundType.assetImage;
@@ -55,6 +66,13 @@ class BackgroundProvider extends ChangeNotifier {
   Future<SharedPreferences> _getPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
+  }
+
+  void reset() {
+    activeType = BackgroundType.assetImage;
+    activePath = 'assets/backgrounds/21.jpg';
+    library = _getDefaultPreseededLibrary();
+    notifyListeners();
   }
 
   Future<void> load() async {

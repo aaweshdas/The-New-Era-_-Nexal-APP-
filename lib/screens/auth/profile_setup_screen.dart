@@ -51,12 +51,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400',
   ];
 
-  // Interests Selection State
-  final Set<String> _selectedInterests = {
-    '🤖 AI & Neural',
-    '⚡ Quantum Tech',
-    '🚀 Space Exploration',
-  };
+  // Interests Selection State (empty by default for new accounts)
+  final Set<String> _selectedInterests = {};
 
   final List<String> _allInterests = [
     '🤖 AI & Neural',
@@ -86,12 +82,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (baseUsername.isEmpty) baseUsername = 'nexaluser';
     _usernameCtrl = TextEditingController(text: current?.handle ?? '@$baseUsername');
 
-    _bioCtrl = TextEditingController(text: current?.bio ?? 'Exploring the quantum frontier on Nexal 🚀');
-    _locationCtrl = TextEditingController(text: 'Neo Tokyo');
+    _bioCtrl = TextEditingController(text: current?.bio ?? '');
+    _locationCtrl = TextEditingController(text: '');
     _websiteCtrl = TextEditingController(text: '');
-    _pronounsCtrl = TextEditingController(text: 'They/Them');
+    _pronounsCtrl = TextEditingController(text: '');
 
-    _selectedAvatarUrl = widget.initialAvatarUrl ?? current?.avatarUrl ?? _presetAvatars.first;
+    _selectedAvatarUrl = widget.initialAvatarUrl ?? (current?.avatarUrl.isNotEmpty == true ? current?.avatarUrl : _presetAvatars.first);
   }
 
   @override
@@ -147,6 +143,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
+  void _skipSetup() {
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, _) => const HomeScreen(),
+        transitionsBuilder: (context, animation, _, child) => FadeTransition(opacity: animation, child: child),
+        transitionDuration: 500.ms,
+      ),
+      (route) => false,
+    );
+  }
+
   Future<void> _completeProfileSetup() async {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
@@ -163,8 +170,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       final location = _locationCtrl.text.trim();
       final website = _websiteCtrl.text.trim();
 
-      // Final avatar URL or fallback
-      final avatarUrl = _selectedAvatarUrl ?? _presetAvatars.first;
+      String avatarUrl = _selectedAvatarUrl ?? _presetAvatars.first;
+
+      // H4 Fix: Upload picked file to Supabase Storage if user chose a custom image
+      if (_selectedImageFile != null && userId != null) {
+        try {
+          final ext = _selectedImageFile!.path.split('.').last;
+          final storagePath = '$userId/avatar_${DateTime.now().millisecondsSinceEpoch}.$ext';
+          await supabase.storage.from('avatars').upload(storagePath, _selectedImageFile!, fileOptions: const FileOptions(upsert: true));
+          avatarUrl = supabase.storage.from('avatars').getPublicUrl(storagePath);
+        } catch (uploadErr) {
+          debugPrint('[ProfileSetup Image Upload Warning] $uploadErr');
+        }
+      }
 
       if (userId != null) {
         await supabase.from('profiles').upsert({
@@ -177,6 +195,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           'location': location,
           'website': website,
           'interests': _selectedInterests.toList(),
+          'onboarding_done': true,
           'updated_at': DateTime.now().toIso8601String(),
         });
       }
@@ -292,7 +311,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           ),
 
                           TextButton(
-                            onPressed: _completeProfileSetup,
+                            onPressed: _skipSetup,
                             child: Text(
                               'Skip',
                               style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),

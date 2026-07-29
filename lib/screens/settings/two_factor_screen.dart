@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/auth_service.dart';
 
 class TwoFactorScreen extends StatefulWidget {
   const TwoFactorScreen({super.key});
@@ -29,8 +30,10 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
   }
 
   Future<void> _loadState() async {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _is2FAEnabled = prefs.getBool('2fa_enabled') ?? false);
+    setState(() => _is2FAEnabled = prefs.getBool('2fa_enabled_$uid') ?? false);
   }
 
   String _generateSecret() {
@@ -40,15 +43,18 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
   }
 
   Future<void> _toggle2FA(bool value) async {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
     if (value && !_is2FAEnabled) {
       final secret = _generateSecret();
-      final uri = 'otpauth://totp/Nexal:user@nexal.space?secret=$secret&issuer=Nexal&algorithm=SHA1&digits=6&period=30';
+      final uri = 'otpauth://totp/Nexal:${AuthService.instance.currentUser?.email ?? "user"}?secret=$secret&issuer=Nexal&algorithm=SHA1&digits=6&period=30';
       setState(() { _totpSecret = secret; _totpUri = uri; _showSetup = true; });
     } else if (!value) {
       setState(() => _isLoading = true);
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('2fa_enabled', false);
-      await prefs.remove('2fa_secret');
+      if (uid.isNotEmpty) {
+        await prefs.setBool('2fa_enabled_$uid', false);
+        await prefs.remove('2fa_secret_$uid');
+      }
       setState(() { _is2FAEnabled = false; _isLoading = false; _setupComplete = false; _showSetup = false; _totpSecret = null; _totpUri = null; });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

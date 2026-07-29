@@ -6,10 +6,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import 'auth/login_screen.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -32,30 +34,32 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   Future<void> _loadLocalOverrides() async {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _overrideName = prefs.getString('profileName');
-        _overrideBio = prefs.getString('profileBio');
-        _overrideLink = prefs.getString('profileLink');
+        _overrideName = prefs.getString('profileName_$uid');
+        _overrideBio = prefs.getString('profileBio_$uid');
+        _overrideLink = prefs.getString('profileLink_$uid');
       });
     }
   }
 
   String _displayName(UserModel? user) {
     final cur = AuthService.instance.currentUser;
-    return _overrideName ?? user?.name ?? cur?.name ?? 'Nexal User';
+    return _overrideName ?? (user?.name.isNotEmpty == true ? user!.name : cur?.name ?? 'Nexal User');
   }
 
   String _displayBio(UserModel? user) =>
-      _overrideBio ?? user?.bio ?? 'Nexal Creator ✨';
+      _overrideBio ?? (user?.bio.isNotEmpty == true ? user!.bio : 'Exploring the quantum frontier on Nexal ✨');
 
   String _displayLink(UserModel? user) =>
-      _overrideLink ?? user?.website ?? 'nexal.app';
+      _overrideLink ?? (user?.website.isNotEmpty == true ? user!.website : 'nexal.app');
 
   String _displayUsername(UserModel? user) {
     final cur = AuthService.instance.currentUser;
-    return user?.username ?? cur?.username ?? 'user';
+    return user?.username.isNotEmpty == true ? user!.username : (cur?.username ?? 'user');
   }
 
   @override
@@ -185,17 +189,17 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
   // ── COMPACT STATS (below avatar) ──
   Widget _buildCompactStats(UserModel? user) {
-    final energy = user != null ? _fmtNum(user.energy) : '2.4K';
-    final connections = user != null ? _fmtNum(user.connections) : '12.5K';
-    final influence = user != null ? _fmtNum(user.influence) : '8.9K';
+    final posts = user != null ? _fmtNum(user.postsCount) : '0';
+    final followers = user != null ? _fmtNum(user.followersCount) : '0';
+    final following = user != null ? _fmtNum(user.followingCount) : '0';
     return Padding(
       padding: const EdgeInsets.fromLTRB(40, 12, 40, 0),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        _compactStat(energy, 'Energy', LucideIcons.zap, AppTheme.purple500),
+        _compactStat(posts, 'Posts', LucideIcons.layoutGrid, AppTheme.purple500),
         Container(width: 1, height: 28, color: Colors.white.withValues(alpha: 0.08)),
-        _compactStat(connections, 'Connections', LucideIcons.users, AppTheme.cyan500),
+        _compactStat(followers, 'Followers', LucideIcons.users, AppTheme.cyan500),
         Container(width: 1, height: 28, color: Colors.white.withValues(alpha: 0.08)),
-        _compactStat(influence, 'Influence', LucideIcons.trendingUp, AppTheme.pink500),
+        _compactStat(following, 'Following', LucideIcons.userCheck, AppTheme.pink500),
       ]),
     ).animate().fadeIn(delay: 400.ms, duration: 400.ms);
   }
@@ -223,6 +227,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
   // ── PROFILE INFO ──
   Widget _buildProfileInfo(String displayName, String displayBio, String displayLink, String displayUsername) {
+    final user = context.watch<AuthProvider>().user;
+    final badgeText = user?.badge.isNotEmpty == true ? user!.badge : '';
+    final locationText = user?.location.isNotEmpty == true ? user!.location : '';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Column(children: [
@@ -231,20 +239,24 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           const SizedBox(width: 6),
           Text('@$displayUsername', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w500)),
         ]),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          decoration: BoxDecoration(gradient: LinearGradient(colors: [AppTheme.purple500.withValues(alpha: 0.6), AppTheme.pink500.withValues(alpha: 0.4)]), borderRadius: BorderRadius.circular(20)),
-          child: Text('ELITE CREATOR', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 2)),
-        ),
+        if (badgeText.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(gradient: LinearGradient(colors: [AppTheme.purple500.withValues(alpha: 0.6), AppTheme.pink500.withValues(alpha: 0.4)]), borderRadius: BorderRadius.circular(20)),
+            child: Text(badgeText.toUpperCase(), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 2)),
+          ),
+        ],
         const SizedBox(height: 10),
         Text(displayBio, textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13, height: 1.4)),
         const SizedBox(height: 6),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(LucideIcons.mapPin, size: 13, color: AppTheme.cyan500.withValues(alpha: 0.5)),
-          const SizedBox(width: 4),
-          Text('Digital Metaverse', style: GoogleFonts.outfit(color: Colors.white24, fontSize: 12)),
-          const SizedBox(width: 14),
+          if (locationText.isNotEmpty) ...[
+            Icon(LucideIcons.mapPin, size: 13, color: AppTheme.cyan500.withValues(alpha: 0.5)),
+            const SizedBox(width: 4),
+            Text(locationText, style: GoogleFonts.outfit(color: Colors.white24, fontSize: 12)),
+            const SizedBox(width: 14),
+          ],
           Icon(LucideIcons.link, size: 13, color: AppTheme.cyan500.withValues(alpha: 0.5)),
           const SizedBox(width: 4),
           GestureDetector(onTap: () => _snack('Opening link...'), child: Text(displayLink, style: GoogleFonts.outfit(color: AppTheme.cyan500.withValues(alpha: 0.7), fontSize: 12))),
@@ -406,13 +418,27 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           const SizedBox(height: 20),
           GestureDetector(
             onTap: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('profileName', nameCtrl.text);
-              await prefs.setString('profileBio', bioCtrl.text);
-              await prefs.setString('profileLink', linkCtrl.text);
+              final uid = AuthService.instance.currentUser?.uid ?? '';
+              if (uid.isNotEmpty) {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('profileName_$uid', nameCtrl.text);
+                await prefs.setString('profileBio_$uid', bioCtrl.text);
+                await prefs.setString('profileLink_$uid', linkCtrl.text);
+
+                try {
+                  await Supabase.instance.client.from('profiles').upsert({
+                    'id': uid,
+                    'name': nameCtrl.text.trim(),
+                    'bio': bioCtrl.text.trim(),
+                    'website': linkCtrl.text.trim(),
+                    'updated_at': DateTime.now().toIso8601String(),
+                  });
+                } catch (_) {}
+              }
 
               if (mounted) {
                 setState(() { _overrideName = nameCtrl.text; _overrideBio = bioCtrl.text; _overrideLink = linkCtrl.text; });
+                context.read<AuthProvider>().reloadProfile();
               }
               if (ctx.mounted) {
                 Navigator.pop(ctx);
@@ -522,7 +548,16 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           )),
           const SizedBox(width: 12),
           Expanded(child: GestureDetector(
-            onTap: () { Navigator.pop(ctx); _snack('Logged out successfully'); },
+            onTap: () async {
+              Navigator.pop(ctx);
+              await AuthService.instance.logout();
+              if (mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
+            },
             child: Container(padding: const EdgeInsets.symmetric(vertical: 14), decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3))),
               child: Center(child: Text('Log Out', style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.w600)))),
           )),

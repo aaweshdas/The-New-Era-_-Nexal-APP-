@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 
@@ -24,11 +25,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
+    final cur = AuthService.instance.currentUser;
+    final uid = cur?.uid ?? '';
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _usernameCtrl.text = prefs.getString('user_username') ?? 'neuralnexus';
-      _emailCtrl.text = prefs.getString('user_email') ?? 'nexus@nexal.space';
-    });
+    
+    final savedUsername = uid.isNotEmpty ? prefs.getString('user_username_$uid') : null;
+    final savedEmail = uid.isNotEmpty ? prefs.getString('user_email_$uid') : null;
+
+    if (mounted) {
+      setState(() {
+        _usernameCtrl.text = savedUsername ?? cur?.handle ?? '';
+        _emailCtrl.text = savedEmail ?? cur?.email ?? '';
+      });
+    }
   }
 
   Future<void> _saveSettings() async {
@@ -47,9 +56,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       return;
     }
     setState(() => _isSaving = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_username', username);
-    await prefs.setString('user_email', email);
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_username_$uid', username);
+      await prefs.setString('user_email_$uid', email);
+      try {
+        await Supabase.instance.client.from('profiles').upsert({
+          'id': uid,
+          'username': username,
+          'email': email,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
+    }
     setState(() => _isSaving = false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

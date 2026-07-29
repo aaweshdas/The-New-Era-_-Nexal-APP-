@@ -31,7 +31,7 @@ class AuthProvider extends ChangeNotifier {
       final supabase = Supabase.instance.client;
       final res = await supabase.from('profiles').select().eq('id', uid).maybeSingle();
 
-      if (res != null && res is Map<String, dynamic>) {
+      if (res != null) {
         _user = UserModel(
           uid: uid,
           name: (res['name'] as String?)?.isNotEmpty == true ? res['name'] : fallbackName,

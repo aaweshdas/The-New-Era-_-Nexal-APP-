@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/auth_service.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
   const PrivacySettingsScreen({super.key});
@@ -13,6 +15,32 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   bool _isPrivateAccount = false;
   bool _allowDirectMessages = true;
   bool _showOnlineStatus = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _isPrivateAccount = prefs.getBool('privacy_private_$uid') ?? false;
+        _allowDirectMessages = prefs.getBool('privacy_dms_$uid') ?? true;
+        _showOnlineStatus = prefs.getBool('privacy_online_$uid') ?? true;
+      });
+    }
+  }
+
+  Future<void> _updateSetting(String key, bool value) async {
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('${key}_$uid', value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +113,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                             ),
                           ),
                           value: _isPrivateAccount,
-                          onChanged: (v) => setState(() => _isPrivateAccount = v),
+                          onChanged: (v) { setState(() => _isPrivateAccount = v); _updateSetting('privacy_private', v); },
                         ),
                         const Divider(color: Colors.white10, height: 1),
                         SwitchListTile(
@@ -106,7 +134,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                             ),
                           ),
                           value: _allowDirectMessages,
-                          onChanged: (v) => setState(() => _allowDirectMessages = v),
+                          onChanged: (v) { setState(() => _allowDirectMessages = v); _updateSetting('privacy_dms', v); },
                         ),
                         const Divider(color: Colors.white10, height: 1),
                         SwitchListTile(
@@ -127,7 +155,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                             ),
                           ),
                           value: _showOnlineStatus,
-                          onChanged: (v) => setState(() => _showOnlineStatus = v),
+                          onChanged: (v) { setState(() => _showOnlineStatus = v); _updateSetting('privacy_online', v); },
                         ),
                       ],
                     ),
