@@ -1,8 +1,8 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../services/webrtc_service.dart';
 
 class CallScreen extends StatefulWidget {
@@ -38,30 +38,25 @@ class _CallScreenState extends State<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cameraCtrl = WebRtcService.instance.cameraController;
+    final isCameraReady = cameraCtrl != null && cameraCtrl.value.isInitialized;
+
     return Scaffold(
       backgroundColor: const Color(0xFF040711),
       body: Stack(
         children: [
-          // Background Remote Video or Ambient Glow
-          if (widget.callType == CallType.video && !_isCameraOff)
-            Positioned.fill(
-              child: RTCVideoView(
-                WebRtcService.instance.remoteRenderer,
-                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-              ),
-            )
-          else
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF0F172A), Color(0xFF040711)],
-                  ),
+          // Background Remote Feed or Ambient Glow
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0F172A), Color(0xFF040711)],
                 ),
               ),
             ),
+          ),
 
           // Dark Overlay Gradient
           Positioned.fill(
@@ -80,8 +75,8 @@ class _CallScreenState extends State<CallScreen> {
             ),
           ),
 
-          // Floating Local Video Preview (PICTURE IN PICTURE)
-          if (widget.callType == CallType.video && !_isCameraOff)
+          // Floating Camera Preview (Picture in Picture)
+          if (widget.callType == CallType.video && isCameraReady && !_isCameraOff)
             Positioned(
               top: 50,
               right: 20,
@@ -97,11 +92,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: RTCVideoView(
-                    WebRtcService.instance.localRenderer,
-                    mirror: true,
-                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                  ),
+                  child: CameraPreview(cameraCtrl),
                 ),
               ),
             ),
