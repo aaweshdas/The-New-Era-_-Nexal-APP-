@@ -7,8 +7,10 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
   emoji_picker_flutter
   file_selector_windows
+  flutter_webrtc
   gal
   geolocator_windows
+  local_auth_windows
   permission_handler_windows
   record_windows
   share_plus

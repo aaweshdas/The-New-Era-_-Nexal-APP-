@@ -18,6 +18,8 @@ import '../widgets/notifications/notification_view.dart';
 import 'create_post_screen.dart';
 import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/api_service.dart';
 import '../models/post_model.dart';
 import '../providers/feed_provider.dart';
 // ignore: unused_import
@@ -320,6 +322,40 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (mounted) {
       if (_pendingNewPostsCount > 0) _injectNewPosts();
       setState(() {});
+    }
+  }
+
+  Future<void> _addOwnStory() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Publishing story to Nexal...', style: GoogleFonts.outfit(color: Colors.white)),
+            backgroundColor: AppTheme.purple500,
+          ),
+        );
+      }
+
+      final storyUrl = file.path;
+      ApiService.instance.post('/api/posts/stories', {'mediaUrl': storyUrl}).catchError((_) => null);
+
+      if (mounted) {
+        setState(() {
+          _stories.insert(1, _Story(name: 'Your Story', avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', isOwn: false, isSeen: false));
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Story published to Nexal! 🌟', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+            backgroundColor: AppTheme.cyan500,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[HomeView] Add story error: $e');
     }
   }
 
@@ -627,6 +663,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             return GestureDetector(
               onTap: () {
                 HapticFeedback.selectionClick();
+                if (story.isOwn) {
+                  _addOwnStory();
+                  return;
+                }
                 setState(() => story.isSeen = true);
                 final mockStories = _stories.map((s) => StoryItem(
                   userName: s.name,

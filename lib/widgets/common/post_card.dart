@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/feed_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../services/api_service.dart';
 
 class PostComment {
   final String userName;
@@ -271,6 +272,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                   ),
                   onPressed: () {
                     userProvider.toggleFollow(widget.post.userName);
+                    ApiService.instance.post('/api/posts/users/${widget.post.userName}/follow', {}).catchError((_) => null);
                     HapticFeedback.lightImpact();
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -415,15 +417,17 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                       onPressed: () {
                         if (commentCtrl.text.trim().isNotEmpty) {
                           HapticFeedback.lightImpact();
+                          final textVal = commentCtrl.text.trim();
                           setModalState(() {
                             widget.post.sampleComments.add(
-                              PostComment(userName: 'You', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', text: commentCtrl.text.trim(), timeAgo: 'Just now'),
+                              PostComment(userName: 'You', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', text: textVal, timeAgo: 'Just now'),
                             );
                             _commentCount++;
                             widget.post.comments = _commentCount;
                           });
                           setState(() {});
                           commentCtrl.clear();
+                          ApiService.instance.post('/api/posts/${widget.post.id}/comments', {'text': textVal}).catchError((_) => null);
                         }
                       },
                     ),
@@ -532,6 +536,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                 _shareOption(LucideIcons.share2, 'More', Colors.white70, () async {
                   Navigator.pop(context);
                   setState(() { _shareCount++; widget.post.shares = _shareCount; });
+                  ApiService.instance.post('/api/posts/${widget.post.id}/share', {}).catchError((_) => null);
                   await Share.share(
                     'Check out this post on Nexal: "${widget.post.content}" by ${widget.post.userName}\nhttps://nexal.app/post/${widget.post.id}',
                     subject: 'Nexal Post Share',
