@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import 'chat_screen.dart'; // To use ChatScreen
 import 'story_viewer_screen.dart'; // To view stories
+import '../services/auth_service.dart';
 
 class MessageItem {
   final String name, avatar, message, time;
@@ -77,7 +78,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
 
       final myStory = StoryItem(
         userName: 'Your Story',
-        userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+        userAvatar: AuthService.instance.currentUser?.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
         imageUrl: file.path,
         caption: 'My story update ✨',
         timeAgo: 'Just now',

@@ -359,39 +359,52 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
               ),
               const Divider(color: Colors.white10, height: 1),
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: widget.post.sampleComments.length,
-                  itemBuilder: (_, i) {
-                    final c = widget.post.sampleComments[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CircleAvatar(radius: 18, backgroundImage: CachedNetworkImageProvider(c.userAvatar, maxWidth: 80)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
+                child: widget.post.sampleComments.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(LucideIcons.messageSquare, color: Colors.white24, size: 40),
+                            const SizedBox(height: 12),
+                            Text('No comments yet', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 4),
+                            Text('Be the first to share your thoughts!', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: widget.post.sampleComments.length,
+                        itemBuilder: (_, i) {
+                          final c = widget.post.sampleComments[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Text(c.userName, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                                    const SizedBox(width: 8),
-                                    Text(c.timeAgo, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
-                                  ],
+                                CircleAvatar(radius: 18, backgroundImage: CachedNetworkImageProvider(c.userAvatar, maxWidth: 80)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(c.userName, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                                          const SizedBox(width: 8),
+                                          Text(c.timeAgo, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(c.text, style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.87), fontSize: 13)),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(c.text, style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.87), fontSize: 13)),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
               Container(
                 padding: EdgeInsets.only(
