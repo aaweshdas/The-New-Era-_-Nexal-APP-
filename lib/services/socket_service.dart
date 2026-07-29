@@ -77,7 +77,16 @@ class SocketService {
   }
 
   void disconnect() {
-    _socket?.disconnect();
-    _isConnected = false;
+    try {
+      _socket?.off('message');
+      _socket?.off('typing');
+      _socket?.disconnect();
+      _socket?.dispose();
+      _socket = null;
+      _isConnected = false;
+      debugPrint('[SocketIO] Cleanly disconnected');
+    } catch (e) {
+      debugPrint('[SocketIO Disconnect Error] $e');
+    }
   }
 }
