@@ -164,6 +164,13 @@ class AriaService {
     _socket!.emit('text_input', payload);
   }
 
+  // ─── Generate AI Image ──────────────────────────────────────────
+  Future<String?> generateAiImage(String prompt) async {
+    final seed = DateTime.now().millisecondsSinceEpoch % 1000000;
+    final url = 'https://image.pollinations.ai/prompt/${Uri.encodeComponent(prompt)}?width=1024&height=1024&nologo=true&seed=$seed';
+    return url;
+  }
+
   // ─── Trigger manual TTS ─────────────────────────────────────────
   void triggerTts(String text) {
     if (_socket == null || !_connected) return;

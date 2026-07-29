@@ -113,7 +113,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   bool _isCheckingBackend = true;
   String _selectedCategory = 'ALL';
   int _latencyMs = 12;
-  int _selectedNavIndex = 0;
   final Set<String> _bookmarkedGames = {};
 
   // Controllers
@@ -286,8 +285,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
     return Scaffold(
       backgroundColor: _kBg,
-      extendBodyBehindAppBar: true,
-      extendBody: true,
       body: Stack(children: [
         // Background Glow Canvas
         RepaintBoundary(child: _buildBackgroundCanvas()),
@@ -296,8 +293,8 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Top Navigation & Hero Section
-            SliverToBoxAdapter(child: _buildTopNavAndHero(topPad, userName)),
+            // Redesigned High-Tech Cyber Header
+            SliverToBoxAdapter(child: _buildRedesignedHeader(topPad, userName)),
 
             // Category Filter Strip
             SliverToBoxAdapter(child: _buildCategoryStrip()),
@@ -308,14 +305,9 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
             // Split Quests & Leaderboard Section
             SliverToBoxAdapter(child: _buildQuestsAndLeaderboardSection()),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            // Clean bottom spacing without footer
+            const SliverToBoxAdapter(child: SizedBox(height: 36)),
           ],
-        ),
-
-        // Bottom Navigation Dock Bar
-        Positioned(
-          bottom: 0, left: 0, right: 0,
-          child: _buildBottomNavDock(),
         ),
       ]),
     );
@@ -326,7 +318,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
   Widget _buildBackgroundCanvas() {
     return Stack(
       children: [
-        // Full screen background image fallback
+        // Full screen background image fallback with bright, clear visibility
         Positioned.fill(
           child: Image.asset(
             'assets/Arcade BG.png',
@@ -335,7 +327,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         ),
 
-        // Gradient Vignette overlay
+        // Lightened Gradient Vignette overlay for clear background artwork visibility
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -343,184 +335,235 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  _kBg.withValues(alpha: 0.3),
-                  _kBg.withValues(alpha: 0.7),
-                  _kBg.withValues(alpha: 0.95),
-                  _kBg,
+                  _kBg.withValues(alpha: 0.05),
+                  _kBg.withValues(alpha: 0.25),
+                  _kBg.withValues(alpha: 0.50),
+                  _kBg.withValues(alpha: 0.70),
                 ],
-                stops: const [0.0, 0.3, 0.75, 1.0],
+                stops: const [0.0, 0.35, 0.70, 1.0],
               ),
             ),
-          ),
-        ),
-
-        // Drifting Top Green Glow Orb
-        AnimatedBuilder(
-          animation: _floatCtrl,
-          builder: (context, _) => Positioned(
-            top: -80 + 15 * _floatCtrl.value,
-            left: -60,
-            child: _glowOrb(340, _kNeonGreen, 0.14),
-          ),
-        ),
-
-        // Drifting Top Cyan Glow Orb
-        AnimatedBuilder(
-          animation: _floatCtrl,
-          builder: (context, _) => Positioned(
-            top: 140 - 20 * _floatCtrl.value,
-            right: -80,
-            child: _glowOrb(300, _kNeonCyan, 0.12),
-          ),
-        ),
-
-        // Bottom Violet Glow Orb
-        AnimatedBuilder(
-          animation: _floatCtrl,
-          builder: (context, _) => Positioned(
-            bottom: 60 + 15 * _floatCtrl.value,
-            left: -40,
-            child: _glowOrb(320, _kNeonPurple, 0.14),
           ),
         ),
       ],
     );
   }
 
-  Widget _glowOrb(double size, Color color, double alpha) => Container(
-    width: size, height: size,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: color.withValues(alpha: alpha),
-      boxShadow: [BoxShadow(color: color.withValues(alpha: alpha * 1.5), blurRadius: size * 0.45, spreadRadius: 24)],
-    ),
-  );
+  // ── Redesigned Header Section ───────────────────────────────────────────────
 
-  // ── Top Navigation & Hero Section ───────────────────────────────────────────
-
-  Widget _buildTopNavAndHero(double topPad, String userName) {
+  Widget _buildRedesignedHeader(double topPad, String userName) {
     final statusColor = _isCheckingBackend ? _kSolarGold : (_isBackendOnline ? _kNeonGreen : _kSolarGold);
     final statusLabel = _isCheckingBackend
         ? 'CONNECTING...'
         : (_isBackendOnline ? 'LIVE ${_latencyMs}ms' : 'OFFLINE');
 
-    return CustomPaint(
-      painter: _GridPainter(_kNeonCyan.withValues(alpha: 0.03)),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(16, topPad + 10, 16, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // ── Top Header Row ─────────────────────────────────────────────────
-            Row(children: [
-              // Circular Back Button
-              _circularNavBtn(
-                icon: LucideIcons.arrowLeft,
-                onTap: () { HapticFeedback.lightImpact(); Navigator.pop(context); },
-              ),
-              const Spacer(),
-
-              // Live Pill
-              _livePill(statusColor, statusLabel),
-
-              const Spacer(),
-
-              // Action Buttons: Search, Calendar, Trophy
-              _circularNavBtn(
-                icon: LucideIcons.search,
-                onTap: () { HapticFeedback.selectionClick(); },
-              ),
-              const SizedBox(width: 8),
-              Stack(clipBehavior: Clip.none, children: [
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.35),
+        border: Border(bottom: BorderSide(color: _kNeonGreen.withValues(alpha: 0.15), width: 1)),
+      ),
+      child: CustomPaint(
+        painter: _GridPainter(_kNeonCyan.withValues(alpha: 0.04)),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, topPad + 12, 16, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Top Glass Navigation & Status Row ─────────────────────────
+              Row(children: [
+                // Back Button
                 _circularNavBtn(
-                  icon: LucideIcons.calendar,
+                  icon: LucideIcons.arrowLeft,
+                  onTap: () { HapticFeedback.lightImpact(); Navigator.pop(context); },
+                ),
+                const SizedBox(width: 12),
+
+                // Live Stream Pill
+                _livePill(statusColor, statusLabel),
+
+                const Spacer(),
+
+                // Action Controls
+                _circularNavBtn(
+                  icon: LucideIcons.search,
                   onTap: () { HapticFeedback.selectionClick(); },
                 ),
-                Positioned(
-                  top: 2, right: 2,
+                const SizedBox(width: 8),
+                Stack(clipBehavior: Clip.none, children: [
+                  _circularNavBtn(
+                    icon: LucideIcons.calendar,
+                    onTap: () { HapticFeedback.selectionClick(); },
+                  ),
+                  Positioned(
+                    top: 2, right: 2,
+                    child: Container(
+                      width: 8, height: 8,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _kNeonGreen,
+                        boxShadow: [BoxShadow(color: _kNeonGreen, blurRadius: 6)],
+                      ),
+                    ),
+                  ),
+                ]),
+                const SizedBox(width: 8),
+                _circularNavBtn(
+                  icon: LucideIcons.trophy,
+                  iconColor: _kSolarGold,
+                  borderColor: _kSolarGold.withValues(alpha: 0.4),
+                  onTap: () { HapticFeedback.selectionClick(); },
+                ),
+              ]),
+
+              const SizedBox(height: 22),
+
+              // ── Redesigned Hero Glass Command Card ─────────────────────────
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                   child: Container(
-                    width: 8, height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _kNeonGreen,
-                      boxShadow: [BoxShadow(color: _kNeonGreen, blurRadius: 4)],
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: _kCardBg.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: _kNeonGreen.withValues(alpha: 0.4), width: 1.4),
+                      boxShadow: [
+                        BoxShadow(color: _kNeonGreen.withValues(alpha: 0.15), blurRadius: 24, spreadRadius: -2),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            // Glowing Emblem Logo
+                            Container(
+                              width: 48, height: 48,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _kDarkGlass,
+                                border: Border.all(color: _kNeonGreen, width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(color: _kNeonGreen.withValues(alpha: 0.5), blurRadius: 16),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Icon(LucideIcons.gamepad2, color: _kNeonGreen, size: 24),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+
+                            // Main Title & Subtitle
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    ShaderMask(
+                                      shaderCallback: (r) => const LinearGradient(
+                                        colors: [Colors.white, _kNeonCyan],
+                                      ).createShader(r),
+                                      child: Text('NEXAL ARCADE',
+                                        style: GoogleFonts.sora(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: 2.0,
+                                        )),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _kNeonGreen.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: _kNeonGreen.withValues(alpha: 0.4)),
+                                      ),
+                                      child: Text('v4.2 PRO',
+                                        style: GoogleFonts.shareTechMono(
+                                          color: _kNeonGreen, fontSize: 8.5, fontWeight: FontWeight.bold,
+                                        )),
+                                    ),
+                                  ]),
+                                  const SizedBox(height: 2),
+                                  Text('Stream Next-Gen Games Live · Zero CPU Load',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      fontSize: 11.5,
+                                    )),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
+
+                        const SizedBox(height: 14),
+
+                        // Pilot HUD Profile Bar inside Header Card
+                        Row(
+                          children: [
+                            // Avatar
+                            Container(
+                              width: 32, height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white10,
+                                border: Border.all(color: _kNeonCyan, width: 1.2),
+                              ),
+                              child: const Icon(LucideIcons.user, color: _kNeonCyan, size: 16),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('PILOT: $userName',
+                                  style: GoogleFonts.sora(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11.5,
+                                  )),
+                                Text('LVL 42  •  RANK #4 GLOBAL',
+                                  style: GoogleFonts.shareTechMono(
+                                    color: _kNeonCyan, fontSize: 9, letterSpacing: 0.8,
+                                  )),
+                              ],
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: _kSolarGold.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _kSolarGold.withValues(alpha: 0.4)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(LucideIcons.star, color: _kSolarGold, size: 12),
+                                  const SizedBox(width: 4),
+                                  Text('48,920 PTS',
+                                    style: GoogleFonts.shareTechMono(
+                                      color: _kSolarGold,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    )),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ]),
-              const SizedBox(width: 8),
-              _circularNavBtn(
-                icon: LucideIcons.trophy,
-                iconColor: _kSolarGold,
-                borderColor: _kSolarGold.withValues(alpha: 0.4),
-                onTap: () { HapticFeedback.selectionClick(); },
               ),
-            ]),
-
-            const SizedBox(height: 20),
-
-            // ── Hero Brand Header ──────────────────────────────────────────────
-            Column(children: [
-              // 3D Glowing Nexal Logo Icon
-              Container(
-                width: 58, height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _kDarkGlass,
-                  border: Border.all(color: _kNeonGreen.withValues(alpha: 0.6), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(color: _kNeonGreen.withValues(alpha: 0.4), blurRadius: 20, spreadRadius: 2),
-                  ],
-                ),
-                child: Center(
-                  child: ShaderMask(
-                    shaderCallback: (r) => const LinearGradient(
-                      colors: [_kNeonGreen, _kNeonCyan],
-                    ).createShader(r),
-                    child: const Icon(LucideIcons.sparkles, color: Colors.white, size: 28),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // NEXAL Title
-              Text('NEXAL',
-                style: GoogleFonts.outfit(
-                  fontSize: 34, fontWeight: FontWeight.w900,
-                  color: Colors.white, letterSpacing: 7, height: 1.0,
-                )),
-
-              // CLOUD ARCADE Subtitle
-              ShaderMask(
-                shaderCallback: (r) => const LinearGradient(
-                  colors: [_kNeonGreen, _kNeonCyan],
-                ).createShader(r),
-                child: Text('CLOUD ARCADE',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18, fontWeight: FontWeight.w900,
-                    color: Colors.white, letterSpacing: 4.5, height: 1.2,
-                  )),
-              ),
-
-              const SizedBox(height: 6),
-
-              // Tagline
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text('Stream Next-Gen Games Live',
-                  style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11.5)),
-                Container(margin: const EdgeInsets.symmetric(horizontal: 6), width: 3, height: 3,
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: _kNeonGreen)),
-                Text('Zero Load',
-                  style: GoogleFonts.outfit(color: _kNeonGreen, fontSize: 11.5, fontWeight: FontWeight.w600)),
-              ]),
-            ]),
-
-            const SizedBox(height: 16),
-
-            // ── Player Pilot HUD Chip ──────────────────────────────────────────
-            _buildPilotHudChip(userName),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -578,60 +621,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
               fontSize: 10.5, fontWeight: FontWeight.bold,
               color: Colors.white, letterSpacing: 1.0,
             )),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPilotHudChip(String name) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(6, 5, 14, 5),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: _kNeonGreen.withValues(alpha: 0.35), width: 1.2),
-            boxShadow: [BoxShadow(color: _kNeonGreen.withValues(alpha: 0.1), blurRadius: 14)],
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            // Pilot Helmet Avatar
-            Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _kDarkGlass,
-                border: Border.all(color: _kNeonGreen, width: 1.5),
-              ),
-              child: const Center(
-                child: Icon(LucideIcons.user, color: _kNeonGreen, size: 18),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text('LVL 42 PILOT · $name',
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5)),
-              const SizedBox(height: 1),
-              Row(children: [
-                const Icon(LucideIcons.star, color: _kSolarGold, size: 11),
-                const SizedBox(width: 3),
-                Text('48,920 PTS',
-                  style: GoogleFonts.shareTechMono(color: _kSolarGold, fontSize: 10, fontWeight: FontWeight.bold)),
-              ]),
-            ]),
-            const SizedBox(width: 14),
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _kNeonGreen.withValues(alpha: 0.15),
-                border: Border.all(color: _kNeonGreen.withValues(alpha: 0.4)),
-              ),
-              child: const Icon(LucideIcons.shieldCheck, color: _kNeonGreen, size: 13),
-            ),
           ]),
         ),
       ),
@@ -1166,74 +1155,6 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
             style: GoogleFonts.shareTechMono(color: _kSolarGold, fontSize: 9.5, fontWeight: FontWeight.bold)),
         ]),
       ]),
-    );
-  }
-
-  // ── Bottom Navigation Dock Bar ──────────────────────────────────────────────
-
-  Widget _buildBottomNavDock() {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          height: 68,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: _kBg.withValues(alpha: 0.85),
-            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navDockItem(0, LucideIcons.home, 'HOME'),
-              _navDockItem(1, LucideIcons.gamepad2, 'LIBRARY'),
-
-              // Center Quantum Planet Orb
-              GestureDetector(
-                onTap: () { HapticFeedback.selectionClick(); },
-                child: Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [_kNeonGreen, _kNeonCyan],
-                    ),
-                    boxShadow: [
-                      BoxShadow(color: _kNeonGreen.withValues(alpha: 0.5), blurRadius: 16, spreadRadius: 2),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(LucideIcons.globe, color: Colors.black, size: 24),
-                  ),
-                ),
-              ),
-
-              _navDockItem(2, LucideIcons.barChart2, 'STATS'),
-              _navDockItem(3, LucideIcons.user, 'PROFILE'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navDockItem(int index, IconData icon, String label) {
-    final sel = _selectedNavIndex == index;
-    return GestureDetector(
-      onTap: () { HapticFeedback.selectionClick(); setState(() => _selectedNavIndex = index); },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: sel ? _kNeonGreen : Colors.white38, size: 18),
-          const SizedBox(height: 3),
-          Text(label,
-            style: GoogleFonts.outfit(
-              color: sel ? _kNeonGreen : Colors.white38,
-              fontSize: 9, fontWeight: sel ? FontWeight.bold : FontWeight.normal,
-              letterSpacing: 0.5,
-            )),
-        ],
-      ),
     );
   }
 }
