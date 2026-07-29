@@ -181,34 +181,100 @@ class _LoginScreenState extends State<LoginScreen>
     HapticFeedback.lightImpact();
     setState(() => _isGoogleLoading = true);
 
-    final success = await AuthService.instance.loginWithGoogle();
+    final result = await AuthService.instance.loginWithGoogle();
     if (!mounted) return;
 
-    if (success || AuthService.instance.isLoggedIn) {
+    if (result.status == GoogleAuthStatus.success) {
       setState(() => _isGoogleLoading = false);
       HapticFeedback.mediumImpact();
       _navigateToHome();
       return;
     }
 
-    // Attach stream listener if browser redirect is still pending
-    StreamSubscription? sub;
-    sub = AuthService.instance.authStateChanges.listen((session) {
-      if (!mounted) return;
-      if (session != null) {
-        sub?.cancel();
-        setState(() => _isGoogleLoading = false);
-        HapticFeedback.mediumImpact();
-        _navigateToHome();
-      }
-    });
-
-    await Future.delayed(const Duration(seconds: 15));
-    if (mounted && _isGoogleLoading) {
-      sub.cancel();
+    if (result.status == GoogleAuthStatus.cancelled) {
       setState(() => _isGoogleLoading = false);
-      if (!AuthService.instance.isLoggedIn) {
-        _showSnackBar('Google Sign-In cancelled or timed out.', isError: true);
+      _showSnackBar('Google Sign-In was cancelled.');
+      return;
+    }
+
+    if (result.status == GoogleAuthStatus.error) {
+      setState(() => _isGoogleLoading = false);
+      _showSnackBar(result.message ?? 'Google Sign-In failed', isError: true);
+      return;
+    }
+
+    if (result.status == GoogleAuthStatus.pendingBrowserOAuth) {
+      // Show glass authenticating dialog while waiting for OAuth completion
+      bool cancelledByDialog = false;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogCtx) => PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F1424).withValues(alpha: 0.90),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.3), width: 1.2),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFF00E5FF).withValues(alpha: 0.15), blurRadius: 20),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: CircularProgressIndicator(color: Color(0xFF00E5FF), strokeWidth: 3),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Authenticating with Google',
+                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text('Please complete sign-in in your browser window...',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13)),
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () {
+                          cancelledByDialog = true;
+                          Navigator.pop(dialogCtx);
+                        },
+                        child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final session = await AuthService.instance.waitForAuthSession(timeout: const Duration(seconds: 35));
+
+      if (mounted) {
+        // Dismiss dialog if still active
+        if (!cancelledByDialog && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        setState(() => _isGoogleLoading = false);
+
+        if (session != null && !cancelledByDialog) {
+          HapticFeedback.mediumImpact();
+          _navigateToHome();
+        } else if (!cancelledByDialog) {
+          _showSnackBar('Google Sign-In timed out or was cancelled.', isError: true);
+        }
       }
     }
   }

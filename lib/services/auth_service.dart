@@ -199,10 +199,61 @@ class AuthService {
     return true;
   }
 
+enum GoogleAuthStatus {
+  success,
+  cancelled,
+  pendingBrowserOAuth,
+  error,
+}
+
+class GoogleAuthResult {
+  final GoogleAuthStatus status;
+  final String? message;
+  final UserSession? user;
+
+  const GoogleAuthResult({
+    required this.status,
+    this.message,
+    this.user,
+  });
+
+  factory GoogleAuthResult.success(UserSession user) =>
+      GoogleAuthResult(status: GoogleAuthStatus.success, user: user);
+
+  factory GoogleAuthResult.cancelled() =>
+      const GoogleAuthResult(status: GoogleAuthStatus.cancelled, message: 'Google Sign-In was cancelled.');
+
+  factory GoogleAuthResult.pendingBrowserOAuth() =>
+      const GoogleAuthResult(status: GoogleAuthStatus.pendingBrowserOAuth, message: 'OAuth launched in browser. Awaiting authentication response...');
+
+  factory GoogleAuthResult.error(String message) =>
+      GoogleAuthResult(status: GoogleAuthStatus.error, message: message);
+}
+
   static const String googleClientId = '851929744766-b1fadinn47jjmu1mhap34knlc9h0i2tu.apps.googleusercontent.com';
 
+  /// Listens for a valid authenticated session until [timeout].
+  Future<UserSession?> waitForAuthSession({Duration timeout = const Duration(seconds: 30)}) async {
+    if (_currentUser != null) return _currentUser;
+    final completer = Completer<UserSession?>();
+    StreamSubscription<UserSession?>? sub;
+    sub = authStateChanges.listen((session) {
+      if (session != null && !completer.isCompleted) {
+        completer.complete(session);
+        sub?.cancel();
+      }
+    });
+
+    try {
+      return await completer.future.timeout(timeout);
+    } catch (_) {
+      sub.cancel();
+      return null;
+    }
+  }
+
   // ── Google OAuth / Native Sign-In ─────────────────────────────────────────
-  Future<bool> loginWithGoogle() async {
+  Future<GoogleAuthResult> loginWithGoogle() async {
     // 1. Try native Google Sign-In with configured Client ID
     try {
       final googleSignIn = GoogleSignIn(
@@ -219,7 +270,7 @@ class AuthService {
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         debugPrint('[AuthService] Google Sign-In cancelled by user.');
-        return false;
+        return GoogleAuthResult.cancelled();
       }
 
       final googleAuth = await googleUser.authentication;
@@ -271,7 +322,7 @@ class AuthService {
 
           _authStateController.add(_currentUser);
           debugPrint('[AuthService] Native Google Sign-In successful for ${_currentUser!.email}!');
-          return true;
+          return GoogleAuthResult.success(_currentUser!);
         }
       }
     } catch (e) {
@@ -280,16 +331,19 @@ class AuthService {
 
     // 2. Fallback to Supabase OAuth browser flow (Desktop / Web / Unsupported native)
     try {
-      final res = await _supabase.auth.signInWithOAuth(
+      final launched = await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb ? null : 'io.nexal.app://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
-      debugPrint('[AuthService] Supabase OAuth browser launch result: $res');
-      return res;
+      if (launched) {
+        return GoogleAuthResult.pendingBrowserOAuth();
+      } else {
+        return GoogleAuthResult.error('Failed to launch browser authentication');
+      }
     } catch (err) {
       debugPrint('[AuthService] Google OAuth fallback failed: $err');
-      return false;
+      return GoogleAuthResult.error(err.toString());
     }
   }
 
@@ -331,6 +385,13 @@ class AuthService {
 
   // ── Logout ─────────────────────────────────────────────────────────────────
   Future<void> logout() async {
+    try {
+      final googleSignIn = GoogleSignIn(
+        clientId: kIsWeb ? googleClientId : null,
+        serverClientId: googleClientId,
+      );
+      await googleSignIn.signOut();
+    } catch (_) {}
     try {
       await _supabase.auth.signOut();
     } catch (_) {}
