@@ -47,29 +47,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
   final ImagePicker _picker = ImagePicker();
 
   // Active Stories List
-  final List<StoryItem> _activeStories = [
-    StoryItem(
-      userName: 'Aria Storm',
-      userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-      imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800',
-      caption: '⚡ Quantum update live in the plaza!',
-      timeAgo: '12m ago',
-    ),
-    StoryItem(
-      userName: 'Kai Cyber',
-      userAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100',
-      imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800',
-      caption: '🚀 Shipping the new engine build today.',
-      timeAgo: '45m ago',
-    ),
-    StoryItem(
-      userName: 'Nova Glitch',
-      userAvatar: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=100',
-      imageUrl: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800',
-      caption: '🌌 Midnight vibes from the cyber grid.',
-      timeAgo: '2h ago',
-    ),
-  ];
+  final List<StoryItem> _activeStories = [];
 
   Future<void> _uploadMyStory() async {
     try {

@@ -335,77 +335,24 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
   // ── GRID ──
   Widget _buildGrid() {
-    final tabMeta = [
-      {'icon': LucideIcons.heart, 'metric': 'likes'},
-      {'icon': LucideIcons.bookmark, 'metric': 'saves'},
-      {'icon': LucideIcons.heart, 'metric': 'likes'},
-      {'icon': LucideIcons.repeat2, 'metric': 'reposts'},
-    ];
-    final meta = tabMeta[_tabCtrl.index];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 14, 8, 0),
-      child: GridView.builder(
-        shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 6, mainAxisSpacing: 6),
-        itemCount: _tabCtrl.index == 3 ? 6 : 9,
-        itemBuilder: (ctx, i) {
-          return GestureDetector(
-            onTap: () => _showImageDetail(i),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Stack(children: [
-                Positioned.fill(child: CachedNetworkImage(imageUrl: 'https://picsum.photos/200/200?random=${i + _tabCtrl.index * 10}', fit: BoxFit.cover, errorWidget: (c, url, error) => Container(color: Colors.grey[900], child: const Icon(LucideIcons.image, color: Colors.white12)))),
-                Positioned.fill(child: Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)])))),
-                // tab-aware badge
-                if (_tabCtrl.index == 3) Positioned(top: 6, left: 6, child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: const Color(0xFF34D399).withValues(alpha: 0.8), borderRadius: BorderRadius.circular(6)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(LucideIcons.repeat2, color: Colors.white, size: 10), const SizedBox(width: 3), Text('Reposted', style: GoogleFonts.outfit(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w600))]),
-                )),
-                Positioned(bottom: 6, left: 6, child: Row(children: [
-                  Icon(meta['icon'] as IconData, color: Colors.white54, size: 12),
-                  const SizedBox(width: 3),
-                  Text('${(i + 1) * 234}', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 10)),
-                ])),
-              ]),
-            ),
-          ).animate().fadeIn(delay: (700 + i * 60).ms, duration: 400.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), duration: 400.ms);
-        },
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.camera, color: Colors.white24, size: 48),
+            const SizedBox(height: 12),
+            Text('No Posts Yet', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text('Photos and videos you post will appear here on your profile.', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13), textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }
 
-  void _showImageDetail(int i) {
-    showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) => DraggableScrollableSheet(
-      initialChildSize: 0.5, minChildSize: 0.3, maxChildSize: 0.8,
-      builder: (c, ctrl) => Container(
-        decoration: const BoxDecoration(color: Color(0xFF0d0d1a), borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-        child: ListView(controller: ctrl, padding: const EdgeInsets.all(20), children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)))),
-          const SizedBox(height: 16),
-          ClipRRect(borderRadius: BorderRadius.circular(18), child: CachedNetworkImage(imageUrl: 'https://picsum.photos/400/300?random=${i + _tabCtrl.index * 10}', height: 200, width: double.infinity, fit: BoxFit.cover, errorWidget: (c, url, error) => Container(height: 200, color: Colors.grey[900]))),
-          const SizedBox(height: 16),
-          Text('Post #${i + 1}', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text('A glimpse into the quantum realm...', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13)),
-          const SizedBox(height: 16),
-          Row(children: [
-            _detailAction('Like', LucideIcons.heart, AppTheme.pink500),
-            const SizedBox(width: 10),
-            _detailAction('Comment', LucideIcons.messageCircle, AppTheme.cyan500),
-            const SizedBox(width: 10),
-            _detailAction('Share', LucideIcons.share2, AppTheme.purple500),
-          ]),
-        ]),
-      ),
-    ));
-  }
 
-  Widget _detailAction(String label, IconData icon, Color c) => Expanded(child: GestureDetector(
-    onTap: () { Navigator.pop(context); _snack('$label tapped'); },
-    child: Container(padding: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: c.withValues(alpha: 0.2))),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: c, size: 16), const SizedBox(width: 6), Text(label, style: GoogleFonts.outfit(color: c, fontSize: 12, fontWeight: FontWeight.w600))])),
-  ));
 
   void _showSettings() {
     showModalBottomSheet(context: context, backgroundColor: Colors.transparent, builder: (ctx) => Container(

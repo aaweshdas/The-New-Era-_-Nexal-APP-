@@ -43,24 +43,9 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
 
   final _categories = ['🔥 Trending', '🎬 Sci-Fi', '📚 Documentary', '🔴 Live', '🎮 Gaming', '🎵 Music'];
 
-  final _continueWatching = [
-    VideoItem(id: '1', title: 'Cosmic Voyager: Ep 4', category: 'Sci-Fi', imageUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=400', duration: '45m', progress: 65, creator: 'NovaCast'),
-    VideoItem(id: '2', title: 'Red Planet: Part 2', category: 'Documentary', imageUrl: 'https://images.unsplash.com/photo-1614728853913-1e2221eb8aa3?w=400', duration: '32m', progress: 30, creator: 'SpaceX Docs'),
-    VideoItem(id: '3', title: 'Tech of Tomorrow', category: 'Tech', imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400', duration: '18m', progress: 80, creator: 'FutureLab'),
-    VideoItem(id: '4', title: 'Deep Ocean Life', category: 'Nature', imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400', duration: '50m', progress: 10, creator: 'NatGeo AI'),
-  ];
-
-  final _trending = [
-    VideoItem(id: '5', title: 'Neon Nights', category: 'Music', imageUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=400', duration: '1h 20m', views: '2.4M', rating: 4.8),
-    VideoItem(id: '6', title: 'AI Awakening', category: 'Sci-Fi', imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400', duration: '2h 10m', views: '1.8M', rating: 4.9),
-    VideoItem(id: '7', title: 'Future Cities', category: 'Travel', imageUrl: 'https://images.unsplash.com/photo-1480796927426-f609979314bd?w=400', duration: '25m', views: '980K', rating: 4.5),
-  ];
-
-  final _recommended = [
-    VideoItem(id: '8', title: 'Quantum Dreams', category: 'Sci-Fi', imageUrl: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?w=800', duration: '1h 45m', views: '3.1M', rating: 4.7, creator: 'Nexal Studios'),
-    VideoItem(id: '9', title: 'Neural Networks Explained', category: 'Education', imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400', duration: '35m', views: '1.2M', rating: 4.6, creator: 'AI Academy'),
-    VideoItem(id: '10', title: 'Arctic Silence', category: 'Nature', imageUrl: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400', duration: '55m', views: '750K', rating: 4.4, creator: 'EarthView'),
-  ];
+  final List<VideoItem> _continueWatching = [];
+  final List<VideoItem> _trending = [];
+  final List<VideoItem> _recommended = [];
 
   @override
   void initState() {

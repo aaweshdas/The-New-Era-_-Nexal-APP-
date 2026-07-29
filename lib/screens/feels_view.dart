@@ -61,16 +61,7 @@ class _FeelsViewState extends State<FeelsView> {
     await _prefs?.setStringList('saved_feels', _savedFeelIds.toList());
   }
 
-  final _feels = [
-    Feel(id: '1', userName: 'Aria Storm', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', videoImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1080', caption: 'Living in the moment ✨ #nexal #vibes', sound: 'Midnight Drive – NeoPulse', likes: 45620, comments: 892, shares: 234, isVerified: true),
-    Feel(id: '2', userName: 'Neo Sync', userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', videoImage: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1080', caption: 'Energy never lies 🔥 #trending', sound: 'Starlight – Cosmic', likes: 38940, comments: 654, shares: 189),
-    Feel(id: '3', userName: 'Luna Nova', userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', videoImage: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=1080', caption: 'Chasing dreams 🌙 #moonlight', sound: 'Dreamscape – Luna', likes: 52310, comments: 1023, shares: 345, isVerified: true),
-    Feel(id: '4', userName: 'Kai Zen', userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', videoImage: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1080', caption: 'Cyberpunk vibes only 🤖 #cyber', sound: 'Neon City – ZenBeats', likes: 12400, comments: 340, shares: 56),
-    Feel(id: '5', userName: 'Zara Void', userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', videoImage: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1080', caption: 'Lost in the nebula 🌌 #space', sound: 'Orbit – Astro', likes: 89200, comments: 2100, shares: 890, isVerified: true),
-    Feel(id: '6', userName: 'Orion Pax', userAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100', videoImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1080', caption: 'Midnight drive 🏎️ #night', sound: 'Turbo – Drift', likes: 32100, comments: 560, shares: 120),
-    Feel(id: '7', userName: 'Lyra Star', userAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100', videoImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1080', caption: 'Coding the future 💻 #dev', sound: 'Binary – Lyra', likes: 67800, comments: 1500, shares: 670, isVerified: true),
-    Feel(id: '8', userName: 'Kael Drift', userAvatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100', videoImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1080', caption: 'Orbiting... 🚀 #launch', sound: 'Countdown – Kael', likes: 4500, comments: 120, shares: 30),
-  ];
+  final List<Feel> _feels = [];
 
   String _fmtNum(int n) {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
@@ -85,18 +76,31 @@ class _FeelsViewState extends State<FeelsView> {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: NotificationListener<ScrollUpdateNotification>(
-        onNotification: (notif) {
-          final newPage = (notif.metrics.pixels / screenHeight).round();
-          if (newPage != _currentPage && newPage >= 0 && newPage < _feels.length) {
-            setState(() => _currentPage = newPage);
-          }
-          return false;
-        },
-        child: ListView.builder(
-          physics: const PageScrollPhysics(),
-          itemExtent: screenHeight,
-          itemCount: _feels.length,
+      body: _feels.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.film, color: Colors.white24, size: 56),
+                  const SizedBox(height: 16),
+                  Text('No Feels Reels Yet', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Text('Tap camera to record & share your first video reel!', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
+                ],
+              ),
+            )
+          : NotificationListener<ScrollUpdateNotification>(
+              onNotification: (notif) {
+                final newPage = (notif.metrics.pixels / screenHeight).round();
+                if (newPage != _currentPage && newPage >= 0 && newPage < _feels.length) {
+                  setState(() => _currentPage = newPage);
+                }
+                return false;
+              },
+              child: ListView.builder(
+                physics: const PageScrollPhysics(),
+                itemExtent: screenHeight,
+                itemCount: _feels.length,
           itemBuilder: (context, index) {
           final feel = _feels[index];
           final isLiked = _likedIndices.contains(index);

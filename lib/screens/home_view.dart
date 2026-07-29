@@ -113,73 +113,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     await prefs.setStringList('home_bookmarked_posts', _bookmarkedPosts.toList());
   }
 
-  // Pending new posts pool (shown when banner is tapped)
-  final List<Post> _pendingNewPosts = [
-    Post(id: 'new1', userName: 'Cyber Nova',   userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200', isVerified: true, content: '🚀 Just uploaded the next quantum milestone. Check it out!', image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800', timeAgo: 'Just now', likes: 128, comments: 14, shares: 5, views: 890),
-    Post(id: 'new2', userName: 'Luna Drift',   userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200', content: '🌌 Midnight thoughts from the cosmos… #space', image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', timeAgo: 'Just now', likes: 67, comments: 8, shares: 2, views: 340),
-    Post(id: 'new3', userName: 'Orion Flux',   userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200', isVerified: true, content: '⚡ Breaking: Nexal hits 100M users!', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800', timeAgo: 'Just now', likes: 4500, comments: 340, shares: 210, views: 12000),
-    Post(id: 'new4', userName: 'Zara Pulse',   userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200', content: '🎨 New generative art collection live now.', image: 'https://images.unsplash.com/photo-1611086615542-635f48ae4656?w=800', timeAgo: 'Just now', likes: 233, comments: 19, shares: 11, views: 1200),
-    Post(id: 'new5', userName: 'Hex Bloom',    userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200', content: '🧠 AI consciousness research just got upgraded.', image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', timeAgo: 'Just now', likes: 901, comments: 55, shares: 32, views: 5600),
-  ];
-
-  // ── Stories ──────────────────────────────────────────────────────────────
+  final List<Post> _pendingNewPosts = [];
   final List<_Story> _stories = [
     _Story(name: 'Your Story', avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', isOwn: true),
-    _Story(name: 'Aria',  avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'),
-    _Story(name: 'Kai',   avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', isSeen: true),
-    _Story(name: 'Nova',  avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'),
-    _Story(name: 'Zeph',  avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100'),
-    _Story(name: 'Luna',  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', isSeen: true),
-    _Story(name: 'Echo',  avatarUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100'),
   ];
+  final List<_SuggestedUser> _suggestedUsers = [];
 
-  // ── Suggested Users ──────────────────────────────────────────────────────
-  final List<_SuggestedUser> _suggestedUsers = [
-    _SuggestedUser(name: 'Lyra Vex',    handle: '@lyravex',    avatarUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100', bio: 'Digital artist & quantum thinker',        followers: 42300),
-    _SuggestedUser(name: 'Orion Byte',  handle: '@orionbyte',  avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', bio: 'Building the future, one commit at a time', followers: 18700),
-    _SuggestedUser(name: 'Sasha Neon',  handle: '@sashaneon',  avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100', bio: 'AI researcher & space enthusiast 🚀',      followers: 89100),
-  ];
-
-  // ── Post Data per Filter ─────────────────────────────────────────────────
-  final _forYouPosts = [
-    Post(id: 'fy1', userName: 'Nova Chen',     userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200', isVerified: true, content: 'Witnessing the future unfold in real-time ✨ The quantum realm is closer than ever.', image: 'https://images.unsplash.com/photo-1589017232573-9d001e5cb52c?w=800', timeAgo: '2h', likes: 2847, comments: 156, shares: 89,  views: 15420),
-    Post(id: 'fy2', userName: 'Kai Nakamura',  userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',                  content: 'The intersection of art and technology creates pure magic 🎨⚡',                    image: 'https://images.unsplash.com/photo-1611086615542-635f48ae4656?w=800', timeAgo: '4h', likes: 1923, comments:  92, shares: 64,  views:  9876),
-    Post(id: 'fy3', userName: 'Zara Williams', userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200', isVerified: true, content: 'Exploring uncharted territories 🚀 No map, just instinct and pure curiosity.',         image: 'https://images.unsplash.com/photo-1681118143075-5f5a10c9c092?w=800', timeAgo: '6h', likes: 3456, comments: 234, shares: 128, views: 21340),
-    Post(id: 'fy4', userName: 'Echo Vibe',     userAvatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200', isVerified: true, content: 'New ambient mix dropping tonight 🎵 Pure quantum energy.',                              image: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=800', timeAgo: '8h', likes: 1567, comments:  78, shares: 45,  views:  8900),
-  ];
-
-  final _trendingPosts = [
-    Post(id: 'tr1', userName: 'Vega Prime',  userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200', isVerified: true, content: '🔥 This just broke the internet. The new neural interface demo is insane!',              image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800', timeAgo: '30m', likes: 48200, comments: 3891, shares: 12400, views: 2100000),
-    Post(id: 'tr2', userName: 'Hex Storm',   userAvatar: 'https://images.unsplash.com/photo-1546961342-ea5f60b193e5?w=200',                  content: 'Trending: The future of quantum computing just shifted. Thread below 👇',                image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800', timeAgo: '1h',  likes: 29100, comments: 1560, shares:  8700, views:  980000),
-    Post(id: 'tr3', userName: 'Lyra Sol',    userAvatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200', isVerified: true, content: 'How I built an AI that can predict trends 3 days ahead 🤖📈',                           image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800', timeAgo: '2h',  likes: 15700, comments:  892, shares:  4300, views:  560000),
-    Post(id: 'tr4', userName: 'Nova Chen',   userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200', isVerified: true, content: 'Every major city is about to be re-designed around AI infrastructure 🏙️',              image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800', timeAgo: '3h',  likes: 11200, comments:  634, shares:  2890, views:  340000),
-  ];
-
-  final _followingPosts = [
-    Post(id: 'fl1', userName: 'Aria Storm',   userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200', isVerified: true, content: 'Good morning from deep space 🌌 Just finished a 6-hour creative session.',               image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', timeAgo: '1h',  likes:  892, comments:  41, shares: 12, views:  4320),
-    Post(id: 'fl2', userName: 'Kai Cyber',    userAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200',                  content: 'Just shipped the biggest update of my life. Years of work, now live 🚀',                  image: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800', timeAgo: '3h',  likes: 2134, comments: 189, shares: 67, views: 11200),
-    Post(id: 'fl3', userName: 'Echo Vibe',    userAvatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200', isVerified: true, content: 'New ambient mix dropping tonight 🎵 The vibe is pure quantum energy.',                   image: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=800', timeAgo: '5h',  likes: 1567, comments:  78, shares: 45, views:  8900),
-    Post(id: 'fl4', userName: 'Luna Ray',     userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',                  content: 'Some days you ship code, some days code ships you. Still love it though 💙',             image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800', timeAgo: '7h',  likes:  678, comments:  34, shares: 18, views:  3200),
-  ];
-
-  final _aiPicksPosts = [
-    Post(id: 'ai1', userName: 'Neural Node',  userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200', isVerified: true, content: '🧠 The singularity graph — fully visualized for the first time.',                        image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', timeAgo: '45m', likes: 5670, comments: 312, shares: 198, views: 34500),
-    Post(id: 'ai2', userName: 'Quantum Flux', userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',                  content: 'The most beautiful nebula captured with next-gen quantum optics 🌌',                    image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', timeAgo: '2h',  likes: 8920, comments: 445, shares: 267, views: 67000),
-    Post(id: 'ai3', userName: 'Zara Williams',userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200', isVerified: true, content: 'Why quantum entanglement will redefine communication forever 🔮',                       image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800', timeAgo: '4h',  likes: 4123, comments: 234, shares: 145, views: 28900),
-    Post(id: 'ai4', userName: 'Vega Prime',   userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200', isVerified: true, content: 'AI says you\'d love this: The architecture that powers every recommendation you see 📡',  image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800', timeAgo: '6h',  likes: 7800, comments: 489, shares: 234, views: 55000),
-  ];
-
-  final _globalPosts = [
-    Post(id: 'gl1', userName: 'Tokyo Tech',   userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200', isVerified: true, content: '🌐 From Tokyo: City lights that look like a circuit board. We are the machine.',         image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800', timeAgo: '1h',  likes:  7890, comments: 423, shares: 234, views:  89000),
-    Post(id: 'gl2', userName: 'Berlin Grid',  userAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200',                  content: '🌐 Berlin underground scene meets augmented reality. The future of nightlife.',         image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800', timeAgo: '3h',  likes:  3456, comments: 178, shares:  89, views:  45600),
-    Post(id: 'gl3', userName: 'Dubai Nexus',  userAvatar: 'https://images.unsplash.com/photo-1546961342-ea5f60b193e5?w=200', isVerified: true, content: '🌐 Dubai just opened the world\'s first quantum-powered skyscraper 🏙️',                 image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800', timeAgo: '5h',  likes: 12300, comments: 891, shares: 567, views: 234000),
-    Post(id: 'gl4', userName: 'Seoul AI Lab', userAvatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200', isVerified: true, content: '🌐 Korea\'s new brain-computer interface goes live. The age of telepathy begins 🧠',     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', timeAgo: '8h',  likes:  9800, comments: 567, shares: 342, views: 120000),
-  ];
-
-  // ── Computed posts list (filter + search) — cached to avoid recompute ──
-  List<Post>? _cachedPosts;
-  FeedFilter? _cachedFilter;
-  String? _cachedSearchQuery;
+  final List<Post> _forYouPosts = [];
 
   /// Converts live PostModel objects from FeedProvider to local Post objects
   List<Post> _postModelsToLocal(List<PostModel> models) {
@@ -200,36 +140,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   List<Post> get _currentPosts {
-    // For "For You" use live provider posts (falls back to curated if empty)
     final feedProvider = Provider.of<FeedProvider>(context, listen: false);
-    late List<Post> base;
-    switch (_activeFilter) {
-      case FeedFilter.forYou:
-        final livePosts = _postModelsToLocal(feedProvider.posts);
-        base = livePosts.isNotEmpty ? livePosts : _forYouPosts;
-        break;
-      case FeedFilter.trending:  base = _trendingPosts;  break;
-      case FeedFilter.following: base = _followingPosts; break;
-      case FeedFilter.aiPicks:   base = _aiPicksPosts;   break;
-      case FeedFilter.global:    base = _globalPosts;    break;
-    }
-    // Return cached result if inputs haven't changed
-    if (_cachedPosts != null && _cachedFilter == _activeFilter && _cachedSearchQuery == _searchQuery) {
-      // Only use cache for non-live tabs
-      if (_activeFilter != FeedFilter.forYou) return _cachedPosts!;
-    }
-    if (_searchQuery.isEmpty) {
-      _cachedPosts = base;
-    } else {
-      final lowerQuery = _searchQuery.toLowerCase();
-      _cachedPosts = base.where((p) =>
-        p.userName.toLowerCase().contains(lowerQuery) ||
-        p.content.toLowerCase().contains(lowerQuery),
-      ).toList();
-    }
-    _cachedFilter = _activeFilter;
-    _cachedSearchQuery = _searchQuery;
-    return _cachedPosts!;
+    final livePosts = _postModelsToLocal(feedProvider.posts);
+    if (_searchQuery.isEmpty) return livePosts;
+    final lowerQuery = _searchQuery.toLowerCase();
+    return livePosts.where((p) =>
+      p.userName.toLowerCase().contains(lowerQuery) ||
+      p.content.toLowerCase().contains(lowerQuery),
+    ).toList();
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -297,7 +215,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       _forYouPosts.insertAll(0, toAdd);
       _pendingNewPostsCount = 0;
       _showNewPostsBanner = false;
-      _cachedPosts = null; // Invalidate cache
     });
     _scrollToTop();
     // Schedule next banner wave
@@ -314,7 +231,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   Future<void> _onRefresh() async {
     HapticFeedback.mediumImpact();
-    setState(() { _showNewPostsBanner = false; _cachedPosts = null; });
+    setState(() { _showNewPostsBanner = false; });
     // Pull fresh posts from backend via FeedProvider
     if (mounted) {
       await Provider.of<FeedProvider>(context, listen: false).refreshFeed();
