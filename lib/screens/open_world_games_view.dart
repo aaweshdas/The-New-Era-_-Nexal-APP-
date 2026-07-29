@@ -327,7 +327,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
           ),
         ),
 
-        // Lightened Gradient Vignette overlay for clear background artwork visibility
+        // Deepened Cyber Overlay for adjusted comfortable lighting
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -335,10 +335,10 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  _kBg.withValues(alpha: 0.05),
-                  _kBg.withValues(alpha: 0.25),
-                  _kBg.withValues(alpha: 0.50),
-                  _kBg.withValues(alpha: 0.70),
+                  _kBg.withValues(alpha: 0.55),
+                  _kBg.withValues(alpha: 0.78),
+                  _kBg.withValues(alpha: 0.90),
+                  _kBg.withValues(alpha: 0.96),
                 ],
                 stops: const [0.0, 0.35, 0.70, 1.0],
               ),
@@ -426,11 +426,11 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                   child: Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: _kCardBg.withValues(alpha: 0.8),
+                      color: _kCardBg.withValues(alpha: 0.92),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: _kNeonGreen.withValues(alpha: 0.4), width: 1.4),
+                      border: Border.all(color: _kNeonGreen.withValues(alpha: 0.20), width: 1.2),
                       boxShadow: [
-                        BoxShadow(color: _kNeonGreen.withValues(alpha: 0.15), blurRadius: 24, spreadRadius: -2),
+                        BoxShadow(color: _kNeonGreen.withValues(alpha: 0.08), blurRadius: 12, spreadRadius: 0),
                       ],
                     ),
                     child: Column(
@@ -444,9 +444,9 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: _kDarkGlass,
-                                border: Border.all(color: _kNeonGreen, width: 1.5),
+                                border: Border.all(color: _kNeonGreen.withValues(alpha: 0.5), width: 1.2),
                                 boxShadow: [
-                                  BoxShadow(color: _kNeonGreen.withValues(alpha: 0.5), blurRadius: 16),
+                                  BoxShadow(color: _kNeonGreen.withValues(alpha: 0.15), blurRadius: 10),
                                 ],
                               ),
                               child: const Center(

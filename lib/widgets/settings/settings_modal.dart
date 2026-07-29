@@ -122,37 +122,37 @@ class _SettingsModalState extends State<SettingsModal> {
   static const String _buildNumber = '20260711';
   String _username = 'neuralnexus';
 
-  // 5 High-Glow Accent Definitions
+  // 5 High-Glow Accent Definitions (softened comfortable glow)
   final List<_AccentStyle> _accents = [
     const _AccentStyle(
       name: 'Electric Cyan',
       primary: Color(0xFF00E5FF),
       secondary: Color(0xFF0284C7),
-      glow: Color(0x6600E5FF),
+      glow: Color(0x2600E5FF),
     ),
     const _AccentStyle(
       name: 'Cosmic Violet',
       primary: Color(0xFFA855F7),
       secondary: Color(0xFF7E22CE),
-      glow: Color(0x66A855F7),
+      glow: Color(0x26A855F7),
     ),
     const _AccentStyle(
       name: 'Solar Gold',
       primary: Color(0xFFF59E0B),
       secondary: Color(0xFFD97706),
-      glow: Color(0x66F59E0B),
+      glow: Color(0x26F59E0B),
     ),
     const _AccentStyle(
       name: 'Matrix Emerald',
       primary: Color(0xFF10B981),
       secondary: Color(0xFF059669),
-      glow: Color(0x6610B981),
+      glow: Color(0x2610B981),
     ),
     const _AccentStyle(
       name: 'Crimson Cyber',
       primary: Color(0xFFEF4444),
       secondary: Color(0xFFDC2626),
-      glow: Color(0x66EF4444),
+      glow: Color(0x26EF4444),
     ),
   ];
 
@@ -438,7 +438,7 @@ class _SettingsModalState extends State<SettingsModal> {
             ),
           ),
 
-          // Cyberpunk Dark Vignette Overlay
+          // Cyberpunk Dark Vignette Overlay (darkened for comfortable lighting)
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -446,8 +446,8 @@ class _SettingsModalState extends State<SettingsModal> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.45),
-                    Colors.black.withValues(alpha: 0.80),
+                    Colors.black.withValues(alpha: 0.82),
+                    Colors.black.withValues(alpha: 0.94),
                   ],
                 ),
               ),
@@ -469,20 +469,20 @@ class _SettingsModalState extends State<SettingsModal> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.20),
-                          Colors.black.withValues(alpha: 0.70),
-                          Colors.white.withValues(alpha: 0.08),
+                          const Color(0xFF0F1424).withValues(alpha: 0.85),
+                          Colors.black.withValues(alpha: 0.92),
+                          const Color(0xFF0A0D18).withValues(alpha: 0.85),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.65),
-                        width: 1.4,
+                        color: Colors.white.withValues(alpha: 0.16),
+                        width: 1.0,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: _accent.glow,
-                          blurRadius: 40,
-                          spreadRadius: 2,
+                          color: _accent.glow.withValues(alpha: 0.20),
+                          blurRadius: 18,
+                          spreadRadius: 0,
                         ),
                       ],
                     ),
@@ -1368,8 +1368,8 @@ class _SettingsModalState extends State<SettingsModal> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.30), width: 1.2),
+        color: Colors.black.withValues(alpha: 0.35),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.0),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: TextField(
@@ -1405,8 +1405,8 @@ class _SettingsModalState extends State<SettingsModal> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+        color: Colors.black.withValues(alpha: 0.35),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [

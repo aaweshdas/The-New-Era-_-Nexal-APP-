@@ -72,14 +72,14 @@ class SettingsNavRail extends StatelessWidget {
                           ],
                         ),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.65),
-                          width: 1.4,
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1.0,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: accentColor.withValues(alpha: 0.45),
-                            blurRadius: 16,
-                            spreadRadius: 2,
+                            color: accentColor.withValues(alpha: 0.20),
+                            blurRadius: 10,
+                            spreadRadius: 0,
                           ),
                         ],
                       ),
