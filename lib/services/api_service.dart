@@ -11,13 +11,13 @@ class ApiService {
   final http.Client _client = http.Client();
 
   Map<String, String> get _defaultHeaders {
-    // Try live Supabase access token first, fallback to uid
     final supaToken = Supabase.instance.client.auth.currentSession?.accessToken;
-    final token = supaToken ?? AuthService.instance.currentUser?.uid ?? '';
+    final uid = AuthService.instance.currentUser?.uid ?? '';
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+      if (supaToken != null && supaToken.isNotEmpty) 'Authorization': 'Bearer $supaToken',
+      if (uid.isNotEmpty) 'X-User-Id': uid,
     };
   }
 
