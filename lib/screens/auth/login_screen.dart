@@ -476,19 +476,19 @@ class _LoginScreenState extends State<LoginScreen>
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── Background Image (assets/login BG.png) ─────────────────────
+          // ── Background Image (Reference Space Galaxy Image) ────────────
           Positioned.fill(
             child: Image.asset(
               'assets/login BG.png',
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              alignment: Alignment.center,
               width: double.infinity,
               height: double.infinity,
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
           ),
 
-          // ── Black & White Glass Vignette Overlay ────────────────────────
+          // ── Subtle Glass Dark Overlay ──────────────────────────────────
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -513,136 +513,29 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
 
-                    // ── Brand Logo Header (Shifted upwards without moving login panel) ──
-                    Transform.translate(
-                      offset: const Offset(0, -45.0),
-                      child: _buildBrandHeader(),
-                    ),
+                    // ── Brand Logo & Header ────────────────────────────────
+                    _buildBrandHeader(),
 
-                    const SizedBox(height: 12), // Gap maintained, login panel stays fixed
+                    const SizedBox(height: 28),
 
-                    // ── Black & White Glassmorphism Combined Auth Card ─────
+                    // ── 3D Liquid Metallic Glass Auth Card ─────────────────
                     _buildAuthCard(),
 
                     const SizedBox(height: 18),
 
-                    // ── Guest Button (Debug only) ──────────────────────────────
+                    // ── Guest Button (Debug only) ──────────────────────────
                     _buildGuestButton(),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // ── Mode Switcher Link ─────────────────────────────────
                     _buildModeToggleLink(),
                   ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Brand Header (Black & White Glassmorphism Squircle Logo)
-  // ──────────────────────────────────────────────────────────────────────────
-  // Brand Header (Black & White Glassmorphism Squircle Logo + Main Dashboard Font Headline)
-  // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildBrandHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // ── Brightened Logo Container (ColorFilter Brightness + Glow Shadow) ──
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(26),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.35),
-                  blurRadius: 32,
-                  spreadRadius: 3,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  blurRadius: 32,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(26),
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.matrix([
-                  1.25, 0,    0,    0, 15,
-                  0,    1.25, 0,    0, 15,
-                  0,    0,    1.25, 0, 15,
-                  0,    0,    0,    1, 0,
-                ]),
-                child: Image.asset(
-                  'assets/nexal_logo.png',
-                  fit: BoxFit.cover,
                 ),
               ),
             ),
-          )
-              .animate()
-              .fadeIn(duration: 700.ms)
-              .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
-
-          const SizedBox(width: 20),
-
-          // ── Right Side Typography: Nexal & The New Era (Rye Font Indented Layout) ─
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Line 1: NEXAL (Uppercase Rye Font - size 56)
-              Text(
-                'NEXAL',
-                style: GoogleFonts.rye(
-                  color: Colors.white,
-                  fontSize: 56,
-                  height: 1.05,
-                  letterSpacing: 2.0,
-                ),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .shimmer(
-                    duration: 3.seconds,
-                    colors: const [
-                      Colors.white,
-                      Color(0xFFA855F7),
-                      Color(0xFF06B6D4),
-                      Color(0xFFEC4899),
-                      Colors.white,
-                    ],
-                  )
-                  .fadeIn(delay: 200.ms, duration: 600.ms),
-
-              const SizedBox(height: 4),
-
-              // Line 2: The New Era (Indented 82px Right under NEXAL, size 22)
-              Padding(
-                padding: const EdgeInsets.only(left: 82.0),
-                child: Text(
-                  'The New Era',
-                  style: GoogleFonts.rye(
-                    color: Colors.white.withValues(alpha: 0.88),
-                    fontSize: 22,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-              ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
-            ],
           ),
         ],
       ),
@@ -650,210 +543,276 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Black & White Glassmorphism Auth Card Body
+  // Brand Header (3D Liquid Glass Badge Emblem + Luxury Access Title)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildBrandHeader() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // ── Metallic 3D Liquid Glass Emblem Box ──
+        Container(
+          width: 86,
+          height: 86,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.85),
+              width: 1.8,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.25),
+                Colors.black.withValues(alpha: 0.45),
+                Colors.white.withValues(alpha: 0.15),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.40),
+                blurRadius: 28,
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.80),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Center(
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.matrix([
+                    1.3, 0,   0,   0, 20,
+                    0,   1.3, 0,   0, 20,
+                    0,   0,   1.3, 0, 20,
+                    0,   0,   0,   1, 0,
+                  ]),
+                  child: Image.asset(
+                    'assets/nexal_logo.png',
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stack) => const Icon(
+                      LucideIcons.orbit,
+                      color: Colors.white,
+                      size: 42,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+            .animate()
+            .fadeIn(duration: 600.ms)
+            .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+
+        const SizedBox(height: 14),
+
+        // Brand Title: AURORA / NEXAL
+        Text(
+          'AURORA',
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 6.0,
+          ),
+        ).animate().fadeIn(delay: 200.ms),
+
+        const SizedBox(height: 4),
+
+        // Subhead: LUXURY ACCESS
+        Text(
+          'LUXURY ACCESS',
+          style: GoogleFonts.outfit(
+            color: Colors.white70,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 4.0,
+          ),
+        ).animate().fadeIn(delay: 350.ms),
+      ],
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 3D Liquid Metallic Glass Auth Card Body
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildAuthCard() {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(38),
+        borderRadius: BorderRadius.circular(34),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.60),
-            blurRadius: 40,
+            color: Colors.black.withValues(alpha: 0.65),
+            blurRadius: 36,
             spreadRadius: 2,
             offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(38),
+        borderRadius: BorderRadius.circular(34),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-          child: Stack(
-            children: [
-              // Sleek Dark Obsidian Glassmorphism Fill (Pure Matte Obsidian Glass, Zero White Glare)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(38),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.75),
-                      Colors.black.withValues(alpha: 0.85),
-                      Colors.black.withValues(alpha: 0.70),
-                      Colors.black.withValues(alpha: 0.80),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    width: 1.0,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Segmented Black & White Tab Controller ──────────────
-                    _buildSegmentedTabBar(),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(34),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.black.withValues(alpha: 0.75),
+                  Colors.black.withValues(alpha: 0.60),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.2,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Segmented Metallic Glass Tab Controller ─────────────────
+                _buildSegmentedTabBar(),
 
-                    const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                    // Full Name (Sign Up Mode)
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 300),
-                      crossFadeState: _isSignUpMode
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildTextField(
-                          controller: _nameCtrl,
-                          focusNode: _nameFocus,
-                          isFocused: _nameFocused,
-                          hint: 'Full Name',
-                          icon: LucideIcons.user,
-                          accentColor: Colors.white,
-                        ),
-                      ),
-                    ),
-
-                    // Email Field
-                    _buildTextField(
-                      controller: _emailCtrl,
-                      focusNode: _emailFocus,
-                      isFocused: _emailFocused,
-                      hint: 'Email address',
-                      icon: LucideIcons.mail,
-                      keyboardType: TextInputType.emailAddress,
+                // Full Name (Sign Up Mode)
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 300),
+                  crossFadeState: _isSignUpMode
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildTextField(
+                      controller: _nameCtrl,
+                      focusNode: _nameFocus,
+                      isFocused: _nameFocused,
+                      hint: 'Full Name',
+                      icon: LucideIcons.user,
                       accentColor: Colors.white,
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Password Field
-                    _buildTextField(
-                      controller: _passCtrl,
-                      focusNode: _passFocus,
-                      isFocused: _passFocused,
-                      hint: _isSignUpMode ? 'Password (min 6 chars)' : 'Password',
-                      icon: LucideIcons.lock,
-                      obscure: _obscureText,
-                      accentColor: Colors.white,
-                      onToggleObscure: () => setState(() => _obscureText = !_obscureText),
-                    ),
-
-                    // Password Strength bar (Sign Up Mode)
-                    if (_isSignUpMode && _passCtrl.text.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      _buildStrengthBar(),
-                    ],
-
-                    // Confirm Password Field (Sign Up Mode)
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 300),
-                      crossFadeState: _isSignUpMode
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: _buildTextField(
-                          controller: _confirmPassCtrl,
-                          focusNode: _confirmPassFocus,
-                          isFocused: _confirmPassFocused,
-                          hint: 'Confirm Password',
-                          icon: LucideIcons.shieldCheck,
-                          obscure: _obscureConfirmText,
-                          accentColor: Colors.white,
-                          onToggleObscure: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
-                        ),
-                      ),
-                    ),
-
-                    // Forgot Password (Sign In Mode)
-                    if (!_isSignUpMode) ...[
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          onPressed: () {},
-                          child: Text(
-                            'Forgot password?',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-
-                    // Black & White High-Contrast Liquid Primary CTA Button
-                    _buildPrimaryButton(
-                      label: _isSignUpMode ? 'CREATE ACCOUNT' : 'SIGN IN',
-                      onPressed: _isLoading ? null : _handleAuth,
-                      isLoading: _isLoading,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
 
-              // Upper Soft Ambient Arc (Minimal 4% Tint, Zero White Glare)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 35,
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(38)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.04),
-                          Colors.white.withValues(alpha: 0.0),
-                        ],
-                      ),
+                // Email / Username Field
+                _buildTextField(
+                  controller: _emailCtrl,
+                  focusNode: _emailFocus,
+                  isFocused: _emailFocused,
+                  hint: _isSignUpMode ? 'Enter Email' : 'Enter Username',
+                  icon: _isSignUpMode ? LucideIcons.mail : LucideIcons.user,
+                  keyboardType: TextInputType.emailAddress,
+                  accentColor: Colors.white,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Password Field
+                _buildTextField(
+                  controller: _passCtrl,
+                  focusNode: _passFocus,
+                  isFocused: _passFocused,
+                  hint: 'Enter Password',
+                  icon: LucideIcons.lock,
+                  obscure: _obscureText,
+                  accentColor: Colors.white,
+                  onToggleObscure: () => setState(() => _obscureText = !_obscureText),
+                ),
+
+                // Password Strength bar (Sign Up Mode)
+                if (_isSignUpMode && _passCtrl.text.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildStrengthBar(),
+                ],
+
+                // Confirm Password Field (Sign Up Mode)
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 300),
+                  crossFadeState: _isSignUpMode
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: _buildTextField(
+                      controller: _confirmPassCtrl,
+                      focusNode: _confirmPassFocus,
+                      isFocused: _confirmPassFocused,
+                      hint: 'Confirm Password',
+                      icon: LucideIcons.shieldCheck,
+                      obscure: _obscureConfirmText,
+                      accentColor: Colors.white,
+                      onToggleObscure: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
                     ),
                   ),
                 ),
-              ),
-            ],
+
+                // Forgot Password (Sign In Mode)
+                if (!_isSignUpMode) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        'Forgot Password?',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+
+                // 3D Metallic Liquid Primary CTA Button
+                _buildPrimaryButton(
+                  label: _isSignUpMode ? 'SIGN UP' : 'LOG IN',
+                  onPressed: _isLoading ? null : _handleAuth,
+                  isLoading: _isLoading,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     )
         .animate()
-        .fadeIn(delay: 400.ms, duration: 700.ms)
-        .slideY(begin: 0.06, curve: Curves.easeOutCubic);
+        .fadeIn(delay: 350.ms, duration: 600.ms)
+        .slideY(begin: 0.05, curve: Curves.easeOutCubic);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Segmented Black & White Liquid Glass Tab Bar [ Sign In | Sign Up ]
+  // Segmented Metallic Liquid Glass Tab Bar [ LOG IN | SIGN UP ]
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildSegmentedTabBar() {
     return Container(
-      height: 48,
+      height: 52,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.40),
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.black.withValues(alpha: 0.50),
+        borderRadius: BorderRadius.circular(26),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.35),
           width: 1.2,
@@ -864,7 +823,7 @@ class _LoginScreenState extends State<LoginScreen>
         children: [
           Expanded(
             child: _buildTabItem(
-              title: 'Sign In',
+              title: 'LOG IN',
               isSelected: !_isSignUpMode,
               onTap: () {
                 if (_isSignUpMode) {
@@ -876,7 +835,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           Expanded(
             child: _buildTabItem(
-              title: 'Sign Up',
+              title: 'SIGN UP',
               isSelected: _isSignUpMode,
               onTap: () {
                 if (!_isSignUpMode) {
@@ -902,25 +861,26 @@ class _LoginScreenState extends State<LoginScreen>
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           gradient: isSelected
-              ? LinearGradient(
+              ? const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white.withValues(alpha: 0.95),
-                    Colors.white.withValues(alpha: 0.80),
+                    Color(0xFFFFFFFF),
+                    Color(0xFFE2E8F0),
+                    Color(0xFF94A3B8),
                   ],
                 )
               : null,
           border: isSelected
-              ? Border.all(color: Colors.white, width: 1.2)
+              ? Border.all(color: Colors.white, width: 1.5)
               : null,
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    blurRadius: 12,
+                    color: Colors.white.withValues(alpha: 0.45),
+                    blurRadius: 16,
                   ),
                 ]
               : [],
@@ -929,9 +889,10 @@ class _LoginScreenState extends State<LoginScreen>
           child: Text(
             title,
             style: GoogleFonts.outfit(
-              color: isSelected ? const Color(0xFF0F172A) : Colors.white60,
+              color: isSelected ? const Color(0xFF0F172A) : Colors.white54,
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+              letterSpacing: 2.0,
             ),
           ),
         ),
@@ -994,9 +955,9 @@ class _LoginScreenState extends State<LoginScreen>
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             width: double.infinity,
-            height: 50,
+            height: 52,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
+              color: Colors.black.withValues(alpha: 0.40),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.45),
@@ -1022,6 +983,7 @@ class _LoginScreenState extends State<LoginScreen>
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ],
@@ -1046,7 +1008,7 @@ class _LoginScreenState extends State<LoginScreen>
             setState(() => _isSignUpMode = !_isSignUpMode);
           },
           child: Text(
-            _isSignUpMode ? 'Sign In' : 'Sign Up',
+            _isSignUpMode ? 'Log In' : 'Sign Up',
             style: GoogleFonts.outfit(
               color: Colors.white,
               fontSize: 15,
@@ -1074,27 +1036,27 @@ class _LoginScreenState extends State<LoginScreen>
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             color: isFocused
-                ? Colors.white.withValues(alpha: 0.18)
-                : Colors.black.withValues(alpha: 0.40),
+                ? Colors.black.withValues(alpha: 0.65)
+                : Colors.black.withValues(alpha: 0.45),
             border: Border.all(
               color: isFocused
-                  ? Colors.white.withValues(alpha: 0.90)
-                  : Colors.white.withValues(alpha: 0.35),
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.45),
               width: isFocused ? 1.8 : 1.2,
             ),
             boxShadow: isFocused
                 ? [
                     BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      blurRadius: 18,
+                      color: Colors.white.withValues(alpha: 0.35),
+                      blurRadius: 20,
                       spreadRadius: 1,
-                    )
+                    ),
                   ]
                 : [],
           ),
@@ -1105,13 +1067,13 @@ class _LoginScreenState extends State<LoginScreen>
                 focusNode: focusNode,
                 obscureText: obscure ?? false,
                 keyboardType: keyboardType,
-                style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 14.5, letterSpacing: 0.5),
                 decoration: InputDecoration(
                   prefixIcon: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Icon(
                       icon,
-                      size: 19,
+                      size: 20,
                       color: isFocused ? Colors.white : Colors.white70,
                     ),
                   ),
@@ -1120,7 +1082,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ? IconButton(
                           icon: Icon(
                             obscure! ? LucideIcons.eyeOff : LucideIcons.eye,
-                            color: Colors.white60,
+                            color: Colors.white70,
                             size: 19,
                           ),
                           onPressed: onToggleObscure,
@@ -1130,6 +1092,7 @@ class _LoginScreenState extends State<LoginScreen>
                   hintStyle: GoogleFonts.outfit(
                     color: Colors.white54,
                     fontSize: 14,
+                    letterSpacing: 0.5,
                   ),
                   filled: false,
                   border: InputBorder.none,
@@ -1142,7 +1105,7 @@ class _LoginScreenState extends State<LoginScreen>
                 top: 0,
                 left: 0,
                 right: 0,
-                height: 20,
+                height: 18,
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
@@ -1180,12 +1143,17 @@ class _LoginScreenState extends State<LoginScreen>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             width: double.infinity,
-            height: 56,
+            height: 58,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
               gradient: onPressed != null
                   ? const LinearGradient(
-                      colors: [Color(0xFFFFFFFF), Color(0xFFF1F5F9), Color(0xFFCBD5E1)],
+                      colors: [
+                        Color(0xFFFFFFFF),
+                        Color(0xFFF1F5F9),
+                        Color(0xFFCBD5E1),
+                        Color(0xFF94A3B8),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
@@ -1194,19 +1162,19 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
               border: Border.all(
                 color: Colors.white,
-                width: 1.5,
+                width: 1.8,
               ),
               boxShadow: onPressed != null
                   ? [
                       BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.40),
-                        blurRadius: 24,
-                        offset: const Offset(0, 6),
+                        color: Colors.white.withValues(alpha: 0.60),
+                        blurRadius: 26,
+                        spreadRadius: 2,
                       ),
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.40),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
+                        color: Colors.black.withValues(alpha: 0.50),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
                     ]
                   : [],
@@ -1216,20 +1184,20 @@ class _LoginScreenState extends State<LoginScreen>
                 Center(
                   child: isLoading
                       ? const SizedBox(
-                          width: 22,
-                          height: 22,
+                          width: 24,
+                          height: 24,
                           child: CircularProgressIndicator(
                             color: Color(0xFF0F172A),
-                            strokeWidth: 2.5,
+                            strokeWidth: 2.8,
                           ),
                         )
                       : Text(
                           label,
                           style: GoogleFonts.outfit(
                             color: const Color(0xFF0F172A),
-                            fontSize: 15,
+                            fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 2.5,
+                            letterSpacing: 3.0,
                           ),
                         ),
                 ),
@@ -1245,7 +1213,7 @@ class _LoginScreenState extends State<LoginScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withValues(alpha: 0.70),
+                          Colors.white.withValues(alpha: 0.65),
                           Colors.white.withValues(alpha: 0.0),
                         ],
                       ),
@@ -1260,3 +1228,4 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 }
+
