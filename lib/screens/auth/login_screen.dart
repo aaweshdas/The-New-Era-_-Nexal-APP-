@@ -634,7 +634,7 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildAuthCard() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 700;
+        final isWide = constraints.maxWidth >= 640;
         return Container(
           constraints: BoxConstraints(
             maxWidth: 860,
@@ -644,8 +644,8 @@ class _LoginScreenState extends State<LoginScreen>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.75),
-                blurRadius: 40,
+                color: Colors.black.withValues(alpha: 0.70),
+                blurRadius: 45,
                 spreadRadius: 2,
                 offset: const Offset(0, 12),
               ),
@@ -660,11 +660,11 @@ class _LoginScreenState extends State<LoginScreen>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 35, sigmaY: 35),
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: const Color(0xFF070A14).withValues(alpha: 0.60),
+                  color: const Color(0xFF070A14).withValues(alpha: 0.48),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.22),
                     width: 1.2,
@@ -690,18 +690,18 @@ class _LoginScreenState extends State<LoginScreen>
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 30),
-                              child: _buildFormContent(),
+                              child: _buildFormContent(isWide: true),
                             ),
                           ),
                         ],
                       )
                     else
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
-                        child: _buildFormContent(),
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                        child: _buildFormContent(isWide: false),
                       ),
 
-                    // Top-Right Specular Flare Glare Lens
+                    // Top Specular Flare Glare Lens
                     Positioned(
                       top: 0,
                       right: 0,
@@ -822,20 +822,96 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  // ── Compact Branding Header for Mobile / Portrait Windows ──
+  Widget _buildCompactBrandingHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF04060C).withValues(alpha: 0.35),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.0,
+        ),
+      ),
+      child: Row(
+        children: [
+          // 3D Emblem Container
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.60),
+                width: 1.2,
+              ),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.20),
+                  Colors.black.withValues(alpha: 0.60),
+                ],
+              ),
+            ),
+            child: Center(
+              child: Image.asset(
+                'assets/nexal_logo.png',
+                width: 26,
+                height: 26,
+                fit: BoxFit.contain,
+                errorBuilder: (c, e, s) => const Icon(LucideIcons.hexagon, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'N E X I O   A I',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Intelligence Reimagined.',
+                style: GoogleFonts.outfit(
+                  color: Colors.white54,
+                  fontSize: 11,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ──────────────────────────────────────────────────────────────────────────
   // Right Form Content Area
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildFormContent() {
+  Widget _buildFormContent({required bool isWide}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // ── Compact Branding Header for Mobile / Narrow Views ───
+        if (!isWide) ...[
+          _buildCompactBrandingHeader(),
+          const SizedBox(height: 18),
+        ],
+
         // Welcome Headline
         Text(
           _isSignUpMode ? 'Create Account' : 'Welcome Back',
           style: GoogleFonts.outfit(
             color: Colors.white,
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
