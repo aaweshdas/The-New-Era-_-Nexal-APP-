@@ -598,6 +598,68 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
+  // 3D Glassmorphism App Logo Badge (Centered at top of card)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildAppLogoBadge() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: Center(
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.65),
+              width: 1.2,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.22),
+                Colors.black.withValues(alpha: 0.65),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.28),
+                blurRadius: 20,
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.60),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.matrix([
+                1.2, 0,   0,   0, 12,
+                0,   1.2, 0,   0, 12,
+                0,   0,   1.2, 0, 12,
+                0,   0,   0,   1, 0,
+              ]),
+              child: Image.asset(
+                'assets/nexal_logo.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) => const Icon(
+                  LucideIcons.hexagon,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ),
+          ),
+        ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
   // Right Form Content Area
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildFormContent() {
@@ -605,6 +667,9 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // ── Centered App Logo Badge ───
+        _buildAppLogoBadge(),
+
         // Welcome Headline
         Text(
           _isSignUpMode ? 'Create Account' : 'Welcome Back',
