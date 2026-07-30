@@ -31,15 +31,6 @@ class _SplashRouterState extends State<SplashRouter> {
     final bool hasValidSession = session != null &&
         !_isSessionExpired(session);
 
-    // 🚀 Precache key background assets to prevent frame pop-in on first render
-    if (mounted) {
-      try {
-        await precacheImage(const AssetImage('assets/backgrounds/active_screens/login_bg.png'), context);
-        if (mounted) await precacheImage(const AssetImage('assets/nexal_logo.png'), context);
-        if (mounted) await precacheImage(const AssetImage('assets/backgrounds/preset_wallpapers/21.jpg'), context);
-      } catch (_) {}
-    }
-
     final Widget nextScreen = hasValidSession ? const HomeScreen() : const LoginScreen();
 
     if (!mounted) return;

@@ -464,19 +464,21 @@ class _LoginScreenState extends State<LoginScreen>
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── Background Image (assets/backgrounds/active_screens/login_bg.png) ───────────
+          // ── Clean Deep Space Background Image (assets/backgrounds/preset_wallpapers/21.jpg) ───────────
           Positioned.fill(
             child: Image.asset(
-              'assets/backgrounds/active_screens/login_bg.png',
+              'assets/backgrounds/preset_wallpapers/21.jpg',
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              alignment: Alignment.center,
               width: double.infinity,
               height: double.infinity,
-              errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+              errorBuilder: (context, error, stack) => Container(
+                color: const Color(0xFF07090E),
+              ),
             ),
           ),
 
-          // ── Black & White Glass Vignette Overlay ────────────────────────
+          // ── Deep Vignette Overlay for Crisp Readability ────────────────────
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -484,8 +486,8 @@ class _LoginScreenState extends State<LoginScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.15),
-                    Colors.black.withValues(alpha: 0.35),
+                    Colors.black.withValues(alpha: 0.30),
+                    Colors.black.withValues(alpha: 0.65),
                   ],
                 ),
               ),
@@ -496,145 +498,32 @@ class _LoginScreenState extends State<LoginScreen>
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = MediaQuery.of(context).size.width >= 700;
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (!isWide) ...[
-                          _buildBrandHeader(),
-                          const SizedBox(height: 16),
-                        ],
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ── Split-Panel Obsidian Glass Card ───
+                    _buildAuthCard(),
 
-                        // ── Split-Panel Obsidian Glass Card ───
-                        _buildAuthCard(),
+                    const SizedBox(height: 18),
 
-                        const SizedBox(height: 18),
+                    // ── Guest Button (Debug only) ───
+                    _buildGuestButton(),
 
-                        // ── Guest Button (Debug only) ───
-                        _buildGuestButton(),
+                    const SizedBox(height: 14),
 
-                        const SizedBox(height: 16),
-
-                        // ── Mode Switcher Link ───
-                        _buildModeToggleLink(),
-                      ],
-                    );
-                  },
+                    // ── Mode Switcher Link ───
+                    _buildModeToggleLink(),
+                  ],
                 ),
               ),
             ),
-          ),
-                ],
-              ),
-            );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Brand Header (Black & White Glassmorphism Squircle Logo)
-  // ──────────────────────────────────────────────────────────────────────────
-  // Brand Header (Black & White Glassmorphism Squircle Logo + Main Dashboard Font Headline)
-  // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildBrandHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // ── Brightened Logo Container (ColorFilter Brightness + Glow Shadow) ──
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(26),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.35),
-                  blurRadius: 32,
-                  spreadRadius: 3,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  blurRadius: 32,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(26),
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.matrix([
-                  1.25, 0,    0,    0, 15,
-                  0,    1.25, 0,    0, 15,
-                  0,    0,    1.25, 0, 15,
-                  0,    0,    0,    1, 0,
-                ]),
-                child: Image.asset(
-                  'assets/nexal_logo.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          )
-              .animate()
-              .fadeIn(duration: 700.ms)
-              .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
-
-          const SizedBox(width: 20),
-
-          // ── Right Side Typography: Nexal & The New Era (Rye Font Indented Layout) ─
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Line 1: NEXAL (Uppercase Rye Font - size 56)
-              Text(
-                'NEXAL',
-                style: GoogleFonts.rye(
-                  color: Colors.white,
-                  fontSize: 56,
-                  height: 1.05,
-                  letterSpacing: 2.0,
-                ),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .shimmer(
-                    duration: 3.seconds,
-                    colors: const [
-                      Colors.white,
-                      Color(0xFFA855F7),
-                      Color(0xFF06B6D4),
-                      Color(0xFFEC4899),
-                      Colors.white,
-                    ],
-                  )
-                  .fadeIn(delay: 200.ms, duration: 600.ms),
-
-              const SizedBox(height: 4),
-
-              // Line 2: The New Era (Indented 82px Right under NEXAL, size 22)
-              Padding(
-                padding: const EdgeInsets.only(left: 82.0),
-                child: Text(
-                  'The New Era',
-                  style: GoogleFonts.rye(
-                    color: Colors.white.withValues(alpha: 0.88),
-                    fontSize: 22,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-              ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
-            ],
           ),
         ],
       ),
     );
   }
+
 
   // ──────────────────────────────────────────────────────────────────────────
   // Split-Panel Obsidian Glass Card (Exact Reference Image Redesign)
