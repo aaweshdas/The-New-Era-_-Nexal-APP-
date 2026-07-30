@@ -1658,7 +1658,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 color: const Color(0xFF090518).withValues(alpha: 0.96),
                 borderRadius: BorderRadius.circular(30),
                 image: const DecorationImage(
-                  image: AssetImage('assets/backgrounds/normal_bg.png'),
+                  image: AssetImage('assets/backgrounds/active_screens/normal_bg.png'),
                   fit: BoxFit.cover,
                   opacity: 0.3,
                 ),
@@ -2417,7 +2417,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               color: const Color(0xFF070412).withValues(alpha: 0.94),
               borderRadius: BorderRadius.circular(30),
               image: const DecorationImage(
-                image: AssetImage('assets/backgrounds/normal_bg.png'),
+                image: AssetImage('assets/backgrounds/active_screens/normal_bg.png'),
                 fit: BoxFit.cover,
                 opacity: 0.35,
               ),
@@ -2691,7 +2691,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               color: const Color(0xFF070412).withValues(alpha: 0.94),
               borderRadius: BorderRadius.circular(30),
               image: const DecorationImage(
-                image: AssetImage('assets/backgrounds/normal_bg.png'),
+                image: AssetImage('assets/backgrounds/active_screens/normal_bg.png'),
                 fit: BoxFit.cover,
                 opacity: 0.35,
               ),
@@ -2969,7 +2969,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               color: const Color(0xFF070412).withValues(alpha: 0.94),
               borderRadius: BorderRadius.circular(30),
               image: const DecorationImage(
-                image: AssetImage('assets/backgrounds/normal_bg.png'),
+                image: AssetImage('assets/backgrounds/active_screens/normal_bg.png'),
                 fit: BoxFit.cover,
                 opacity: 0.35,
               ),
@@ -3226,7 +3226,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           color: const Color(0xFF070412).withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(30),
           image: const DecorationImage(
-            image: AssetImage('assets/backgrounds/normal_bg.png'),
+            image: AssetImage('assets/backgrounds/active_screens/normal_bg.png'),
             fit: BoxFit.cover,
             opacity: 0.35,
           ),

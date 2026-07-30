@@ -104,6 +104,8 @@ flutter:
     - assets/map/assets/
     - assets/videos/
     - assets/backgrounds/
+    - assets/backgrounds/active_screens/
+    - assets/backgrounds/preset_wallpapers/
     - assets/gallery/
     - assets/images/
     - assets/nexal_logo.png

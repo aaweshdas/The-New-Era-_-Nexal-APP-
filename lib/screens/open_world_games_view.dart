@@ -212,7 +212,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         precacheImage(AssetImage(game.bannerAsset!), context).catchError((_) {});
       }
     }
-    precacheImage(const AssetImage('assets/backgrounds/arcade_bg.png'), context).catchError((_) {});
+    precacheImage(const AssetImage('assets/backgrounds/active_screens/arcade_bg.png'), context).catchError((_) {});
   }
 
   @override
@@ -311,7 +311,7 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
         // Full screen background image fallback with bright, clear visibility
         Positioned.fill(
           child: Image.asset(
-            'assets/backgrounds/arcade_bg.png',
+            'assets/backgrounds/active_screens/arcade_bg.png',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stack) => const SizedBox.shrink(),
           ),

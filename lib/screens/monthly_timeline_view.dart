@@ -280,7 +280,7 @@ class _MonthlyTimelineViewState extends State<MonthlyTimelineView> {
             // Background Image
             Positioned.fill(
               child: Image.asset(
-                'assets/backgrounds/timeline_bg.jpg',
+                'assets/backgrounds/active_screens/timeline_bg.jpg',
                 fit: BoxFit.cover,
               ),
             ),

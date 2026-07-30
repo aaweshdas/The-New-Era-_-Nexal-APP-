@@ -54,7 +54,7 @@ class BackgroundProvider extends ChangeNotifier {
 
   // Active background
   BackgroundType activeType   = BackgroundType.assetImage;
-  String         activePath   = 'assets/backgrounds/21.jpg';
+  String         activePath   = 'assets/backgrounds/preset_wallpapers/21.jpg';
 
   // User's saved media library
   List<BackgroundItem> library = [];
@@ -70,7 +70,7 @@ class BackgroundProvider extends ChangeNotifier {
 
   void reset() {
     activeType = BackgroundType.assetImage;
-    activePath = 'assets/backgrounds/21.jpg';
+    activePath = 'assets/backgrounds/preset_wallpapers/21.jpg';
     library = _getDefaultPreseededLibrary();
     notifyListeners();
   }
@@ -85,7 +85,7 @@ class BackgroundProvider extends ChangeNotifier {
         orElse: () => BackgroundType.assetImage,
       );
     }
-    activePath = prefs.getString(_activeKey) ?? 'assets/backgrounds/21.jpg';
+    activePath = prefs.getString(_activeKey) ?? 'assets/backgrounds/preset_wallpapers/21.jpg';
 
     final raw = prefs.getStringList(_libraryKey);
     if (raw == null) {
@@ -132,7 +132,7 @@ class BackgroundProvider extends ChangeNotifier {
     // Base background wallpapers (1.png - 11.png)
     for (int i = 1; i <= 11; i++) {
       list.add(BackgroundItem(
-        path: 'assets/backgrounds/$i.png',
+        path: 'assets/backgrounds/preset_wallpapers/$i.png',
         type: BackgroundType.assetImage,
         name: 'Neo-City Grid $i',
         addedAt: DateTime(2026),
@@ -162,7 +162,7 @@ class BackgroundProvider extends ChangeNotifier {
 
     for (int i = 12; i <= 28; i++) {
       list.add(BackgroundItem(
-        path: 'assets/backgrounds/$i.jpg',
+        path: 'assets/backgrounds/preset_wallpapers/$i.jpg',
         type: BackgroundType.assetImage,
         name: customBgNames[i] ?? 'Cyber Wallpaper $i',
         addedAt: DateTime(2026),
@@ -184,7 +184,7 @@ class BackgroundProvider extends ChangeNotifier {
 
   Future<void> resetToDefault() async {
     activeType = BackgroundType.assetImage;
-    activePath = 'assets/backgrounds/21.jpg';
+    activePath = 'assets/backgrounds/preset_wallpapers/21.jpg';
 
     final prefs = await _getPrefs();
     await prefs.setString(_activeType, BackgroundType.assetImage.name);

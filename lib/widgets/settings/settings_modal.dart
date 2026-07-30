@@ -337,7 +337,7 @@ class _SettingsModalState extends State<SettingsModal> {
           // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/backgrounds/login_bg.png',
+              'assets/backgrounds/active_screens/login_bg.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
