@@ -610,7 +610,7 @@ class _LoginScreenState extends State<LoginScreen>
               const SizedBox(height: 2),
 
               Padding(
-                padding: const EdgeInsets.only(left: 36.0),
+                padding: const EdgeInsets.only(left: 72.0),
                 child: Text(
                   'The New Era',
                   style: GoogleFonts.rye(
