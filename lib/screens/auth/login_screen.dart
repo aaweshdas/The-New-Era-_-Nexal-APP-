@@ -610,7 +610,7 @@ class _LoginScreenState extends State<LoginScreen>
               const SizedBox(height: 2),
 
               Padding(
-                padding: const EdgeInsets.only(left: 72.0),
+                padding: const EdgeInsets.only(left: 80.0),
                 child: Text(
                   'The New Era',
                   style: GoogleFonts.rye(
@@ -644,14 +644,14 @@ class _LoginScreenState extends State<LoginScreen>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.85),
+                color: Colors.black.withValues(alpha: 0.75),
                 blurRadius: 40,
                 spreadRadius: 2,
                 offset: const Offset(0, 12),
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.08),
-                blurRadius: 20,
+                color: Colors.white.withValues(alpha: 0.12),
+                blurRadius: 24,
                 spreadRadius: -2,
                 offset: const Offset(0, -2),
               ),
@@ -660,13 +660,13 @@ class _LoginScreenState extends State<LoginScreen>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              filter: ImageFilter.blur(sigmaX: 35, sigmaY: 35),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: const Color(0xFF0A0D15).withValues(alpha: 0.92),
+                  color: const Color(0xFF070A14).withValues(alpha: 0.60),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.18),
+                    color: Colors.white.withValues(alpha: 0.22),
                     width: 1.2,
                   ),
                 ),
@@ -705,16 +705,17 @@ class _LoginScreenState extends State<LoginScreen>
                     Positioned(
                       top: 0,
                       right: 0,
+                      left: 0,
                       child: IgnorePointer(
                         child: Container(
-                          width: 120,
-                          height: 3,
+                          height: 2,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withValues(alpha: 0.0),
-                                Colors.white.withValues(alpha: 0.90),
-                                Colors.white.withValues(alpha: 0.0),
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.85),
+                                const Color(0xFF00E5FF).withValues(alpha: 0.70),
+                                Colors.transparent,
                               ],
                             ),
                           ),
@@ -740,7 +741,7 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildBrandingSidebar() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF06080E).withValues(alpha: 0.80),
+        color: const Color(0xFF04060C).withValues(alpha: 0.40),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       child: Column(
@@ -1056,18 +1057,19 @@ class _LoginScreenState extends State<LoginScreen>
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: const Color(0xFF06080D),
+        color: const Color(0xFF050812).withValues(alpha: 0.55),
         border: Border.all(
           color: isFocused
-              ? Colors.white.withValues(alpha: 0.70)
-              : Colors.white.withValues(alpha: 0.15),
+              ? const Color(0xFF00E5FF).withValues(alpha: 0.70)
+              : Colors.white.withValues(alpha: 0.16),
           width: isFocused ? 1.2 : 1.0,
         ),
         boxShadow: isFocused
             ? [
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.10),
-                  blurRadius: 10,
+                  color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  spreadRadius: 1,
                 )
               ]
             : [],
@@ -1084,7 +1086,7 @@ class _LoginScreenState extends State<LoginScreen>
             child: Icon(
               icon,
               size: 17,
-              color: isFocused ? Colors.white : Colors.white54,
+              color: isFocused ? const Color(0xFF00E5FF) : Colors.white54,
             ),
           ),
           prefixIconConstraints: const BoxConstraints(minWidth: 48),
@@ -1182,12 +1184,11 @@ class _LoginScreenState extends State<LoginScreen>
                           label,
                           style: GoogleFonts.outfit(
                             color: Colors.white,
-                            fontSize: 13.5,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 3.0,
+                            letterSpacing: 2.5,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         const Icon(
                           LucideIcons.arrowRight,
                           color: Colors.white,
