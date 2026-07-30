@@ -650,213 +650,176 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Black & White Glassmorphism Auth Card Body
+  // Minimalist Matte Obsidian Glass Auth Card Body
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildAuthCard() {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(38),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.60),
-            blurRadius: 40,
+            color: Colors.black.withValues(alpha: 0.75),
+            blurRadius: 36,
             spreadRadius: 2,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: Colors.black.withValues(alpha: 0.40),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(38),
+        borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-          child: Stack(
-            children: [
-              // Sleek Dark Obsidian Glassmorphism Fill (Pure Matte Obsidian Glass, Zero White Glare)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(38),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.75),
-                      Colors.black.withValues(alpha: 0.85),
-                      Colors.black.withValues(alpha: 0.70),
-                      Colors.black.withValues(alpha: 0.80),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    width: 1.0,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Segmented Black & White Tab Controller ──────────────
-                    _buildSegmentedTabBar(),
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              color: const Color(0xFF090D16).withValues(alpha: 0.88),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.22),
+                width: 1.0,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Segmented Obsidian Glass Tab Controller ─────────────
+                _buildSegmentedTabBar(),
 
-                    const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                    // Full Name (Sign Up Mode)
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 300),
-                      crossFadeState: _isSignUpMode
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildTextField(
-                          controller: _nameCtrl,
-                          focusNode: _nameFocus,
-                          isFocused: _nameFocused,
-                          hint: 'Full Name',
-                          icon: LucideIcons.user,
-                          accentColor: Colors.white,
-                        ),
-                      ),
-                    ),
-
-                    // Email Field
-                    _buildTextField(
-                      controller: _emailCtrl,
-                      focusNode: _emailFocus,
-                      isFocused: _emailFocused,
-                      hint: 'Email address',
-                      icon: LucideIcons.mail,
-                      keyboardType: TextInputType.emailAddress,
+                // Full Name (Sign Up Mode)
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 300),
+                  crossFadeState: _isSignUpMode
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildTextField(
+                      controller: _nameCtrl,
+                      focusNode: _nameFocus,
+                      isFocused: _nameFocused,
+                      hint: 'Full Name',
+                      icon: LucideIcons.user,
                       accentColor: Colors.white,
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Password Field
-                    _buildTextField(
-                      controller: _passCtrl,
-                      focusNode: _passFocus,
-                      isFocused: _passFocused,
-                      hint: _isSignUpMode ? 'Password (min 6 chars)' : 'Password',
-                      icon: LucideIcons.lock,
-                      obscure: _obscureText,
-                      accentColor: Colors.white,
-                      onToggleObscure: () => setState(() => _obscureText = !_obscureText),
-                    ),
-
-                    // Password Strength bar (Sign Up Mode)
-                    if (_isSignUpMode && _passCtrl.text.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      _buildStrengthBar(),
-                    ],
-
-                    // Confirm Password Field (Sign Up Mode)
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 300),
-                      crossFadeState: _isSignUpMode
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: _buildTextField(
-                          controller: _confirmPassCtrl,
-                          focusNode: _confirmPassFocus,
-                          isFocused: _confirmPassFocused,
-                          hint: 'Confirm Password',
-                          icon: LucideIcons.shieldCheck,
-                          obscure: _obscureConfirmText,
-                          accentColor: Colors.white,
-                          onToggleObscure: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
-                        ),
-                      ),
-                    ),
-
-                    // Forgot Password (Sign In Mode)
-                    if (!_isSignUpMode) ...[
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          onPressed: () {},
-                          child: Text(
-                            'Forgot password?',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-
-                    // Black & White High-Contrast Liquid Primary CTA Button
-                    _buildPrimaryButton(
-                      label: _isSignUpMode ? 'CREATE ACCOUNT' : 'SIGN IN',
-                      onPressed: _isLoading ? null : _handleAuth,
-                      isLoading: _isLoading,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
 
-              // Upper Soft Ambient Arc (Minimal 4% Tint, Zero White Glare)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 35,
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(38)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.04),
-                          Colors.white.withValues(alpha: 0.0),
-                        ],
-                      ),
+                // Email / Username Field
+                _buildTextField(
+                  controller: _emailCtrl,
+                  focusNode: _emailFocus,
+                  isFocused: _emailFocused,
+                  hint: _isSignUpMode ? 'Email Address' : 'Email or Username',
+                  icon: LucideIcons.mail,
+                  keyboardType: TextInputType.emailAddress,
+                  accentColor: Colors.white,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Password Field
+                _buildTextField(
+                  controller: _passCtrl,
+                  focusNode: _passFocus,
+                  isFocused: _passFocused,
+                  hint: _isSignUpMode ? 'Password (min 6 chars)' : 'Password',
+                  icon: LucideIcons.lock,
+                  obscure: _obscureText,
+                  accentColor: Colors.white,
+                  onToggleObscure: () => setState(() => _obscureText = !_obscureText),
+                ),
+
+                // Password Strength bar (Sign Up Mode)
+                if (_isSignUpMode && _passCtrl.text.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildStrengthBar(),
+                ],
+
+                // Confirm Password Field (Sign Up Mode)
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 300),
+                  crossFadeState: _isSignUpMode
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: _buildTextField(
+                      controller: _confirmPassCtrl,
+                      focusNode: _confirmPassFocus,
+                      isFocused: _confirmPassFocused,
+                      hint: 'Confirm Password',
+                      icon: LucideIcons.shieldCheck,
+                      obscure: _obscureConfirmText,
+                      accentColor: Colors.white,
+                      onToggleObscure: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
                     ),
                   ),
                 ),
-              ),
-            ],
+
+                // Forgot Password (Sign In Mode)
+                if (!_isSignUpMode) ...[
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        'Forgot password?',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+
+                // Minimalist High-Contrast White Primary CTA Button
+                _buildPrimaryButton(
+                  label: _isSignUpMode ? 'CREATE ACCOUNT' : 'SIGN IN',
+                  onPressed: _isLoading ? null : _handleAuth,
+                  isLoading: _isLoading,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     )
         .animate()
-        .fadeIn(delay: 400.ms, duration: 700.ms)
-        .slideY(begin: 0.06, curve: Curves.easeOutCubic);
+        .fadeIn(delay: 350.ms, duration: 600.ms)
+        .slideY(begin: 0.05, curve: Curves.easeOutCubic);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Segmented Black & White Liquid Glass Tab Bar [ Sign In | Sign Up ]
+  // Segmented Minimalist Obsidian Glass Tab Bar [ Sign In | Sign Up ]
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildSegmentedTabBar() {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.40),
+        color: Colors.black.withValues(alpha: 0.50),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.35),
-          width: 1.2,
+          color: Colors.white.withValues(alpha: 0.18),
+          width: 1.0,
         ),
       ),
       padding: const EdgeInsets.all(4),
@@ -903,24 +866,16 @@ class _LoginScreenState extends State<LoginScreen>
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: isSelected
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.95),
-                    Colors.white.withValues(alpha: 0.80),
-                  ],
-                )
-              : null,
+          color: isSelected ? Colors.white : Colors.transparent,
           border: isSelected
-              ? Border.all(color: Colors.white, width: 1.2)
+              ? Border.all(color: Colors.white, width: 1.0)
               : null,
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: Colors.white.withValues(alpha: 0.25),
                     blurRadius: 12,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : [],
@@ -932,6 +887,7 @@ class _LoginScreenState extends State<LoginScreen>
               color: isSelected ? const Color(0xFF0F172A) : Colors.white60,
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              letterSpacing: 0.5,
             ),
           ),
         ),
@@ -989,26 +945,18 @@ class _LoginScreenState extends State<LoginScreen>
     return GestureDetector(
       onTap: _isLoading ? null : _handleDemoLogin,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             width: double.infinity,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(30),
+              color: Colors.black.withValues(alpha: 0.40),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.45),
-                width: 1.2,
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.15),
-                  Colors.black.withValues(alpha: 0.25),
-                ],
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.0,
               ),
             ),
             child: Row(
@@ -1072,94 +1020,69 @@ class _LoginScreenState extends State<LoginScreen>
     VoidCallback? onToggleObscure,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(16),
             color: isFocused
-                ? Colors.white.withValues(alpha: 0.18)
+                ? Colors.black.withValues(alpha: 0.60)
                 : Colors.black.withValues(alpha: 0.40),
             border: Border.all(
               color: isFocused
-                  ? Colors.white.withValues(alpha: 0.90)
-                  : Colors.white.withValues(alpha: 0.35),
-              width: isFocused ? 1.8 : 1.2,
+                  ? Colors.white.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.18),
+              width: isFocused ? 1.5 : 1.0,
             ),
             boxShadow: isFocused
                 ? [
                     BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      blurRadius: 18,
+                      color: Colors.white.withValues(alpha: 0.12),
+                      blurRadius: 14,
                       spreadRadius: 1,
                     )
                   ]
                 : [],
           ),
-          child: Stack(
-            children: [
-              TextField(
-                controller: controller,
-                focusNode: focusNode,
-                obscureText: obscure ?? false,
-                keyboardType: keyboardType,
-                style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Icon(
-                      icon,
-                      size: 19,
-                      color: isFocused ? Colors.white : Colors.white70,
-                    ),
-                  ),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 54),
-                  suffixIcon: onToggleObscure != null
-                      ? IconButton(
-                          icon: Icon(
-                            obscure! ? LucideIcons.eyeOff : LucideIcons.eye,
-                            color: Colors.white60,
-                            size: 19,
-                          ),
-                          onPressed: onToggleObscure,
-                        )
-                      : null,
-                  hintText: hint,
-                  hintStyle: GoogleFonts.outfit(
-                    color: Colors.white54,
-                    fontSize: 14,
-                  ),
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            obscureText: obscure ?? false,
+            keyboardType: keyboardType,
+            style: GoogleFonts.outfit(color: Colors.white, fontSize: 14.5),
+            decoration: InputDecoration(
+              prefixIcon: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Icon(
+                  icon,
+                  size: 19,
+                  color: isFocused ? Colors.white : Colors.white60,
                 ),
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 20,
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.35),
-                          Colors.white.withValues(alpha: 0.0),
-                        ],
+              prefixIconConstraints: const BoxConstraints(minWidth: 54),
+              suffixIcon: onToggleObscure != null
+                  ? IconButton(
+                      icon: Icon(
+                        obscure! ? LucideIcons.eyeOff : LucideIcons.eye,
+                        color: Colors.white60,
+                        size: 19,
                       ),
-                    ),
-                  ),
-                ),
+                      onPressed: onToggleObscure,
+                    )
+                  : null,
+              hintText: hint,
+              hintStyle: GoogleFonts.outfit(
+                color: Colors.white54,
+                fontSize: 14,
               ),
-            ],
+              filled: false,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            ),
           ),
         ),
       ),
@@ -1174,89 +1097,59 @@ class _LoginScreenState extends State<LoginScreen>
     return GestureDetector(
       onTap: onPressed,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              gradient: onPressed != null
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFFFFFF), Color(0xFFF1F5F9), Color(0xFFCBD5E1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : const LinearGradient(
-                      colors: [Color(0xFF334155), Color(0xFF1E293B)],
-                    ),
-              border: Border.all(
-                color: Colors.white,
-                width: 1.5,
-              ),
-              boxShadow: onPressed != null
-                  ? [
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.40),
-                        blurRadius: 24,
-                        offset: const Offset(0, 6),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.40),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
-                      ),
-                    ]
-                  : [],
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          height: 54,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: onPressed != null
+                ? const LinearGradient(
+                    colors: [Color(0xFFFFFFFF), Color(0xFFE2E8F0)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  )
+                : const LinearGradient(
+                    colors: [Color(0xFF334155), Color(0xFF1E293B)],
+                  ),
+            border: Border.all(
+              color: Colors.white,
+              width: 1.0,
             ),
-            child: Stack(
-              children: [
-                Center(
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF0F172A),
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : Text(
-                          label,
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFF0F172A),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.5,
-                          ),
-                        ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 24,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.70),
-                          Colors.white.withValues(alpha: 0.0),
-                        ],
-                      ),
+            boxShadow: onPressed != null
+                ? [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF0F172A),
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF0F172A),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.0,
                     ),
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
     );
   }
 }
+
