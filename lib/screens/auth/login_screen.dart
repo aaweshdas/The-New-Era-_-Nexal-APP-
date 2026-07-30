@@ -523,74 +523,116 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Minimalist Sleek Obsidian Glass Card
+  // Split-Panel Obsidian Glass Card with Left Branding Sidebar
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildAuthCard() {
-    return Container(
-      constraints: const BoxConstraints(
-        maxWidth: 440,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.75),
-            blurRadius: 40,
-            spreadRadius: 2,
-            offset: const Offset(0, 12),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+        return Container(
+          constraints: BoxConstraints(
+            maxWidth: 860,
+            minHeight: isWide ? 510 : 0,
           ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.12),
-            blurRadius: 20,
-            spreadRadius: -2,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 28),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: const Color(0xFF0A0D16).withValues(alpha: 0.75),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.22),
-                width: 1.2,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.75),
+                blurRadius: 40,
+                spreadRadius: 2,
+                offset: const Offset(0, 12),
               ),
-            ),
-            child: Stack(
-              children: [
-                _buildFormContent(),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.12),
+                blurRadius: 20,
+                spreadRadius: -2,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: const Color(0xFF070A14).withValues(alpha: 0.75),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    width: 1.2,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    if (isWide)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Left Panel: Branding Sidebar with App Logo
+                          SizedBox(
+                            width: 280,
+                            child: _buildBrandingSidebar(),
+                          ),
+                          // Vertical Specular Divider Line
+                          Container(
+                            width: 1,
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                          // Right Panel: Form Area
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+                              child: _buildFormContent(),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          // Top Compact Sidebar Banner on Mobile
+                          _buildBrandingSidebar(isMobile: true),
+                          Container(
+                            height: 1,
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                            child: _buildFormContent(),
+                          ),
+                        ],
+                      ),
 
-                // Top Specular Glare Lens
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  left: 0,
-                  child: IgnorePointer(
-                    child: Container(
-                      height: 2,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withValues(alpha: 0.90),
-                            const Color(0xFF00E5FF).withValues(alpha: 0.70),
-                            Colors.transparent,
-                          ],
+                    // Top Specular Glare Lens
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      left: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          height: 2,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.90),
+                                const Color(0xFF00E5FF).withValues(alpha: 0.70),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     )
         .animate()
         .fadeIn(delay: 200.ms, duration: 600.ms)
@@ -598,78 +640,145 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3D Glassmorphism App Logo Badge (Centered at top of card)
+  // Left Branding Sidebar (3D Hexagon Emblem Logo & NEXIO AI Branding)
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildAppLogoBadge() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18.0),
-      child: Center(
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.65),
-              width: 1.2,
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: 0.22),
-                Colors.black.withValues(alpha: 0.65),
+  Widget _buildBrandingSidebar({bool isMobile = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF04060C).withValues(alpha: 0.45),
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: isMobile ? 18 : 36,
+      ),
+      child: isMobile
+          ? Row(
+              children: [
+                // 3D Hexagon Emblem Badge
+                _buildLogoBadge(size: 52, iconSize: 30),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'N E X I O   A I',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 3.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Intelligence Reimagined.',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white54,
+                        fontSize: 11.5,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(height: 10),
+
+                // Center Branding Stack
+                Column(
+                  children: [
+                    // 3D Hexagon Emblem Badge with App Logo
+                    _buildLogoBadge(size: 90, iconSize: 54),
+
+                    const SizedBox(height: 20),
+
+                    // Title: NEXIO AI
+                    Text(
+                      'N E X I O   A I',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4.0,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Footer Subtext: Intelligence Reimagined.
+                Text(
+                  'Intelligence Reimagined.',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
+                  ),
+                ),
               ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.28),
-                blurRadius: 20,
-                spreadRadius: 1,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.60),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+    );
+  }
+
+  // 3D Hexagon Emblem Badge Container
+  Widget _buildLogoBadge({required double size, required double iconSize}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size * 0.26),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.70),
+          width: 1.5,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.22),
+            Colors.black.withValues(alpha: 0.65),
+            Colors.white.withValues(alpha: 0.10),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.30),
+            blurRadius: 24,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.matrix([
-                1.2, 0,   0,   0, 12,
-                0,   1.2, 0,   0, 12,
-                0,   0,   1.2, 0, 12,
-                0,   0,   0,   1, 0,
-              ]),
-              child: Image.asset(
-                'assets/nexal_logo.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) => const Icon(
-                  LucideIcons.hexagon,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-            ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.60),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
-        ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+        ],
+      ),
+      child: Center(
+        child: Image.asset(
+          'assets/nexal_logo.png',
+          width: iconSize,
+          height: iconSize,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stack) => Icon(
+            LucideIcons.hexagon,
+            color: Colors.white,
+            size: iconSize * 0.8,
+          ),
+        ),
       ),
     );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Right Form Content Area
+  // Form Content Area
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildFormContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ── Centered App Logo Badge ───
-        _buildAppLogoBadge(),
-
         // Welcome Headline
         Text(
           _isSignUpMode ? 'Create Account' : 'Welcome Back',
