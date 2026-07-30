@@ -103,7 +103,6 @@ flutter:
     - assets/map/
     - assets/map/assets/
     - assets/videos/
-    - assets/backgrounds/
     - assets/backgrounds/active_screens/
     - assets/backgrounds/preset_wallpapers/
     - assets/gallery/
