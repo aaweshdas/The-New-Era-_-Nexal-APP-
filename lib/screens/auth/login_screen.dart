@@ -496,16 +496,11 @@ class _LoginScreenState extends State<LoginScreen>
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ── App Brand Logo & Headline ───
-                    _buildBrandHeader(),
-
-                    const SizedBox(height: 16),
-
-                    // ── Split-Panel Obsidian Glass Card ───
+                    // ── Minimalist Sleek Obsidian Glass Box ───
                     _buildAuthCard(),
 
                     const SizedBox(height: 18),
@@ -528,207 +523,74 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Brand Header (Black & White Glassmorphism Squircle Logo + Rye Font Headline)
+  // Minimalist Sleek Obsidian Glass Card
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildBrandHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // ── Brightened Logo Container (ColorFilter Brightness + Glow Shadow) ──
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.35),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.matrix([
-                  1.25, 0,    0,    0, 15,
-                  0,    1.25, 0,    0, 15,
-                  0,    0,    1.25, 0, 15,
-                  0,    0,    0,    1, 0,
-                ]),
-                child: Image.asset(
-                  'assets/nexal_logo.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          )
-              .animate()
-              .fadeIn(duration: 700.ms)
-              .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
-
-          const SizedBox(width: 16),
-
-          // ── Right Side Typography: Nexal & The New Era (Rye Font) ─
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'NEXAL',
-                style: GoogleFonts.rye(
-                  color: Colors.white,
-                  fontSize: 44,
-                  height: 1.05,
-                  letterSpacing: 2.0,
-                ),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .shimmer(
-                    duration: 3.seconds,
-                    colors: const [
-                      Colors.white,
-                      Color(0xFFA855F7),
-                      Color(0xFF06B6D4),
-                      Color(0xFFEC4899),
-                      Colors.white,
-                    ],
-                  )
-                  .fadeIn(delay: 200.ms, duration: 600.ms),
-
-              const SizedBox(height: 2),
-
-              Padding(
-                padding: const EdgeInsets.only(left: 80.0),
-                child: Text(
-                  'The New Era',
-                  style: GoogleFonts.rye(
-                    color: Colors.white.withValues(alpha: 0.88),
-                    fontSize: 18,
-                    letterSpacing: 1.8,
-                  ),
-                ),
-              ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
-            ],
+  Widget _buildAuthCard() {
+    return Container(
+      constraints: const BoxConstraints(
+        maxWidth: 440,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.75),
+            blurRadius: 40,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.12),
+            blurRadius: 20,
+            spreadRadius: -2,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-    );
-  }
-
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Split-Panel Obsidian Glass Card (Exact Reference Image Redesign)
-  // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildAuthCard() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 640;
-        return Container(
-          constraints: BoxConstraints(
-            maxWidth: 860,
-            minHeight: isWide ? 520 : 0,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.70),
-                blurRadius: 45,
-                spreadRadius: 2,
-                offset: const Offset(0, 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 28),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: const Color(0xFF0A0D16).withValues(alpha: 0.75),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.22),
+                width: 1.2,
               ),
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.12),
-                blurRadius: 24,
-                spreadRadius: -2,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: const Color(0xFF070A14).withValues(alpha: 0.48),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    width: 1.2,
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    if (isWide)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Left Panel: Branding Sidebar
-                          SizedBox(
-                            width: 290,
-                            child: _buildBrandingSidebar(),
-                          ),
-                          // Vertical Divider with Specular Flare Node
-                          Container(
-                            width: 1,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          // Right Panel: Form Area
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 30),
-                              child: _buildFormContent(isWide: true),
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                        child: _buildFormContent(isWide: false),
-                      ),
+            ),
+            child: Stack(
+              children: [
+                _buildFormContent(),
 
-                    // Top Specular Flare Glare Lens
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      left: 0,
-                      child: IgnorePointer(
-                        child: Container(
-                          height: 2,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                Colors.white.withValues(alpha: 0.85),
-                                const Color(0xFF00E5FF).withValues(alpha: 0.70),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
+                // Top Specular Glare Lens
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  left: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withValues(alpha: 0.90),
+                            const Color(0xFF00E5FF).withValues(alpha: 0.70),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     )
         .animate()
         .fadeIn(delay: 200.ms, duration: 600.ms)
@@ -736,182 +598,19 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Left Branding Sidebar (3D Hexagon Emblem & NEXIO AI Branding)
-  // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildBrandingSidebar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF04060C).withValues(alpha: 0.40),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const SizedBox(height: 10),
-
-          // Center Branding Stack
-          Column(
-            children: [
-              // 3D Hexagon Emblem Badge
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.70),
-                    width: 1.5,
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.20),
-                      Colors.black.withValues(alpha: 0.60),
-                      Colors.white.withValues(alpha: 0.10),
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.30),
-                      blurRadius: 24,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Image.asset(
-                    'assets/nexal_logo.png',
-                    width: 54,
-                    height: 54,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stack) => const Icon(
-                      LucideIcons.hexagon,
-                      color: Colors.white,
-                      size: 44,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Title: NEXIO AI
-              Text(
-                'N E X I O   A I',
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4.0,
-                ),
-              ),
-            ],
-          ),
-
-          // Footer Subtext: Intelligence Reimagined.
-          Text(
-            'Intelligence Reimagined.',
-            style: GoogleFonts.outfit(
-              color: Colors.white54,
-              fontSize: 12,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Compact Branding Header for Mobile / Portrait Windows ──
-  Widget _buildCompactBrandingHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFF04060C).withValues(alpha: 0.35),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1.0,
-        ),
-      ),
-      child: Row(
-        children: [
-          // 3D Emblem Container
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.60),
-                width: 1.2,
-              ),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.20),
-                  Colors.black.withValues(alpha: 0.60),
-                ],
-              ),
-            ),
-            child: Center(
-              child: Image.asset(
-                'assets/nexal_logo.png',
-                width: 26,
-                height: 26,
-                fit: BoxFit.contain,
-                errorBuilder: (c, e, s) => const Icon(LucideIcons.hexagon, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'N E X I O   A I',
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Intelligence Reimagined.',
-                style: GoogleFonts.outfit(
-                  color: Colors.white54,
-                  fontSize: 11,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
   // Right Form Content Area
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildFormContent({required bool isWide}) {
+  Widget _buildFormContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ── Compact Branding Header for Mobile / Narrow Views ───
-        if (!isWide) ...[
-          _buildCompactBrandingHeader(),
-          const SizedBox(height: 18),
-        ],
-
         // Welcome Headline
         Text(
           _isSignUpMode ? 'Create Account' : 'Welcome Back',
           style: GoogleFonts.outfit(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
