@@ -464,17 +464,15 @@ class _LoginScreenState extends State<LoginScreen>
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── Clean Deep Space Background Image (assets/backgrounds/preset_wallpapers/21.jpg) ───────────
+          // ── Background Image (assets/backgrounds/active_screens/login_bg.png) ───────────
           Positioned.fill(
             child: Image.asset(
-              'assets/backgrounds/preset_wallpapers/21.jpg',
+              'assets/backgrounds/active_screens/login_bg.png',
               fit: BoxFit.cover,
-              alignment: Alignment.center,
+              alignment: Alignment.topCenter,
               width: double.infinity,
               height: double.infinity,
-              errorBuilder: (context, error, stack) => Container(
-                color: const Color(0xFF07090E),
-              ),
+              errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
           ),
 
