@@ -165,10 +165,10 @@ class _SignupScreenState extends State<SignupScreen>
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── Full-Screen Background Image (assets/login BG.png) ───────────
+          // ── Full-Screen Background Image (assets/backgrounds/login_bg.png) ──
           Positioned.fill(
             child: Image.asset(
-              'assets/login BG.png',
+              'assets/backgrounds/login_bg.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),

@@ -450,7 +450,7 @@ class _GalleryViewState extends State<GalleryView> {
             // Background Image
             Positioned.fill(
               child: Image.asset(
-                'assets/gallery/gallery_background.jpg',
+                'assets/backgrounds/gallery_bg.jpg',
                 fit: BoxFit.cover,
               ),
             ),

@@ -34,7 +34,7 @@ class _SplashRouterState extends State<SplashRouter> {
     // 🚀 Precache key background assets to prevent frame pop-in on first render
     if (mounted) {
       try {
-        await precacheImage(const AssetImage('assets/login BG.png'), context);
+        await precacheImage(const AssetImage('assets/backgrounds/login_bg.png'), context);
         if (mounted) await precacheImage(const AssetImage('assets/nexal_logo.png'), context);
         if (mounted) await precacheImage(const AssetImage('assets/backgrounds/21.jpg'), context);
       } catch (_) {}

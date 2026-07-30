@@ -612,7 +612,7 @@ class _AIAssistViewState extends State<AIAssistView>
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/aria_background.png'),
+                  image: AssetImage('assets/backgrounds/aria_bg.png'),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
                     Color(0x4C000000), // 30% black overlay (70% image brightness)

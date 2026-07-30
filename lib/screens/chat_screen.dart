@@ -280,10 +280,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Message Page Background Image (MSG BG.jpg)
+          // Message Page Background Image (assets/backgrounds/msg_bg.jpg)
           Positioned.fill(
             child: Image.asset(
-              'assets/MSG BG.jpg',
+              'assets/backgrounds/msg_bg.jpg',
               fit: BoxFit.cover,
               errorBuilder: (c, e, s) => const SizedBox.shrink(),
             ),

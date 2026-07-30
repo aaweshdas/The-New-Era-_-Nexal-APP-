@@ -485,7 +485,7 @@ class _SearchViewState extends State<SearchView> with TickerProviderStateMixin {
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/search_background.png'),
+                  image: AssetImage('assets/backgrounds/search_bg.png'),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(Color(0xBB000000), BlendMode.darken),
                 ),
