@@ -262,97 +262,122 @@ class _SignupScreenState extends State<SignupScreen>
 
   Widget _buildBrandHeader() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Metallic 3D Liquid Glass Emblem Box
+        // Liquid glass orb logo container
         Container(
-          width: 86,
-          height: 86,
+          width: 96,
+          height: 96,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.85),
-              width: 1.8,
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: 0.25),
-                Colors.black.withValues(alpha: 0.45),
-                Colors.white.withValues(alpha: 0.15),
-              ],
-            ),
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.40),
-                blurRadius: 28,
-                spreadRadius: 2,
+                color: const Color(0xFFEC4899).withValues(alpha: 0.50),
+                blurRadius: 36,
+                spreadRadius: 4,
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.80),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: const Color(0xFFA855F7).withValues(alpha: 0.35),
+                blurRadius: 50,
+                spreadRadius: 2,
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Center(
-                child: ColorFiltered(
-                  colorFilter: const ColorFilter.matrix([
-                    1.3, 0,   0,   0, 20,
-                    0,   1.3, 0,   0, 20,
-                    0,   0,   1.3, 0, 20,
-                    0,   0,   0,   1, 0,
-                  ]),
-                  child: Image.asset(
-                    'assets/nexal_logo.png',
-                    width: 58,
-                    height: 58,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stack) => const Icon(
-                      LucideIcons.orbit,
-                      color: Colors.white,
-                      size: 42,
+          child: Stack(
+            children: [
+              // Gel blur backing
+              ClipOval(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.35),
+                          const Color(0xFFEC4899).withValues(alpha: 0.20),
+                          const Color(0xFFA855F7).withValues(alpha: 0.15),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.65),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/nexal_logo.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+              // Upper specular liquid highlight lens
+              Positioned(
+                top: 2,
+                left: 10,
+                right: 10,
+                height: 36,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.55),
+                        Colors.white.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         )
             .animate()
-            .fadeIn(duration: 600.ms)
-            .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+            .fadeIn(duration: 800.ms)
+            .scale(begin: const Offset(0.7, 0.7), curve: Curves.elasticOut, duration: 900.ms),
 
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
 
-        // Brand Title: AURORA
-        Text(
-          'AURORA',
-          style: GoogleFonts.outfit(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 6.0,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFFFFFFFF), Color(0xFFF472B6), Color(0xFFC084FC)],
+              ).createShader(bounds),
+              child: Text(
+                'NEXAL THE NEW ERA',
+                style: GoogleFonts.rye(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 3,
+                ),
+              ),
+            ),
           ),
-        ).animate().fadeIn(delay: 200.ms),
+        ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
 
-        // Subhead: LUXURY ACCESS
         Text(
-          'LUXURY ACCESS',
+          'Create Your Liquid Glass Account',
           style: GoogleFonts.outfit(
-            color: Colors.white70,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 4.0,
+            color: const Color(0xFFF472B6).withValues(alpha: 0.75),
+            fontSize: 12,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w500,
           ),
-        ).animate().fadeIn(delay: 350.ms),
+        ).animate().fadeIn(delay: 450.ms),
       ],
     );
   }
