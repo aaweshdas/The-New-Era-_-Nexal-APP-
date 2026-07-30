@@ -1,5 +1,5 @@
 name: nexal
-description: "A new Flutter project."
+description: "Nexal — A next-generation social platform with AI, real-time chat, immersive maps, and cloud arcade."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -67,9 +67,12 @@ dependencies:
   emoji_picker_flutter: ^4.3.0
   qr_flutter: ^4.1.0
   supabase_flutter: ^2.8.0
-  google_sign_in: ^6.2.1
   flutter_lucide: ^1.11.0
   app_links: ^6.3.2
+  photo_manager: ^3.7.0
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.4
+  otp: ^3.1.7
 
 
 
@@ -114,6 +117,7 @@ flutter:
     - assets/saved_icon.png
     - assets/3d_map.png
     - assets/wordl/
+    - assets/voxel_realm/
 
     - assets/wordl/assets/
     - assets/wordl/assets/audio/ambiances/

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,6 +13,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'home_screen.dart';
 import '../services/map_video_preloader.dart';
 
 class MapView extends StatefulWidget {
@@ -811,23 +814,94 @@ class _MapViewState extends State<MapView> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     if (_locationDenied) return _buildDeniedScreen();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
-      body: Stack(
-        children: [
-          // Map WebView (always in tree once server ready)
-          if (_serverReady && _ctrl != null)
-            Positioned.fill(child: WebViewWidget(controller: _ctrl!)),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0A0A0F),
+        body: Stack(
+          children: [
+            // Map WebView (always in tree once server ready)
+            if (_serverReady && _ctrl != null)
+              Positioned.fill(child: WebViewWidget(controller: _ctrl!)),
 
-          // Cinematic loading screen
-          if (_isLoading)
-            Positioned.fill(
-              child: FadeTransition(
-                opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_fadeAnim),
-                child: _buildLoadingScreen(),
+            // Cinematic loading screen
+            if (_isLoading)
+              Positioned.fill(
+                child: FadeTransition(
+                  opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_fadeAnim),
+                  child: _buildLoadingScreen(),
+                ),
+              ),
+
+            // Floating Top Left Liquid Glass Back Button
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              left: 16,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    } else {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                      );
+                    }
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF00E5FF).withValues(alpha: 0.40),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00E5FF).withValues(alpha: 0.20),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'GALAXY',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

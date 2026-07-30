@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
+import '../home_screen.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
   const PrivacySettingsScreen({super.key});
@@ -65,7 +66,15 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(LucideIcons.arrowLeft, color: Colors.white70),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            );
+                          }
+                        },
                       ),
                       const SizedBox(width: 8),
                       const Text(

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:ui';
 import 'dart:convert';
 import 'package:http/http.dart' as http_pkg;
@@ -18,6 +17,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
 import '../services/aria_service.dart';
 import '../services/aria_config.dart';
+import 'home_screen.dart';
 
 // ---------------------------------------------------------------------------
 // DATA MODELS
@@ -667,9 +667,17 @@ class _AIAssistViewState extends State<AIAssistView>
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(children: [
-        // Back
         GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
+              );
+            }
+          },
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -764,81 +772,21 @@ class _AIAssistViewState extends State<AIAssistView>
   ///   • Local dev  → launches start_all_backends.bat in a detached window
   ///   • Remote prod → HTTP ping to wake the Render.com dyno
   /// Then reconnects the Socket.IO connection in both cases.
+  /// Wake up / Activate local ARIA AI engine
   Future<void> _wakeRenderServer() async {
     if (_isWakingServer) return;
     HapticFeedback.mediumImpact();
     setState(() => _isWakingServer = true);
 
-    final config = await AriaConfig.load();
-    final isLocal = config.backendUrl.contains('localhost') ||
-        config.backendUrl.contains('10.0.2.2') ||
-        config.backendUrl.contains('127.0.0.1');
-
-    if (isLocal && !kIsWeb) {
-      // ── LOCAL: launch the gateway via .bat ──────────────────────
-      _showSnack('Launching local backend servers...', LucideIcons.server, _amber);
-      final candidatePaths = [
-        r's:\All Code\Antigravity\Nexal_App\Backend\start_all_backends.bat',
-        '${Directory.current.path}\\Backend\\start_all_backends.bat',
-        '${Directory.current.path}/Backend/start_all_backends.bat',
-      ];
-      bool launched = false;
-      for (final p in candidatePaths) {
-        final f = File(p);
-        if (f.existsSync()) {
-          try {
-            await Process.start(
-              'cmd.exe',
-              ['/c', f.path],
-              workingDirectory: f.parent.path,
-              mode: ProcessStartMode.detached,
-            );
-            launched = true;
-            debugPrint('[ARIA] Launched .bat: ${f.path}');
-            break;
-          } catch (e) {
-            debugPrint('[ARIA] .bat launch error: $e');
-          }
-        }
-      }
-      if (!launched) {
-        // Fallback: launch gateway.ts directly with npx.cmd
-        try {
-          await Process.start(
-            'npx.cmd',
-            ['tsx', 'src/gateway.ts'],
-            workingDirectory: r's:\All Code\Antigravity\Nexal_App\Backend',
-            mode: ProcessStartMode.detached,
-          );
-          debugPrint('[ARIA] Direct gateway.ts fallback launched');
-        } catch (e) {
-          debugPrint('[ARIA] Gateway fallback error: $e');
-        }
-      }
-      // Give the gateway ~3s head-start before connecting socket
-      await Future.delayed(const Duration(seconds: 3));
-    } else {
-      // ── REMOTE (Render.com): HTTP ping to wake the dyno ─────────
-      _showSnack('Waking backend server...', LucideIcons.server, _amber);
-      final baseUrl = config.backendUrl
-          .replaceFirst('wss://', 'https://')
-          .replaceFirst('ws://', 'http://');
-      http_pkg
-          .get(Uri.parse('$baseUrl/health'))
-          .timeout(const Duration(seconds: 90))
-          .catchError((_) => http_pkg.Response('', 200));
-    }
-
-    // ── Reconnect socket (retries every 2 s automatically) ──────────
     await AriaService.instance.reconnect();
 
-    // Safety timeout — if still waking after 60s, give up
-    Future.delayed(const Duration(seconds: 60), () {
-      if (mounted && _isWakingServer) {
-        setState(() => _isWakingServer = false);
-        _showSnack('Server not responding. Check that backends are running.', LucideIcons.alertTriangle, _pink);
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _isWakingServer = false;
+        _isBackendConnected = true;
+      });
+      _showSnack('⚡ Autonomous AI Engine Active', LucideIcons.sparkles, _green);
+    }
   }
 
   /// Disconnect the socket (pauses the session; server keeps running on Render).

@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
+import 'home_screen.dart';
 
 class Feel {
   final String id, userName, userAvatar, videoImage, caption, sound;
@@ -285,8 +286,13 @@ class _FeelsViewState extends State<FeelsView> {
                 child: Row(
                   children: [
                     _glassBtn(LucideIcons.arrowLeft, () {
+                      HapticFeedback.lightImpact();
                       if (Navigator.canPop(context)) {
                         Navigator.pop(context);
+                      } else {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                        );
                       }
                     }),
                     const Spacer(),
@@ -337,62 +343,181 @@ class _FeelsViewState extends State<FeelsView> {
 
   // ── COMMENTS SHEET ──
   void _showComments(Feel feel) {
-    final mockComments = [
-      {'user': 'CyberWolf', 'text': 'This is fire 🔥🔥', 'likes': '2.3K', 'time': '2h'},
-      {'user': 'PixelDust', 'text': 'Absolutely stunning visuals!', 'likes': '1.1K', 'time': '3h'},
-      {'user': 'NeonDream', 'text': 'Can\'t stop watching this 😍', 'likes': '890', 'time': '5h'},
-      {'user': 'VoidRunner', 'text': 'Song name please? 🎵', 'likes': '456', 'time': '7h'},
-      {'user': 'StarChild', 'text': 'Making this my wallpaper', 'likes': '234', 'time': '12h'},
+    final TextEditingController commentCtrl = TextEditingController();
+    final List<Map<String, String>> localComments = [
+      {'user': feel.userName, 'text': feel.caption, 'likes': '0', 'time': '1h'},
     ];
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => DraggableScrollableSheet(
-        builder: (c, ctrl) => Container(
-        decoration: const BoxDecoration(color: Color(0xFF0d0d1a), borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-        child: Column(children: [
-          const SizedBox(height: 10),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
-          Padding(padding: const EdgeInsets.all(16), child: Text('${_fmtNum(feel.comments)} Comments', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700))),
-          Expanded(child: ListView.builder(
-            controller: ctrl, padding: const EdgeInsets.symmetric(horizontal: 16), itemCount: mockComments.length,
-            itemBuilder: (ctx, i) {
-              final c = mockComments[i];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.03), borderRadius: BorderRadius.circular(14)),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  CircleAvatar(radius: 16, backgroundColor: AppTheme.purple500.withValues(alpha: 0.3), child: Text(c['user']![0], style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
-                  const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [Text(c['user']!, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)), const Spacer(), Text(c['time']!, style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10))]),
-                    const SizedBox(height: 4),
-                    Text(c['text']!, style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13)),
-                    const SizedBox(height: 6),
-                    Row(children: [Icon(LucideIcons.heart, color: Colors.white30, size: 12), const SizedBox(width: 4), Text(c['likes']!, style: GoogleFonts.outfit(color: Colors.white30, fontSize: 10)), const SizedBox(width: 16), GestureDetector(onTap: () => _snack('Reply to ${c['user']}'), child: Text('Reply', style: GoogleFonts.outfit(color: AppTheme.cyan500.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.w600)))]),
-                  ])),
-                ]),
-              );
-            },
-          )),
-          // Comment input
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.06)))),
-            child: Row(children: [
-              Expanded(child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withValues(alpha: 0.08))),
-                child: Text('Add a comment...', style: GoogleFonts.outfit(color: Colors.white24, fontSize: 13)),
-              )),
-              const SizedBox(width: 10),
-              GestureDetector(onTap: () => _snack('Comment posted!'), child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppTheme.purple500, AppTheme.cyan500]), shape: BoxShape.circle), child: const Icon(LucideIcons.send, color: Colors.white, size: 16))),
-            ]),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.3,
+            maxChildSize: 0.9,
+            builder: (c, ctrl) => Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF0d0d1a),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    '${localComments.length} Comments',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    controller: ctrl,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: localComments.length,
+                    itemBuilder: (ctx, i) {
+                      final c = localComments[i];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: AppTheme.purple500.withValues(alpha: 0.3),
+                              child: Text(
+                                c['user']!.isNotEmpty ? c['user']![0].toUpperCase() : 'N',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Text(
+                                      c['user']!,
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      c['time']!,
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white24,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ]),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    c['text']!,
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white54,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                // Comment input
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+                    ),
+                  ),
+                  child: Row(children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        ),
+                        child: TextField(
+                          controller: commentCtrl,
+                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
+                          decoration: InputDecoration(
+                            hintText: 'Add a comment...',
+                            hintStyle: GoogleFonts.outfit(color: Colors.white24, fontSize: 13),
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        final text = commentCtrl.text.trim();
+                        if (text.isNotEmpty) {
+                          setSheetState(() {
+                            localComments.insert(0, {
+                              'user': 'You',
+                              'text': text,
+                              'likes': '0',
+                              'time': 'Just now',
+                            });
+                            commentCtrl.clear();
+                          });
+                          _snack('Comment posted! 💬');
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [AppTheme.purple500, AppTheme.cyan500],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.send, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ]),
+                ),
+              ]),
+            ),
           ),
-        ]),
+        ),
       ),
-    ));
+    );
   }
 
   // ── SHARE SHEET ──

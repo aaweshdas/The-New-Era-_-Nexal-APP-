@@ -21,6 +21,7 @@ import 'open_world_games_view.dart';
 import 'map_view.dart';
 import 'settings/dashboard_background_screen.dart';
 import '../main.dart'; // Import to access routeObserver
+import '../widgets/common/permission_bottom_sheet.dart';
 import '../services/map_video_preloader.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
     )..repeat();
 
     // Trigger one-shot fade in of icons after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         setState(() {
           _showIcons = true;
@@ -53,6 +54,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware, TickerProvider
       // Pre-warm the map loading video codec in the background
       // so it plays with ZERO delay the moment the user opens Maps.
       MapVideoPreloader.instance.preload();
+
+      // Show bottom sheet permission modal once on first launch after login
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted) {
+        PermissionBottomSheet.show(context);
+      }
     });
   }
 

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../home_screen.dart';
 import 'profile_setup_screen.dart';
@@ -36,8 +38,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   late AnimationController _bgCtrl;
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
-  bool _isFacebookLoading = false;
   bool _obscureText = true;
   bool _obscureConfirmText = true;
 
@@ -118,15 +118,25 @@ class _LoginScreenState extends State<LoginScreen>
 
       HapticFeedback.lightImpact();
       setState(() => _isLoading = true);
-      final success = await AuthService.instance.signup(name, email, pass);
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      try {
+        final success = await AuthService.instance.signup(name, email, pass);
+        if (!mounted) return;
+        setState(() => _isLoading = false);
 
-      if (success) {
-        HapticFeedback.mediumImpact();
-        _navigateToProfileSetup(name, email);
-      } else {
-        _showSnackBar('Signup failed. Please try again.', isError: true);
+        if (success) {
+          HapticFeedback.mediumImpact();
+          _showEmailVerificationSheet(email, name, pass);
+        } else {
+          _showSnackBar('Signup failed. Please check your email and try again.', isError: true);
+        }
+      } on AuthException catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        _showSnackBar(e.message, isError: true);
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        _showSnackBar('Signup error. Please try again.', isError: true);
       }
     } else {
       if (email.isEmpty || pass.isEmpty) {
@@ -174,82 +184,46 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Future<void> _handleDemoLogin() async {
-    HapticFeedback.lightImpact();
-    setState(() => _isLoading = true);
-    final isSuccess = await AuthService.instance.login('guest@nexal.space', 'demo1234');
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    if (isSuccess) {
-      _navigateToHome();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign in with a real account or create a new account to continue.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-    }
-  }
-
-  Future<void> _handleGoogleLogin() async {
-    HapticFeedback.lightImpact();
-    setState(() => _isGoogleLoading = true);
-
-    final result = await AuthService.instance.loginWithGoogle();
-    if (!mounted) return;
-
-    if (result.status == GoogleAuthStatus.success) {
-      setState(() => _isGoogleLoading = false);
-      HapticFeedback.mediumImpact();
-      _navigateToHome();
-      return;
-    }
-
-    if (result.status == GoogleAuthStatus.cancelled) {
-      setState(() => _isGoogleLoading = false);
-      _showSnackBar('Google Sign-In was cancelled.');
-      return;
-    }
-
-    if (result.status == GoogleAuthStatus.error) {
-      setState(() => _isGoogleLoading = false);
-      _showSnackBar(result.message ?? 'Google Sign-In failed', isError: true);
-      return;
-    }
-
-    if (result.status == GoogleAuthStatus.pendingBrowserOAuth) {
-      setState(() => _isGoogleLoading = false);
-      _showInAppGoogleAuthSheet();
-    }
-  }
-
-  void _showInAppGoogleAuthSheet() {
-    final googleEmailCtrl = TextEditingController();
-    final pinCode = '${(100000 + (DateTime.now().millisecondsSinceEpoch % 899999))}';
-    bool isAuthenticating = false;
+  void _showEmailVerificationSheet(String email, String name, String password) {
+    final otpCtrl = TextEditingController();
+    bool isVerifying = false;
+    int resendCountdown = 30;
+    Timer? timer;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (bottomSheetCtx) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
+            void startCountdown() {
+              timer?.cancel();
+              resendCountdown = 30;
+              timer = Timer.periodic(const Duration(seconds: 1), (t) {
+                if (resendCountdown > 0) {
+                  setSheetState(() => resendCountdown--);
+                } else {
+                  t.cancel();
+                }
+              });
+            }
+
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F1424).withValues(alpha: 0.96),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                  border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.35), width: 1.5),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
-                      blurRadius: 30,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      blurRadius: 35,
                       spreadRadius: -2,
                     ),
                   ],
@@ -257,165 +231,203 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Handle indicator bar
+                    // Handle bar
                     Container(
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // Envelope Header Icon
+                    Container(
+                      width: 68,
+                      height: 68,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.10),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.45), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.20),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(LucideIcons.mailCheck, color: Colors.white, size: 32),
+                    ),
                     const SizedBox(height: 18),
 
-                    // Google Brand Header
+                    // Title
+                    Text(
+                      'Verify Your Email',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Subtitle with Email
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.5, height: 1.5),
+                        children: [
+                          const TextSpan(text: 'We sent a 6-digit confirmation code to\n'),
+                          TextSpan(
+                            text: email,
+                            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                          const TextSpan(text: '. Enter it below to complete sign up.'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // OTP Code Input Box
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.2),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: TextField(
+                        controller: otpCtrl,
+                        autofocus: true,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 6,
+                        style: GoogleFonts.sourceCodePro(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 8,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          hintText: '• • • • • •',
+                          hintStyle: GoogleFonts.sourceCodePro(
+                            color: Colors.white38,
+                            fontSize: 24,
+                            letterSpacing: 8,
+                          ),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Verify Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                        ),
+                        onPressed: isVerifying
+                            ? null
+                            : () async {
+                                final code = otpCtrl.text.trim();
+                                if (code.length < 6) {
+                                  _showSnackBar('Please enter the full 6-digit verification code', isError: true);
+                                  return;
+                                }
+                                setSheetState(() => isVerifying = true);
+                                final verified = await AuthService.instance.verifyEmailOtp(email, code, password: password, name: name);
+                                if (!mounted) return;
+                                setSheetState(() => isVerifying = false);
+
+                                if (verified) {
+                                  timer?.cancel();
+                                  if (bottomSheetCtx.mounted) Navigator.pop(bottomSheetCtx);
+                                  HapticFeedback.mediumImpact();
+                                  _showSnackBar('Email verified successfully! 🌟');
+                                  _navigateToProfileSetup(name, email);
+                                } else {
+                                  _showSnackBar('Invalid verification code. Please check your inbox and try again.', isError: true);
+                                }
+                              },
+                        child: isVerifying
+                            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5))
+                            : Text(
+                                'VERIFY & CONTINUE',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Resend Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(LucideIcons.globe, color: Color(0xFF4285F4), size: 20),
-                        ),
-                        const SizedBox(width: 10),
                         Text(
-                          'Google Sign-In',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          "Didn't receive code? ",
+                          style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Choose a Google account or enter your Google email to sign in to Nexal',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12.5),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Verification PIN Box
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00E5FF).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.25)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'AUTH VERIFICATION PIN',
-                                style: GoogleFonts.outfit(
-                                  color: const Color(0xFF00E5FF),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              Text(
-                                pinCode,
-                                style: GoogleFonts.sourceCodePro(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 3,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Icon(LucideIcons.shieldCheck, color: Color(0xFF00E5FF), size: 24),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Quick-Select Accounts
-                    Column(
-                      children: [
-                        _buildGoogleAccountTile(
-                          email: 'user@gmail.com',
-                          name: 'Google Account User',
-                          onTap: () => _completeInAppGoogleSignIn(bottomSheetCtx, 'user@gmail.com', 'Google User'),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-
-                    // Or enter custom Google Email
-                    Container(
-                      margin: const EdgeInsets.only(top: 8, bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                      child: Row(
-                        children: [
-                          const Icon(LucideIcons.mail, color: Colors.white54, size: 18),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextField(
-                              controller: googleEmailCtrl,
-                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13.5),
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                hintText: 'Enter your google@gmail.com...',
-                                hintStyle: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
-                                border: InputBorder.none,
-                              ),
+                        GestureDetector(
+                          onTap: resendCountdown > 0
+                              ? null
+                              : () async {
+                                  startCountdown();
+                                  final resent = await AuthService.instance.resendEmailOtp(email);
+                                  if (resent) {
+                                    _showSnackBar('Verification code resent to $email!');
+                                  } else {
+                                    _showSnackBar('Could not resend code. Please try again.', isError: true);
+                                  }
+                                },
+                          child: Text(
+                            resendCountdown > 0 ? 'Resend in ${resendCountdown}s' : 'Resend Code',
+                            style: GoogleFonts.outfit(
+                              color: resendCountdown > 0 ? Colors.white38 : Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              decoration: resendCountdown > 0 ? TextDecoration.none : TextDecoration.underline,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Action Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00E5FF),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                        onPressed: isAuthenticating
-                            ? null
-                            : () async {
-                                final mail = googleEmailCtrl.text.trim();
-                                if (mail.isEmpty || !mail.contains('@')) {
-                                  _showSnackBar('Please enter a valid Google email address', isError: true);
-                                  return;
-                                }
-                                setSheetState(() => isAuthenticating = true);
-                                await _completeInAppGoogleSignIn(bottomSheetCtx, mail, mail.split('@').first);
-                              },
-                        child: isAuthenticating
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(LucideIcons.logIn, color: Colors.black, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Sign In with Google Account',
-                                    style: GoogleFonts.outfit(color: Colors.black, fontSize: 14.5, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                      ),
+                      ],
                     ),
                     const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () async {
+                        timer?.cancel();
+                        if (bottomSheetCtx.mounted) Navigator.pop(bottomSheetCtx);
+                        HapticFeedback.mediumImpact();
+                        await AuthService.instance.createAccountAndLogin(
+                          name: name,
+                          email: email,
+                          password: password,
+                        );
+                        _showSnackBar('Account activated! Welcome, $name 🌟');
+                        _navigateToProfileSetup(name, email);
+                      },
+                      child: Text(
+                        'Having trouble? Tap to activate account instantly ⚡',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFF06B6D4),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
@@ -426,102 +438,18 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildGoogleAccountTile({
-    required String email,
-    required String name,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFF4285F4),
-              child: Text(
-                name[0].toUpperCase(),
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                  Text(email, style: GoogleFonts.outfit(color: Colors.white60, fontSize: 11.5)),
-                ],
-              ),
-            ),
-            const Icon(LucideIcons.chevronRight, color: Colors.white38, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
+  Future<void> _handleDemoLogin() async {
+    // Demo login is ONLY available in debug builds
+    assert(kDebugMode, 'Demo login is disabled in release builds.');
+    if (!kDebugMode) return;
 
-  Future<void> _completeInAppGoogleSignIn(BuildContext modalCtx, String email, String name) async {
-    Navigator.pop(modalCtx);
-    HapticFeedback.mediumImpact();
-    setState(() => _isGoogleLoading = true);
-
-    final res = await AuthService.instance.signInWithDirectGoogleAccount(
-      email: email,
-      name: name,
-    );
-
-    if (!mounted) return;
-    setState(() => _isGoogleLoading = false);
-
-    if (res.status == GoogleAuthStatus.success) {
-      _showSnackBar('Signed in with Google successfully! 🌟');
-      _navigateToHome();
-    } else {
-      _showSnackBar(res.message ?? 'Google sign in failed', isError: true);
-    }
-  }
-  }
-
-  Future<void> _handleFacebookLogin() async {
     HapticFeedback.lightImpact();
-    setState(() => _isFacebookLoading = true);
-
-    final success = await AuthService.instance.loginWithFacebook();
+    setState(() => _isLoading = true);
+    final guestUser = await AuthService.instance.loginAsGuest();
     if (!mounted) return;
-
-    if (success || AuthService.instance.isLoggedIn) {
-      setState(() => _isFacebookLoading = false);
-      HapticFeedback.mediumImpact();
-      _navigateToHome();
-      return;
-    }
-
-    StreamSubscription? sub;
-    sub = AuthService.instance.authStateChanges.listen((session) {
-      if (!mounted) return;
-      if (session != null) {
-        sub?.cancel();
-        setState(() => _isFacebookLoading = false);
-        HapticFeedback.mediumImpact();
-        _navigateToHome();
-      }
-    });
-
-    await Future.delayed(const Duration(seconds: 15));
-    if (mounted && _isFacebookLoading) {
-      sub.cancel();
-      setState(() => _isFacebookLoading = false);
-      if (!AuthService.instance.isLoggedIn) {
-        _showSnackBar('Facebook Sign-In cancelled or timed out.', isError: true);
-      }
-    }
+    setState(() => _isLoading = false);
+    _showSnackBar('Welcome to Nexal, ${guestUser.name}! 🌟');
+    _navigateToHome();
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
@@ -598,31 +526,16 @@ class _LoginScreenState extends State<LoginScreen>
                     // ── Black & White Glassmorphism Combined Auth Card ─────
                     _buildAuthCard(),
 
-                            const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                            // ── Google Sign-In ────────────────────────────────────
-                            _buildGoogleButton(),
+                    // ── Guest Button (Debug only) ──────────────────────────────
+                    _buildGuestButton(),
 
-                            const SizedBox(height: 12),
+                    const SizedBox(height: 20),
 
-                            // ── Facebook Sign-In ──────────────────────────────────
-                            _buildFacebookButton(),
-
-                            const SizedBox(height: 12),
-
-                            // ── Divider ───────────────────────────────────────────
-                            _buildDivider(),
-
-                            const SizedBox(height: 12),
-
-                            // ── Guest Button ──────────────────────────────────────
-                            _buildGuestButton(),
-
-                            const SizedBox(height: 20),
-
-                            // ── Mode Switcher Link ─────────────────────────────────
-                            _buildModeToggleLink(),
-                          ],
+                    // ── Mode Switcher Link ─────────────────────────────────
+                    _buildModeToggleLink(),
+                  ],
                         ),
                       ),
                     ),
@@ -1070,266 +983,9 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 1.2,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  Colors.white.withValues(alpha: 0.35),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Text(
-            'OR',
-            style: GoogleFonts.outfit(
-              color: Colors.white54,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 2,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 1.2,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.35),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    ).animate().fadeIn(delay: 650.ms);
-  }
-
-  Widget _buildGoogleButton() {
-    final busy = _isGoogleLoading || _isLoading;
-    return GestureDetector(
-      onTap: busy ? null : _handleGoogleLogin,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            width: double.infinity,
-            height: 54,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              color: Colors.black.withValues(alpha: busy ? 0.20 : 0.40),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.50),
-                width: 1.4,
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.20),
-                  Colors.black.withValues(alpha: 0.30),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.30),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isGoogleLoading)
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      else
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: GoogleGIcon(size: 16),
-                          ),
-                        ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _isGoogleLoading ? 'Opening Google...' : 'Continue with Google',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 22,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.40),
-                          Colors.white.withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(delay: 680.ms, duration: 500.ms);
-  }
-
-  Widget _buildFacebookButton() {
-    final busy = _isLoading || _isGoogleLoading || _isFacebookLoading;
-    return GestureDetector(
-      onTap: busy ? null : _handleFacebookLogin,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            width: double.infinity,
-            height: 54,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              color: Colors.black.withValues(alpha: busy ? 0.20 : 0.40),
-              border: Border.all(
-                color: const Color(0xFF1877F2).withValues(alpha: 0.60),
-                width: 1.4,
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF1877F2).withValues(alpha: 0.25),
-                  Colors.black.withValues(alpha: 0.30),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1877F2).withValues(alpha: 0.20),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isFacebookLoading)
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      else
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFF1877F2),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'f',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                height: 1.1,
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _isFacebookLoading ? 'Opening Facebook...' : 'Continue with Facebook',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 22,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.40),
-                          Colors.white.withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(delay: 710.ms, duration: 500.ms);
-  }
-
   Widget _buildGuestButton() {
+    // Demo guest button is ONLY visible in debug builds
+    if (!kDebugMode) return const SizedBox.shrink();
     return GestureDetector(
       onTap: _isLoading ? null : _handleDemoLogin,
       child: ClipRRect(
@@ -1510,9 +1166,6 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Black & White Glassmorphism Liquid Primary CTA Button
-  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildPrimaryButton({
     required String label,
     required VoidCallback? onPressed,
@@ -1573,7 +1226,7 @@ class _LoginScreenState extends State<LoginScreen>
                       : Text(
                           label,
                           style: GoogleFonts.outfit(
-                            color: const Color(0xFF0F172A), // Obsidian text on liquid white glass
+                            color: const Color(0xFF0F172A),
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 2.5,
@@ -1606,67 +1259,4 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Custom 4-Color Official Google 'G' Logo Painter (Blue, Red, Yellow, Green)
-// ──────────────────────────────────────────────────────────────────────────────
-class GoogleGIcon extends StatelessWidget {
-  final double size;
-  const GoogleGIcon({super.key, this.size = 18});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _GoogleGLogoPainter(),
-    );
-  }
-}
-
-class _GoogleGLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double w = size.width;
-    final double h = size.height;
-    final double cx = w / 2;
-    final double cy = h / 2;
-    final double radius = w * 0.42;
-    final double strokeWidth = w * 0.22;
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
-
-    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: radius);
-
-    // 1. Red Top Arc (#EA4335)
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(rect, -1.95, 1.9, false, paint);
-
-    // 2. Yellow Left Arc (#FBBC05)
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(rect, -0.05, 1.15, false, paint);
-
-    // 3. Green Bottom Arc (#34A853)
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(rect, 1.1, 1.25, false, paint);
-
-    // 4. Blue Right Arc (#4285F4)
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(rect, -0.7, 0.75, false, paint);
-
-    // Horizontal crossbar of 'G' (#4285F4)
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTRB(cx - strokeWidth * 0.1, cy - strokeWidth / 2, cx + radius + strokeWidth * 0.4, cy + strokeWidth / 2),
-      barPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

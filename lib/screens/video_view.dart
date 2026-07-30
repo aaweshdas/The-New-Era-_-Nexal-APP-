@@ -4,8 +4,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import 'video_player_screen.dart';
+import 'home_screen.dart';
 
 class VideoItem {
   final String id, title, category, imageUrl, duration;
@@ -74,12 +76,17 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => _VideoDetailSheet(video: v, isBookmarked: _bookmarked.contains(v.id), onBookmark: () {
+        final nowBookmarked = !_bookmarked.contains(v.id);
         setState(() {
-          _bookmarked.contains(v.id) ? _bookmarked.remove(v.id) : _bookmarked.add(v.id);
+          if (nowBookmarked) {
+            _bookmarked.add(v.id);
+          } else {
+            _bookmarked.remove(v.id);
+          }
         });
         Navigator.pop(ctx);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(_bookmarked.contains(v.id) ? 'Added to watchlist' : 'Removed from watchlist', style: GoogleFonts.outfit(color: Colors.white)),
+          content: Text(nowBookmarked ? 'Added to watchlist' : 'Removed from watchlist', style: GoogleFonts.outfit(color: Colors.white)),
           backgroundColor: const Color(0xFF1a1a2e),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -151,8 +158,13 @@ class _VideoViewState extends State<VideoView> with TickerProviderStateMixin {
       child: Row(
         children: [
           _headerIcon(LucideIcons.arrowLeft, () {
+            HapticFeedback.lightImpact();
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
+              );
             }
           }),
           const SizedBox(width: 12),

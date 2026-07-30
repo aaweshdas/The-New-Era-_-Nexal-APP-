@@ -206,6 +206,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                   p.imageUrl!,
                                   width: double.infinity,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    height: 180,
+                                    color: Colors.white10,
+                                    child: const Icon(LucideIcons.image, color: Colors.white38),
+                                  ),
                                 ),
                               ),
 

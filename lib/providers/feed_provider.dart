@@ -65,26 +65,47 @@ class FeedProvider extends ChangeNotifier {
     final index = _posts.indexWhere((p) => p.id == postId);
     if (index != -1) {
       final post = _posts[index];
-      post.isLiked = !post.isLiked;
+      final wasLiked = post.isLiked;
+      post.isLiked = !wasLiked;
       if (post.isLiked) {
         post.likes++;
       } else {
         post.likes--;
       }
       notifyListeners();
-      ApiService.instance.post('/api/posts/$postId/like', {}).catchError((_) => null);
+      ApiService.instance.post('/api/posts/$postId/like', {}).catchError((_) {
+        // Rollback optimistic update on error
+        post.isLiked = wasLiked;
+        if (wasLiked) {
+          post.likes++;
+        } else {
+          post.likes--;
+        }
+        notifyListeners();
+        return null;
+      });
     }
   }
 
   void toggleBookmark(String postId) {
-    if (_bookmarkedIds.contains(postId)) {
+    final wasBookmarked = _bookmarkedIds.contains(postId);
+    if (wasBookmarked) {
       _bookmarkedIds.remove(postId);
     } else {
       _bookmarkedIds.add(postId);
     }
     _saveBookmarks();
     notifyListeners();
-    ApiService.instance.post('/api/posts/$postId/bookmark', {}).catchError((_) => null);
+    ApiService.instance.post('/api/posts/$postId/bookmark', {}).catchError((_) {
+      if (wasBookmarked) {
+        _bookmarkedIds.add(postId);
+      } else {
+        _bookmarkedIds.remove(postId);
+      }
+      _saveBookmarks();
+      notifyListeners();
+      return null;
+    });
   }
 
   void addPost(PostModel post) {

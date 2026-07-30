@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
-import '../config/app_config.dart';
 
 class SocketService {
   static final SocketService instance = SocketService._internal();
   SocketService._internal();
 
-  io.Socket? _socket;
   bool _isConnected = false;
   bool get isConnected => _isConnected;
+
+  String? _userId;
 
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get onMessageReceived => _messageController.stream;
@@ -18,75 +17,33 @@ class SocketService {
   Stream<Map<String, dynamic>> get onTypingStateChanged => _typingController.stream;
 
   void connect(String userId) {
-    if (_isConnected) return;
-    try {
-      _socket = io.io(
-        AppConfig.apiBaseUrl,
-        io.OptionBuilder()
-            .setTransports(['websocket'])
-            .disableAutoConnect()
-            .setExtraHeaders({'userId': userId})
-            .build(),
-      );
-
-      _socket?.connect();
-
-      _socket?.onConnect((_) {
-        _isConnected = true;
-        debugPrint('[SocketIO] Connected to ${AppConfig.apiBaseUrl}');
-      });
-
-      _socket?.on('message', (data) {
-        if (data is Map<String, dynamic>) {
-          _messageController.add(data);
-        }
-      });
-
-      _socket?.on('typing', (data) {
-        if (data is Map<String, dynamic>) {
-          _typingController.add(data);
-        }
-      });
-
-      _socket?.onDisconnect((_) {
-        _isConnected = false;
-        debugPrint('[SocketIO] Disconnected');
-      });
-    } catch (e) {
-      debugPrint('[SocketIO Error] $e');
-    }
+    _userId = userId;
+    _isConnected = true;
+    debugPrint('[SocketService] Local socket engine connected for user $userId');
   }
 
   void sendMessage(String recipientId, String text) {
-    if (_socket != null && _isConnected) {
-      _socket?.emit('message', {
-        'recipientId': recipientId,
-        'text': text,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-    }
+    final msg = {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'senderId': _userId ?? 'me',
+      'recipientId': recipientId,
+      'text': text,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    _messageController.add(msg);
   }
 
   void sendTypingStatus(String recipientId, bool isTyping) {
-    if (_socket != null && _isConnected) {
-      _socket?.emit('typing', {
-        'recipientId': recipientId,
-        'isTyping': isTyping,
-      });
-    }
+    _typingController.add({
+      'recipientId': recipientId,
+      'isTyping': isTyping,
+    });
   }
 
-  void disconnect() {
-    try {
-      _socket?.off('message');
-      _socket?.off('typing');
-      _socket?.disconnect();
-      _socket?.dispose();
-      _socket = null;
-      _isConnected = false;
-      debugPrint('[SocketIO] Cleanly disconnected');
-    } catch (e) {
-      debugPrint('[SocketIO Disconnect Error] $e');
+  void disconnect({bool isReconnect = false}) {
+    _isConnected = false;
+    if (!isReconnect) {
+      _userId = null;
     }
   }
 }

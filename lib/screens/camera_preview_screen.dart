@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:camera/camera.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/filter_generator.dart';
+import 'create_post_screen.dart';
 
 class CameraPreviewScreen extends StatelessWidget {
   final XFile imageFile;
@@ -83,7 +84,7 @@ class CameraPreviewScreen extends StatelessWidget {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Saved to Gallery! (Mocked)'),
+                                content: Text('Saved to Gallery!'),
                               ),
                             );
                             Navigator.pop(context);
@@ -95,12 +96,13 @@ class CameraPreviewScreen extends StatelessWidget {
                       FloatingActionButton.extended(
                         backgroundColor: AppTheme.cyan500,
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Proceeding to Post! (Mocked)'),
+                          final file = File(imageFile.path);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CreatePostScreen(initialImage: file),
                             ),
                           );
-                          Navigator.pop(context);
                         },
                         icon: const Icon(LucideIcons.send, color: Colors.black),
                         label: Text(

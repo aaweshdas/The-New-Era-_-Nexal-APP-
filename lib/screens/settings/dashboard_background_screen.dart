@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../providers/background_provider.dart';
 import '../../theme/app_theme.dart';
+import '../home_screen.dart';
 
 // ─── Accent used throughout this screen ────────────────────────────────────
 const _kAccent   = Color(0xFF22D3EE);
@@ -318,7 +319,15 @@ class _DashboardBackgroundScreenState
                   borderRadius: BorderRadius.circular(10),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                        );
+                      }
+                    },
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Row(

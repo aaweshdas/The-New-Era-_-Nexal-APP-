@@ -1,5 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../../screens/monthly_timeline_view.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
+import '../../services/device_gallery_service.dart';
+import '../../screens/full_screen_image_view.dart';
 
 class TimelineEntry {
   final String year;
@@ -7,6 +11,7 @@ class TimelineEntry {
   final String description;
   final String imageUrl;
   final String category;
+  final AssetEntity? asset;
 
   TimelineEntry({
     required this.year,
@@ -14,6 +19,7 @@ class TimelineEntry {
     required this.description,
     required this.imageUrl,
     required this.category,
+    this.asset,
   });
 }
 
@@ -81,149 +87,6 @@ final List<TimelineEntry> mockTimelineData = [
         'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2000&auto=format&fit=crop',
     category: 'AI & Future',
   ),
-  TimelineEntry(
-    year: '2019',
-    title: 'Orbital Expansion',
-    description:
-        'The first commercial space station achieved full operational capacity.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2000&auto=format&fit=crop',
-    category: 'Space & Tech',
-  ),
-  TimelineEntry(
-    year: '2018',
-    title: 'Neural Link',
-    description:
-        'Breakthroughs in brain-computer interfaces allowed direct digital communication.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop',
-    category: 'AI & Future',
-  ),
-  TimelineEntry(
-    year: '2017',
-    title: 'Crypto Renaissance',
-    description:
-        'Decentralized systems integrated into mainstream financial infrastructure globally.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1639762681485-074b7f4ec651?q=80&w=2000&auto=format&fit=crop',
-    category: 'Culture & Web3',
-  ),
-  TimelineEntry(
-    year: '2016',
-    title: 'Virtual Awakening',
-    description:
-        'High-fidelity immersive reality became indistinguishable from the physical world.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1617802690992-15d93263d3a9?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2015',
-    title: 'Algorithmic Art',
-    description:
-        'Machine learning models began creating celebrated works of digital art.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop',
-    category: 'AI & Future',
-  ),
-  TimelineEntry(
-    year: '2014',
-    title: 'The Data Boom',
-    description:
-        'Global data creation surpassed zettabyte milestones, redefining information storage.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2013',
-    title: 'Mobile Dominance',
-    description: 'Mobile internet usage overtook desktop computing worldwide.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2012',
-    title: 'God Particle',
-    description:
-        'Discovery of the Higgs boson fundamental particle confirmed by the large hadron collider.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2000&auto=format&fit=crop',
-    category: 'Space & Tech',
-  ),
-  TimelineEntry(
-    year: '2011',
-    title: 'Cloud Computing',
-    description:
-        'The foundation of modern scalable internet architectures was solidified.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2010',
-    title: 'Social Era',
-    description:
-        'Social networks connected billions, reshaping communication and culture.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop',
-    category: 'Culture & Web3',
-  ),
-  TimelineEntry(
-    year: '2009',
-    title: 'The Genesis Block',
-    description:
-        'The first cryptographic decentralized ledger was brought online.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=2000&auto=format&fit=crop',
-    category: 'Culture & Web3',
-  ),
-  TimelineEntry(
-    year: '2008',
-    title: 'Digital Pocket',
-    description:
-        'App ecosystems launched, putting supercomputers in every pocket.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2007',
-    title: 'Touch Revolution',
-    description:
-        'The first modern multi-touch smartphones entered the consumer market.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2006',
-    title: 'Global Stream',
-    description:
-        'High-speed internet allowed real-time video streaming across the globe.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2005',
-    title: 'Video Boom',
-    description:
-        'User-generated video content disrupted traditional media broadcasting.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
-  TimelineEntry(
-    year: '2004',
-    title: 'The Beginning',
-    description:
-        'The early foundation of interconnected digital identities took shape.',
-    imageUrl:
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop',
-    category: 'Science & Nature',
-  ),
 ];
 
 class PremiumTimelineGallery extends StatelessWidget {
@@ -231,6 +94,9 @@ class PremiumTimelineGallery extends StatelessWidget {
   final bool isNewestFirst;
   final String selectedCategory;
   final String searchQuery;
+  final List<DevicePhotoItem> devicePhotos;
+  final bool isLoadingDevicePhotos;
+  final VoidCallback? onRequestPermission;
 
   const PremiumTimelineGallery({
     super.key,
@@ -238,12 +104,43 @@ class PremiumTimelineGallery extends StatelessWidget {
     this.isNewestFirst = true,
     this.selectedCategory = 'All',
     this.searchQuery = '',
+    this.devicePhotos = const [],
+    this.isLoadingDevicePhotos = false,
+    this.onRequestPermission,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isLoadingDevicePhotos) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Color(0xFF00E5FF)),
+            SizedBox(height: 16),
+            Text(
+              'Importing Device Gallery...',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Convert devicePhotos to TimelineEntry items if available
+    final List<TimelineEntry> sourceData = devicePhotos.isNotEmpty
+        ? devicePhotos.map((dp) => TimelineEntry(
+              year: dp.year,
+              title: dp.title,
+              description: dp.description,
+              imageUrl: '',
+              category: dp.category,
+              asset: dp.asset,
+            )).toList()
+        : mockTimelineData;
+
     // 1. Filter entries
-    final entries = mockTimelineData.where((entry) {
+    final entries = sourceData.where((entry) {
       final matchesCategory =
           selectedCategory == 'All' || entry.category == selectedCategory;
       final query = searchQuery.trim().toLowerCase();
@@ -268,8 +165,8 @@ class PremiumTimelineGallery extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.manage_search,
-              size: 64,
+              LucideIcons.image_off,
+              size: 56,
               color: Colors.white.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
@@ -283,12 +180,25 @@ class PremiumTimelineGallery extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Try clearing search or changing filters.',
+              'Try clearing search or granting gallery permissions.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 13,
               ),
             ),
+            if (onRequestPermission != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(LucideIcons.shield_check, size: 16),
+                label: const Text('Grant Access'),
+                onPressed: onRequestPermission,
+              ),
+            ],
           ],
         ),
       );
@@ -352,11 +262,21 @@ class PremiumTimelineGallery extends StatelessWidget {
 
   Widget _buildGridCard(BuildContext context, TimelineEntry entry, int index) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
+      onTap: () async {
+        final nav = Navigator.of(context);
+        String targetUrl = entry.imageUrl;
+        if (entry.asset != null) {
+          final file = await entry.asset!.file;
+          if (file != null) {
+            targetUrl = file.path;
+          }
+        }
+        nav.push(
           MaterialPageRoute(
-            builder: (context) => MonthlyTimelineView(year: entry.year),
+            builder: (_) => FullScreenImageView(
+              imageUrl: targetUrl,
+              index: index,
+            ),
           ),
         );
       },
@@ -385,17 +305,7 @@ class PremiumTimelineGallery extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
-                      entry.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey[900],
-                        child: const Icon(
-                          Icons.broken_image,
-                          color: Colors.white54,
-                        ),
-                      ),
-                    ),
+                    _buildImageWidget(entry),
                     Positioned(
                       top: 8,
                       right: 8,
@@ -414,7 +324,7 @@ class PremiumTimelineGallery extends StatelessWidget {
                         child: Text(
                           entry.year,
                           style: const TextStyle(
-                            color: Color(0xFF135BEC),
+                            color: Color(0xFF00E5FF),
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
@@ -493,16 +403,16 @@ class PremiumTimelineGallery extends StatelessWidget {
           width: 12,
           height: 12,
           decoration: BoxDecoration(
-            color: const Color(0xFF135BEC),
+            color: const Color(0xFF00E5FF),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF135BEC).withValues(alpha: 0.8),
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.8),
                 blurRadius: 16,
                 spreadRadius: 4,
               ),
               BoxShadow(
-                color: const Color(0xFF135BEC).withValues(alpha: 0.4),
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
                 blurRadius: 32,
                 spreadRadius: 8,
               ),
@@ -529,7 +439,7 @@ class PremiumTimelineGallery extends StatelessWidget {
           Text(
             entry.year,
             style: const TextStyle(
-              color: Color(0xFF135BEC),
+              color: Color(0xFF00E5FF),
               fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: 2.0,
@@ -541,7 +451,7 @@ class PremiumTimelineGallery extends StatelessWidget {
             entry.title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
             textAlign: align,
@@ -551,8 +461,8 @@ class PremiumTimelineGallery extends StatelessWidget {
             entry.description,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 14,
-              height: 1.6,
+              fontSize: 13,
+              height: 1.5,
             ),
             textAlign: align,
           ),
@@ -567,11 +477,21 @@ class PremiumTimelineGallery extends StatelessWidget {
     int index,
   ) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
+      onTap: () async {
+        final nav = Navigator.of(context);
+        String targetUrl = entry.imageUrl;
+        if (entry.asset != null) {
+          final file = await entry.asset!.file;
+          if (file != null) {
+            targetUrl = file.path;
+          }
+        }
+        nav.push(
           MaterialPageRoute(
-            builder: (context) => MonthlyTimelineView(year: entry.year),
+            builder: (_) => FullScreenImageView(
+              imageUrl: targetUrl,
+              index: index,
+            ),
           ),
         );
       },
@@ -597,31 +517,48 @@ class PremiumTimelineGallery extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
             child: AspectRatio(
               aspectRatio: 4 / 3,
-              child: Image.network(
-                entry.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[900],
-                  child: const Icon(Icons.broken_image, color: Colors.white54),
-                ),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: Colors.black12,
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF135BEC),
-                        ),
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  );
-                },
-              ),
+              child: _buildImageWidget(entry),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(TimelineEntry entry) {
+    if (entry.asset != null) {
+      return FutureBuilder<Uint8List?>(
+        future: DeviceGalleryService.instance.getThumbnail(entry.asset!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+            return Image.memory(
+              snapshot.data!,
+              fit: BoxFit.cover,
+            );
+          }
+          return Container(
+            color: Colors.black26,
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF00E5FF),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.network(
+      entry.imageUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: Colors.grey[900],
+        child: const Icon(Icons.broken_image, color: Colors.white54),
       ),
     );
   }

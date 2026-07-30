@@ -90,7 +90,12 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
-      if (mounted) setState(() => _serverReady = true);
+      if (mounted) {
+        setState(() {
+          _serverReady = true;
+          _isLoadingGame = false;
+        });
+      }
       return;
     }
 
@@ -146,11 +151,11 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
 
   Future<void> _startLocalServer() async {
     try {
-      // Bind server to localhost on any available port
-      _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      // Bind server to all IPv4 interfaces on any available port
+      _server = await HttpServer.bind(InternetAddress.anyIPv4, 0);
       _port = _server!.port;
       
-      debugPrint("WORDL local server listening on http://127.0.0.1:$_port");
+      debugPrint("Game local server listening on http://127.0.0.1:$_port");
 
       _server!.listen((HttpRequest request) async {
         // Handle CORS headers
@@ -207,6 +212,7 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
       if (!useWebView) {
         setState(() {
           _serverReady = true;
+          _isLoadingGame = false;
         });
         _launchBrowserGame();
         return;
@@ -302,8 +308,16 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
   Widget build(BuildContext context) {
     final showLoading = !_serverReady || _isLoadingGame;
     
-    return Scaffold(
-      backgroundColor: Colors.black,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+        ]);
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
       body: Stack(
         children: [
           // 1. WebView Game Canvas (or Desktop Browser Fallback)
@@ -420,8 +434,9 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildFloatingActionCircle({
     required IconData icon,
@@ -557,11 +572,7 @@ class _GameWebViewScreenState extends State<GameWebViewScreen> {
     final gameUrl = 'http://127.0.0.1:$_port/index.html';
     final uri = Uri.parse(gameUrl);
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not launch $gameUrl';
-      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       debugPrint("Error launching browser: $e");
     }

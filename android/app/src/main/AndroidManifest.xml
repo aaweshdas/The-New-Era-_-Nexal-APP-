@@ -2,10 +2,18 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <!-- Location permissions for real-time GPS in map WebView -->
+    <!-- Storage & Media permissions for Gallery import -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <!-- Location permissions for real-time GPS in map WebView (foreground only) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <!-- ACCESS_BACKGROUND_LOCATION removed — not needed for foreground map features -->
+    <!-- Biometric authentication permissions (required by local_auth package) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
 
 
     <application
@@ -14,7 +22,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:largeHeap="true"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="true">
         <!-- Force Impeller to use OpenGL ES instead of Vulkan.
              Fixes SIGABRT crash in libGLES_mali.so (pthread_mutex_lock on
              destroyed mutex) that occurs on Mali GPU devices (Redmi/Xiaomi)

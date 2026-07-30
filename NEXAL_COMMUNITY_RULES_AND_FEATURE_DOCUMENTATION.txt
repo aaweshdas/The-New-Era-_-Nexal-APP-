@@ -1,0 +1,379 @@
+================================================================================
+                    NEXAL SOCIAL MEDIA PLATFORM
+      MASTER COMMUNITY RULES, TERMS OF SERVICE & FEATURE MANUAL
+================================================================================
+Document Version: 2.0.0 (Unified Master Edition)
+Last Updated: July 2026
+Application: Nexal App & Ecosystem (Web & Mobile Platforms)
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+PART I: PLATFORM RULES, REGULATIONS & POLICY ENFORCEMENT
+   1. WHAT YOU ARE ALLOWED TO DO (USER RIGHTS & PERMITTED ACTIVITIES)
+   2. WHAT IS STRICTLY NOT ALLOWED (PROHIBITED CONDUCT & VIOLATIONS)
+   3. CONTENT POLICY (ALLOWED VS. PROHIBITED MEDIA & TEXT)
+   4. RULE ENFORCEMENT, STRIKE SYSTEM & BAN POLICY
+   5. PRIVACY, DATA PROTECTION & UNCONSENTED RECORDING RULES
+   6. POLICY UPDATES & NOTIFICATION TERMS
+
+PART II: EXHAUSTIVE NEXAL PAGES, FEATURES & OPTIONS MANUAL
+   7. AUTHENTICATION & PROFILE SETUP ENGINE
+   8. NEXAL GALAXY PORTAL & 3D NAVIGATION ENGINE
+   9. QUANTUM FEED & CONTENT CREATION STUDIO
+   10. FEELS (REELS STUDIO)
+   11. VIDEO VIEW (LONG-FORM STREAMING & PLAYER ENGINE)
+   12. ARIA AI VIRTUAL ASSISTANT
+   13. MESSAGES & REAL-TIME COMMUNICATION (SOCKET.IO)
+   14. OPEN WORLD GAMES & ARCADE PLATFORM
+   15. NEXAL MAPS & SPATIAL PROXIMITY RADAR
+   16. GALLERY & MEDIA VAULT
+   17. UNIVERSAL SEARCH & DISCOVERY ENGINE
+   18. PROFILE & CREATOR ANALYTICS
+   19. SETTINGS & COMMAND CENTER
+--------------------------------------------------------------------------------
+
+
+================================================================================
+PART I: PLATFORM RULES, REGULATIONS & POLICY ENFORCEMENT
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 1 - WHAT YOU ARE ALLOWED TO DO (PERMITTED ACTIVITIES)
+--------------------------------------------------------------------------------
+
+1.1  CREATE A PERSONAL PROFILE
+     You may set up your own Nexal account with a verified Gmail address, custom
+     display name, creative @username handle, profile picture, location, and bio.
+
+1.2  POST ORIGINAL CONTENT
+     You may share original photos, videos, text posts, polls, audio tracks, and
+     creative work. Express yourself freely while respecting community standards.
+
+1.3  FOLLOW AND INTERACT WITH OTHERS
+     You may follow other users, like posts (with heart animations), leave comments,
+     share content, and bookmark/save posts to your private vault.
+
+1.4  CONTROL YOUR PRIVACY
+     You may toggle your account to Public or Private mode, restrict direct messages,
+     hide online status, block users, and manage biometric & encryption settings.
+
+1.5  REPORT VIOLATIONS
+     You may use the built-in report feature to flag inappropriate posts, comments,
+     or accounts. Reports are reviewed by the moderation team within 24 hours.
+
+1.6  SHARE OTHERS' CONTENT WITH CREDIT
+     You may repost or share content created by other users as long as proper credit
+     is given to the original creator and it respects content guidelines.
+
+1.7  HONEST BUSINESS PROMOTION
+     You may share products, commercial services, portfolios, or creative work.
+     Promotional content is permitted as long as it is honest, non-deceptive, and not spam.
+
+1.8  LIVE STREAMING & REEL CREATION
+     You may broadcast live streams and publish vertical Reels (Feels) as long as
+     the live broadcast and recorded media follow community guidelines.
+
+1.9  PARTICIPATE IN DISCUSSIONS & CYBER QUESTS
+     You may participate in public feed discussions, community polls, AI prompts,
+     and open-world arcade quests in a respectful and fair manner.
+
+1.10 USE ALL PLATFORM FEATURES
+     You may utilize all native Nexal features including Stories, Feels (Reels),
+     Long-Form Videos, Polls, Direct Messages, Socket.IO Voice/Video Calls,
+     ARIA AI Assistant, Arcade Games, Media Gallery, and Spatial Radar Maps.
+
+
+--------------------------------------------------------------------------------
+SECTION 2 - WHAT IS STRICTLY NOT ALLOWED (PROHIBITED CONDUCT)
+--------------------------------------------------------------------------------
+
+2.1  HARASSMENT AND BULLYING
+     Do NOT target, threaten, humiliate, stalk, or harass any individual or group
+     through messages, comments, feed posts, or live streams.
+
+2.2  IMPERSONATION AND FAKE IDENTITIES
+     Do NOT create accounts pretending to be another real person, celebrity, brand,
+     official Nexal administrator, or the ARIA AI system.
+
+2.3  SPREADING MISINFORMATION
+     Do NOT deliberately post fake news, fabricated medical advice, manipulated stats,
+     or misleading information that causes real-world harm.
+
+2.4  HATE SPEECH AND DISCRIMINATION
+     Do NOT post content promoting hatred, violence, or discrimination based on race,
+     ethnicity, religion, gender, sexual orientation, disability, or nationality.
+
+2.5  BOT ACTIVITY, SPAM & API EXPLOITS
+     Do NOT use automated bots, scripts, scrapers, or third-party tools to mass-follow,
+     spam DMs/comments, manipulate likes, or exploit the API Gateway.
+
+2.6  HACKING AND UNAUTHORIZED ACCESS
+     Do NOT attempt to access another user's account, bypass 6-digit OTP verification,
+     tamper with database tables, or launch Denial-of-Service attacks.
+
+2.7  SCAMS AND FRAUDULENT ACTIVITY
+     Do NOT engage in phishing, fraudulent giveaways, pyramid schemes, or deceptive
+     practices intended to steal user data, credentials, or funds.
+
+2.8  SELF-HARM AND DANGEROUS CONTENT
+     Do NOT share, promote, or glorify self-harm, suicide, eating disorders, or
+     dangerous viral stunts that risk human life.
+
+2.9  THREATS AND VIOLENT CONTENT
+     Do NOT make threats of physical violence against any person or group, or post
+     content inciting violence or civil unrest.
+
+2.10 DOXXING AND PRIVACY INVASION
+     Do NOT post another individual's private information (home address, phone number,
+     workplace, financial data, or legal IDs) without explicit written consent.
+
+2.11 UNDERAGE EXPLOITATION (CSAM)
+     Do NOT share, create, or distribute any content that exploits or endangers minors.
+     Child abuse material results in immediate reporting to federal authorities.
+
+2.12 MULTIPLE ACCOUNTS TO BYPASS BANS
+     Do NOT register new accounts or use alternate Gmail addresses to evade an active
+     suspension or permanent ban. Ban evasion triggers immediate IP and Device locks.
+
+
+--------------------------------------------------------------------------------
+SECTION 3 - CONTENT POLICY
+--------------------------------------------------------------------------------
+
+--- ALLOWED CONTENT ---
+3.1  Photos & Videos: Original media owned by you, or clearly labeled AI-generated artwork.
+3.2  News & Opinions: Factual news, personal commentary, and public debates.
+3.3  Creative & Educational Work: Music, digital art, coding tutorials, and poetry.
+3.4  Entertainment: Comedy, memes, gaming clips, sports, and lifestyle vlogs.
+
+--- PROHIBITED CONTENT ---
+3.5  Adult or Explicit Content: Nudity, sexually explicit acts, or adult services.
+3.6  Graphic Violence: Gore, animal cruelty, physical abuse, or disturbing imagery.
+3.7  Copyrighted Material: DMCA-protected films, music, or broadcasts posted without authorization.
+3.8  Illegal Activity: Drug trafficking, illegal weapons sales, or criminal tutorials.
+3.9  Extremism & Terrorism: Propaganda, recruitment, or glorification of extremist groups.
+
+
+--------------------------------------------------------------------------------
+SECTION 4 - RULE ENFORCEMENT, STRIKE SYSTEM & BAN POLICY
+--------------------------------------------------------------------------------
+
+--- ZERO TOLERANCE OFFENSES (IMMEDIATE PERMANENT BAN) ---
+The following violations result in an IMMEDIATE PERMANENT BAN with no warning and no appeal:
+  1. Sharing Child Sexual Abuse Material (CSAM).
+  2. Credible threats of physical violence or terrorism.
+  3. Large-scale platform hacking, fraud, or server attacks.
+  4. Attempting to bypass a prior permanent ban (Ban Evasion).
+
+--- 4-STRIKE ENFORCEMENT SYSTEM (STANDARD VIOLATIONS) ---
+  - STRIKE 1 (Formal Warning):
+    Violating content is permanently deleted. User receives an official in-app notice.
+    No feature restrictions applied. Account remains in good standing.
+  - STRIKE 2 (Temporary Restriction - 7 to 30 Days):
+    User loses ability to create posts, upload reels, comment, or send DMs for 7-30 days.
+    Profile remains visible, but read-only mode is enforced.
+  - STRIKE 3 (90-Day Account Suspension):
+    Account is fully suspended for 90 days. Profile and content are hidden from search.
+    User receives final notice prior to potential reactivation.
+  - STRIKE 4 (Permanent Ban & Data Purge):
+    Account is permanently deactivated. All profile data, posts, messages, and scores are
+    purged after 30 days. IP address, hardware ID, and Gmail address are permanently blacklisted.
+
+--- APPEAL RIGHTS ---
+  - Appeals for Strike 1, 2, and 3 must be submitted within 14 days of notice.
+  - Appeals are reviewed by the Moderation Panel within 5 to 7 business days.
+  - Zero-Tolerance bans (CSAM, Hacking, Threats) are non-appealable.
+
+--- STRIKE RESET POLICY ---
+  - Accounts maintaining 12 consecutive months of good standing without new violations
+    qualify for a clean record review, resetting previous strikes.
+
+
+--------------------------------------------------------------------------------
+SECTION 5 - PRIVACY, DATA PROTECTION & UNCONSENTED RECORDING
+--------------------------------------------------------------------------------
+5.1 Data Harvesting: Users must not harvest, scrape, or collect personal data of other users.
+5.2 Unconsented Recordings: Users must not screenshot or record private DM conversations,
+    voice calls, or video calls to publish them publicly without explicit consent of all parties.
+5.3 Unauthorized Tracking: Using Map proximity features or third-party tools to stalk or
+    track individuals without their knowledge is strictly forbidden.
+5.4 Data Governance: All stored data is encrypted and protected under Nexal's Privacy Policy.
+
+
+--------------------------------------------------------------------------------
+SECTION 6 - POLICY UPDATES & NOTIFICATION TERMS
+--------------------------------------------------------------------------------
+6.1 Major updates to platform rules will be communicated at least 7 days prior to taking effect
+    via in-app notification and registered email.
+6.2 Continued platform usage after updates take effect constitutes full acceptance of terms.
+
+
+================================================================================
+PART II: EXHAUSTIVE NEXAL PAGES, FEATURES & OPTIONS MANUAL
+================================================================================
+
+7. AUTHENTICATION & PROFILE SETUP ENGINE
+----------------------------------------
+- Login & Signup Screen:
+  - Email input & Password input fields with floating labels.
+  - Password visibility toggle icon (Eye / Eye-off).
+  - Mode Switcher: Login vs. Signup tabs.
+  - Direct Gmail account creation integration.
+  - 6-Digit Email OTP Verification Sheet:
+    - 6 separate numeric PIN input boxes.
+    - Automatic focus advancement & backspace handling.
+    - 60-second resend countdown timer.
+    - Admin bypass fallback for Supabase SMTP rate limits.
+- Profile Setup Screen:
+  - Custom Display Name input.
+  - @username Handle setup.
+  - Bio / Motto description input.
+  - Personal Website link input.
+  - Custom Avatar image selector.
+
+8. NEXAL GALAXY PORTAL & 3D NAVIGATION ENGINE
+---------------------------------------------
+- Smart Background: Animated background video rendering with smooth opacity transitions.
+- GyroParallax: Device tilt parallax wrapper adding 3D orbital motion.
+- Quantum Arc Menu: Curved 3D orbital wheel with 11 navigational items:
+  1. HOME -> Navigates to Quantum Feed.
+  2. REEL -> Launches Feels vertical video player.
+  3. VIDEOS -> Opens long-form video streaming page.
+  4. PROFILE -> Opens personal profile & analytics.
+  5. CAMERA -> Opens live camera capture view.
+  6. SEARCH -> Opens universal search & discovery.
+  7. NEXAL AI -> Opens ARIA AI assistant.
+  8. ARCADE -> Opens open-world game arcade.
+  9. MESSAGE -> Opens direct messaging & chat rooms.
+  10. GALLERY -> Opens media gallery vault.
+  11. MAPS -> Opens spatial map & proximity radar.
+- Celestial Header: Animated 90-star text mask with golden shimmer sweep over "NEXAL GALAXY".
+- Quick Action Buttons:
+  - Notifications Sheet button (Top Right).
+  - Command Center Settings Modal button (Bottom Right).
+  - Wallpaper Customizer button (Bottom Left).
+
+9. QUANTUM FEED & CONTENT CREATION STUDIO
+-----------------------------------------
+- Quantum Feed (HomeView):
+  - Top Bar: Liquid Glass Back Button (returns to Galaxy), Animated glowing "Quantum Feed" title, Search toggle, Messages shortcut, Notifications shortcut.
+  - Feed Categories: For You, Trending, Following, AI Picks, Global.
+  - Stories Bar: Horizontal avatar list with active gradient glow rings, Add Story button (+).
+  - Post Cards: Creator @handle, Verified badge, Multi-image carousel, Like button (heart animation), Comment sheet trigger, Share button, Bookmark button, Caption with hashtag links (#Quantum, #AI).
+- Create Post Studio:
+  - Multi-line text input with hashtag auto-suggest.
+  - Gallery Attachment Picker (Photos/Videos).
+  - Audio Track Selector ("Quantum Beats", "Deep Space Vibe", "Synthwave Pulse", "Cyber Ambient").
+  - Poll Creator: Add options, set voting duration.
+  - Direct publish to Quantum Feed.
+- Create Reel Studio:
+  - Video selector, thumbnail picker, sound track picker, and caption writer.
+
+10. FEELS (REELS STUDIO)
+------------------------
+- Vertical Full-Screen Snap Scroll: Smooth swipe vertical video feed.
+- Persistent Header: Liquid Glass Back Button (returns to Galaxy), "Feels Reels" title, Mute/Unmute audio button.
+- Action Rail (Right): Creator Avatar with Follow (+), Like (heart counter), Comments, Share, Bookmark/Save, More Options sheet.
+- Info Overlay (Bottom): Creator handle, Verified checkmark, Caption text, Audio track marquee ticker.
+
+11. VIDEO VIEW (LONG-FORM STREAMING & PLAYER ENGINE)
+-----------------------------------------------------
+- Video Library Hub:
+  - Top Bar with Back Button, "Videos" title, Search input toggle.
+  - Hero Featured Banner with "Watch Now" trigger.
+  - Categories: Sci-Fi, Neural, AI, Cyberpunk, Gaming, Tutorials.
+  - Sections: Continue Watching (with progress bars), Trending Now, Recommended.
+- Video Player Screen:
+  - Fullscreen Player with Play/Pause, Seek bar, 10s Skip forward/backward.
+  - Quality Switcher (720p, 1080p, 4K).
+  - Speed Switcher (0.5x, 1.0x, 1.5x, 2.0x).
+  - Interactive Comments Thread and Related Videos slider.
+
+12. ARIA AI VIRTUAL ASSISTANT
+-----------------------------
+- Multi-Modal AI Engine: Powered by GROQ LLM, Deepgram STT, LiveKit WebSockets.
+- Animated Holographic Orb: Twinkling multi-color orb reflecting Listening, Processing, and Speaking states.
+- Interactive Controls:
+  - Top Bar: Liquid Glass Back Button, ARIA title, Connection status pill, Audio TTS Mute button, History drawer button, New Chat button.
+  - STT Mic Button: Tap to record voice queries.
+  - Input Bar: Text input + Image Attachment picker.
+  - Code Block Renderer: Syntax-highlighted code with Copy button.
+
+13. MESSAGES & REAL-TIME COMMUNICATION (SOCKET.IO)
+---------------------------------------------------
+- Messages Inbox:
+  - Contact Search input.
+  - Filter Modes: All, Unread, Online.
+  - Horizontal Active Story Bar.
+  - Chat Items: Avatar, Online Status dot, Contact Name, Message preview, Timestamp, Unread count.
+  - New Conversation Modal (+): Search user handle to start new chat.
+- Chat Room Screen:
+  - Real-time Socket.IO WebSocket messaging.
+  - Header: Back button, Contact Name, Status, Audio Call button, Video Call button.
+  - Chat Stream: Text, Images, Voice Notes.
+- Call Screen:
+  - Full-screen Video/Audio calling view with Mute Mic, Camera Flip, Video Off, and End Call buttons.
+
+14. OPEN WORLD GAMES & ARCADE PLATFORM
+--------------------------------------
+- Cyber Arcade Dashboard:
+  - Top Bar: Back Button, Live Gateway Status ("LIVE 14ms"), Search, Event Calendar, Trophy Leaderboard button.
+  - Category Filter Strip: All, Puzzle, Action, Racing, Strategy, Arcade.
+  - Dual-Column Game Grid: Playable titles with Engine badge (HTML5/Canvas), Rating, Play Now button.
+- Playable Game Titles: Wordle Quantum, Cyber Run, Voxel Realm, Quantum Delivery Simulator, Space Shooter, Neon Racer.
+- Game WebView Runner: Fullscreen interactive game viewport.
+- Quests & Leaderboards: Daily Cyber Quests with XP rewards, Hall of Fame Leaderboard (Rank 1-3 Gold, Silver, Bronze badges).
+
+15. NEXAL MAPS & SPATIAL PROXIMITY RADAR
+----------------------------------------
+- Interactive Map Viewport: Custom Mapbox/Leaflet dark neon engine.
+- Floating Glass Navigation: Top-left Liquid Glass Back Button ("GALAXY") to return home.
+- Signal Lock Loading Screen: 5-Bar Signal Strength Gauge, Holographic Radar Spinner, status progression ticker.
+- Proximity Radar: Nearby user markers, geofence alerts.
+
+16. GALLERY & MEDIA VAULT
+--------------------------
+- Header: Floating Glass Back Button, Search Bar, Grid/List Layout toggle, Sort toggle, Category selector.
+- Gallery Engine: Grouped Year/Month/Event timeline, Local Device Photo/Video loader via permissions.
+- Full-Screen Image Inspector: High-res zoomable viewer with metadata and download/share buttons.
+- Immersive Dome 360 Gallery: 3D panoramic dome projection view of gallery media.
+
+17. UNIVERSAL SEARCH & DISCOVERY ENGINE
+----------------------------------------
+- Header: Back Button, Search Input with Clear (X) button, Filter mode button.
+- Search Tabs:
+  1. USERS: Search profile handles, names, bios with Follow action buttons.
+  2. MEDIA: Search photos, reels, and long videos.
+  3. WEB / ARTICLES: Search external news and AI articles.
+- Live Auto-Suggestions & Trending Hashtag Chips (#AI, #Quantum, #Cyberpunk).
+
+18. PROFILE & CREATOR ANALYTICS
+--------------------------------
+- Profile Screen:
+  - Top Bar: Back Button, Display Name, Share Link button.
+  - Header: Cover Photo, Avatar with glowing gradient ring, Achievement Badges.
+  - Profile Info: Display Name, @handle, Bio, Website link, Location.
+  - Compact Stats: Posts count, Followers count, Following count.
+  - Action Buttons: Edit Profile sheet button, Share Profile button, Settings (...) sheet button.
+  - Content Tabs: Grid Posts, Saved Posts, Tagged Posts.
+- Profile Analytics Screen: Audience growth charts, Impressions, Engagements, Reach metrics.
+
+19. SETTINGS & COMMAND CENTER
+------------------------------
+- Command Center Modal Header: Logo, Title, Microservice Health (7/7), Latency Ping (ms), "SYNC SETTINGS" liquid pill button, Close (X) button.
+- Navigation Rail (Desktop) / Horizontal Tab Bar (Mobile):
+  1. AI & GATEWAY NODE: Gateway URL, GROQ Key, Deepgram Key, LiveKit WebSocket URL & Secrets.
+  2. VISUALS & THEME SPECTRUM: 5 Accent Orbs (Quantum Cyan, Cosmic Violet, Solar Gold, Matrix Emerald, Crimson Cyber), OLED Dark Mode, Toast Notifications, System Language (English US, Spanish, Japanese, German, French).
+  3. SECURITY & QUANTUM VAULT: Biometrics (FaceID/TouchID), E2E Encrypted Sync, Privacy Shield, App Lock PIN.
+  4. DIAGNOSTICS & STORAGE: Gateway Health ping gauge, Cache Footprint monitor with PURGE CACHE button.
+  5. NOTIFICATIONS CONSOLE: ARIA Alerts, Map Radar, Microservice Alerts, Audio Chime, Haptic Vibration, Unread Badges.
+  6. ABOUT NEXAL: App Version, Build Number, System Architecture details.
+- Standalone Sub-Screens:
+  - Account Settings Screen: Change Username, Email, and Log Out button.
+  - Privacy Settings Screen: Private Account toggle, Allow DMs toggle, Show Online Status toggle.
+  - Dashboard Background Screen: Custom wallpaper picker (Images/Videos), Library manager, and Apply actions.
+  - Two-Factor Screen: 2FA setup & emergency recovery codes.
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================

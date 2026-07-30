@@ -124,9 +124,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             fileOptions: FileOptions(contentType: 'image/$ext', upsert: true));
         imageUrl = supabase.storage.from('media').getPublicUrl(fileName);
       } catch (e) {
-        // Storage upload failed — use local file path as fallback (shows in UI only)
-        imageUrl = _selectedImage!.path;
-        debugPrint('[CreatePost] Storage upload failed, using local path: $e');
+        debugPrint('[CreatePost] Storage upload failed: $e');
+        if (!mounted) return;
+        setState(() => _isPosting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload image. Please check your network.',
+                style: GoogleFonts.outfit()),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
       }
     }
 
@@ -134,9 +142,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
       userId: user?.uid ?? 'guest',
       userName: (user?.name.isNotEmpty == true) ? user!.name : ((user?.username.isNotEmpty == true) ? '@${user!.username}' : 'Nexal User'),
-      userAvatar: (user?.avatarUrl.isNotEmpty == true) ? user!.avatarUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
-      isVerified: true,
-      content: text.isEmpty ? 'Shared a new memory ⚡' : text,
+      userAvatar: (user?.avatarUrl.isNotEmpty == true) ? user!.avatarUrl : 'assets/images/default_avatar.png',
+      isVerified: user?.isVerified ?? false,
+      content: text,
       imageUrl: imageUrl,
       timeAgo: 'Just now',
       location: _locationLabel,

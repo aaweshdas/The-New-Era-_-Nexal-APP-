@@ -2,7 +2,9 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:otp/otp.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
@@ -22,6 +24,11 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
   String? _totpUri;
   final _verifyCtrl = TextEditingController();
   bool _setupComplete = false;
+
+  // Secure storage — TOTP secrets are stored in Android Keystore / iOS Keychain
+  final _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   @override
   void initState() {
@@ -50,51 +57,86 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
       setState(() { _totpSecret = secret; _totpUri = uri; _showSetup = true; });
     } else if (!value) {
       setState(() => _isLoading = true);
-      final prefs = await SharedPreferences.getInstance();
       if (uid.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('2fa_enabled_$uid', false);
-        await prefs.remove('2fa_secret_$uid');
+        // Remove secret from SECURE storage
+        await _secureStorage.delete(key: '2fa_secret_$uid');
       }
+      if (!mounted) return;
       setState(() { _is2FAEnabled = false; _isLoading = false; _setupComplete = false; _showSetup = false; _totpSecret = null; _totpUri = null; });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('2FA disabled', style: TextStyle(fontSize: 14)),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('2FA disabled', style: TextStyle(fontSize: 14)),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
   Future<void> _verifyAndEnable() async {
     final code = _verifyCtrl.text.trim();
-    if (code.length != 6) {
+    if (code.length != 6 || !RegExp(r'^\d{6}$').hasMatch(code)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Enter the 6-digit code', style: TextStyle(fontSize: 14)),
+          content: const Text('Enter the 6-digit code from your authenticator app', style: TextStyle(fontSize: 14)),
           backgroundColor: Colors.red.shade800,
         ),
       );
       return;
     }
+
+    if (_totpSecret == null) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    final uid = AuthService.instance.currentUser?.uid ?? '';
-    final prefs = await SharedPreferences.getInstance();
-    if (uid.isNotEmpty) {
-      await prefs.setBool('2fa_enabled_$uid', true);
-      await prefs.setString('2fa_secret_$uid', _totpSecret!);
+
+    // ── Real TOTP Verification using HMAC-SHA1 ──────────────────────────────
+    // Allow ±1 time-step tolerance for clock drift
+    bool isValid = false;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (int offset in [-1, 0, 1]) {
+      final expectedCode = OTP.generateTOTPCodeString(
+        _totpSecret!,
+        now + (offset * 30000),
+        length: 6,
+        interval: 30,
+        algorithm: Algorithm.SHA1,
+        isGoogle: true,
+      );
+      if (expectedCode == code) {
+        isValid = true;
+        break;
+      }
     }
-    setState(() { _is2FAEnabled = true; _setupComplete = true; _isLoading = false; });
-    if (mounted) {
+
+    if (!isValid) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ 2FA enabled successfully!', style: TextStyle(fontSize: 14)),
-          backgroundColor: Color(0xFF00E5FF),
+        SnackBar(
+          content: const Text('❌ Invalid code. Please try again.', style: TextStyle(fontSize: 14)),
+          backgroundColor: Colors.red.shade800,
         ),
       );
+      return;
     }
+
+    // ── Persist 2FA state ──────────────────────────────────────────────────
+    final uid = AuthService.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('2fa_enabled_$uid', true);
+      // Store TOTP secret in SECURE storage (Android Keystore / iOS Keychain)
+      await _secureStorage.write(key: '2fa_secret_$uid', value: _totpSecret!);
+    }
+
+    if (!mounted) return;
+    setState(() { _is2FAEnabled = true; _setupComplete = true; _isLoading = false; });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✅ 2FA enabled successfully!', style: TextStyle(fontSize: 14)),
+        backgroundColor: Color(0xFF00E5FF),
+      ),
+    );
   }
 
   @override

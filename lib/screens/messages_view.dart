@@ -4,11 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:glassmorphism_ui/glassmorphism_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:async';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import 'home_screen.dart';
 import 'chat_screen.dart'; // To use ChatScreen
 import 'story_viewer_screen.dart'; // To view stories
 import '../services/auth_service.dart';
@@ -170,13 +171,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
       backgroundColor: Colors.transparent,
       builder: (modalCtx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          final allContacts = [
-            ..._primary,
-            MessageItem(name: 'Orion Seeker', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', message: 'Suggested connection', time: 'Online', isOnline: true),
-            MessageItem(name: 'Sol Flare', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100', message: 'Suggested connection', time: 'Offline'),
-            MessageItem(name: 'Lyra Star', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', message: 'Suggested connection', time: 'Online', isOnline: true),
-            MessageItem(name: 'Cyber Pulse', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', message: 'New connection', time: 'Online', isOnline: true),
-          ];
+          final allContacts = List<MessageItem>.from(_primary);
 
           final filtered = newSearchQuery.isEmpty
               ? allContacts
@@ -549,7 +544,16 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
                               : Row(
                                   children: [
                                     GestureDetector(
-                                      onTap: () => Navigator.maybePop(context),
+                                      onTap: () {
+                                        HapticFeedback.lightImpact();
+                                        if (Navigator.canPop(context)) {
+                                          Navigator.pop(context);
+                                        } else {
+                                          Navigator.of(context).pushReplacement(
+                                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                                          );
+                                        }
+                                      },
                                       child: Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(

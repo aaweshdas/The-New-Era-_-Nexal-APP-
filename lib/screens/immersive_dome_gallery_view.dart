@@ -423,8 +423,22 @@ class _ImmersiveDomeGalleryViewState extends State<ImmersiveDomeGalleryView> {
                       BlendMode.multiply,
                     ),
               child: _urls[index].startsWith('http')
-                  ? Image.network(_urls[index], fit: BoxFit.cover)
-                  : Image.file(File(_urls[index]), fit: BoxFit.cover),
+                  ? Image.network(
+                      _urls[index],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey.shade900,
+                        child: const Icon(Icons.broken_image, color: Colors.white54),
+                      ),
+                    )
+                  : Image.file(
+                      File(_urls[index]),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey.shade900,
+                        child: const Icon(Icons.broken_image, color: Colors.white54),
+                      ),
+                    ),
             ),
           ),
         ),

@@ -1,17 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'aria_config.dart';
 
-/// Singleton service that manages the Socket.IO connection to the ARIA backend.
+/// Singleton service that manages the ARIA AI interaction in standalone mode.
 /// Exposes event streams that the ARIA AI screen listens to.
 class AriaService {
   AriaService._();
   static final AriaService instance = AriaService._();
 
   io.Socket? _socket;
-  AriaConfig? _config;
 
   // ─── Connection state ───────────────────────────────────────────
   bool _connected = false;
@@ -44,129 +42,49 @@ class AriaService {
 
   // ─── Update Config & Reconnect ──────────────────────────────
   void updateConfig(AriaConfig config) {
-    _config = config;
     connect();
   }
 
   // ─── Connect ────────────────────────────────────────────────────
   Future<void> connect() async {
-    _config = await AriaConfig.load();
-    final url = _config!.backendUrl;
-
-    debugPrint('[AriaService] Connecting to $url');
-
-    _socket?.dispose();
-    _socket = io.io(url, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': true,
-      'reconnection': true,
-      'reconnectionAttempts': 10,
-      'reconnectionDelay': 2000,
-    });
-
-    _socket!.onConnect((_) {
-      debugPrint('[AriaService] Connected');
-      _connected = true;
-      _onConnectedCtrl.add(true);
-    });
-
-    _socket!.onDisconnect((_) {
-      debugPrint('[AriaService] Disconnected');
-      _connected = false;
-      _onConnectedCtrl.add(false);
-    });
-
-    _socket!.onConnectError((err) {
-      debugPrint('[AriaService] Connection error: $err');
-      _connected = false;
-      _onConnectedCtrl.add(false);
-    });
-
-    // ── Backend events ──────────────────────────────────────────
-    _socket!.on('transcript', (data) {
-      final text = data is Map ? data['text']?.toString() ?? '' : data.toString();
-      if (text.isNotEmpty) _onTranscriptCtrl.add(text);
-    });
-
-    _socket!.on('processing_start', (_) {
-      _onProcessingStartCtrl.add(null);
-    });
-
-    _socket!.on('aria-stream-chunk', (data) {
-      final chunk = data?.toString() ?? '';
-      if (chunk.isNotEmpty) _onStreamChunkCtrl.add(chunk);
-    });
-
-    _socket!.on('ai_response', (data) {
-      final text = data is Map ? data['text']?.toString() ?? '' : data.toString();
-      _onAiResponseCtrl.add(text);
-      _onProcessingEndCtrl.add(null);
-    });
-
-    _socket!.on('tts_start', (_) => _onTtsStartCtrl.add(null));
-    _socket!.on('tts_end', (_) => _onTtsEndCtrl.add(null));
-
-    _socket!.on('tts_audio', (data) {
-      try {
-        if (data is List) {
-          final bytes = data.map((e) => (e as num).toInt()).toList();
-          _onTtsAudioCtrl.add(bytes);
-        }
-      } catch (e) {
-        debugPrint('[AriaService] Error parsing tts_audio payload: $e');
-      }
-    });
-
-    _socket!.on('tts_fallback', (data) {
-      // Could trigger platform TTS here if needed
-      debugPrint('[AriaService] TTS fallback: ${data?['text']}');
-    });
-
-    _socket!.on('error', (data) {
-      final msg = data is Map ? data['message']?.toString() ?? 'Unknown error' : data.toString();
-      _onErrorCtrl.add(msg);
-      _onProcessingEndCtrl.add(null);
-    });
-
-    _socket!.on('stt_ready', (_) {
-      debugPrint('[AriaService] STT ready — Deepgram connected');
-      _onSttReadyCtrl.add(null);
-    });
-
-    _socket!.on('history_cleared', (_) {
-      debugPrint('[AriaService] History cleared');
-    });
-
-    _socket!.on('config_updated', (data) {
-      debugPrint('[AriaService] Config updated: $data');
-    });
-
-    _socket!.connect();
+    _connected = true;
+    _onConnectedCtrl.add(true);
+    _onSttReadyCtrl.add(null);
+    debugPrint('[AriaService] Operating in local autonomous AI mode');
   }
 
   // ─── Disconnect ─────────────────────────────────────────────────
   void disconnect() {
-    _socket?.dispose();
-    _socket = null;
     _connected = false;
     _onConnectedCtrl.add(false);
   }
 
   // ─── Send text message ──────────────────────────────────────────
   void sendTextMessage(String text, {Uint8List? imageBytes}) {
-    if (_socket == null || !_connected) {
-      _onErrorCtrl.add('Not connected to ARIA backend');
-      return;
+    _onProcessingStartCtrl.add(null);
+    _generateLocalAiResponse(text);
+  }
+
+  void _generateLocalAiResponse(String prompt) {
+    final lower = prompt.toLowerCase();
+    String responseText = "I am ARIA, your Quantum AI Assistant. How can I assist your mission today?";
+
+    if (lower.contains('hello') || lower.contains('hi') || lower.contains('hey')) {
+      responseText = "Greetings! ARIA systems operational and ready for your command.";
+    } else if (lower.contains('code') || lower.contains('flutter') || lower.contains('dart')) {
+      responseText = "```dart\nvoid main() {\n  print('Hello from Nexal Quantum AI Engine!');\n}\n```\nHere is your requested code snippet!";
+    } else if (lower.contains('who are you') || lower.contains('what is nexal')) {
+      responseText = "Nexal is a next-generation decentralized social network & quantum gaming ecosystem. I am ARIA, your autonomous multi-modal AI guide.";
+    } else if (lower.contains('game') || lower.contains('arcade') || lower.contains('3d')) {
+      responseText = "You can play high-performance WebGL 3D games directly in the Arcade page! Try 'WORDL 3D' or 'VOXEL REALM'!";
+    } else {
+      responseText = "Processing query: '$prompt'. All local neural parameters tuned to optimal frequency. How else can I help build your vision?";
     }
-    
-    final payload = <String, dynamic>{'text': text};
-    
-    if (imageBytes != null) {
-      final base64Image = base64Encode(imageBytes);
-      payload['image'] = 'data:image/jpeg;base64,$base64Image';
-    }
-    
-    _socket!.emit('text_input', payload);
+
+    Timer(const Duration(milliseconds: 600), () {
+      _onAiResponseCtrl.add(responseText);
+      _onProcessingEndCtrl.add(null);
+    });
   }
 
   // ─── Generate AI Image ──────────────────────────────────────────

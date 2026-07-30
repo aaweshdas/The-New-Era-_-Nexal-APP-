@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import '../home_screen.dart';
+import 'community_guidelines_screen.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -57,31 +59,59 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
     setState(() => _isSaving = true);
     final uid = AuthService.instance.currentUser?.uid ?? '';
+    final currentEmail = AuthService.instance.currentUser?.email ?? '';
+    final emailChanged = email != currentEmail && currentEmail.isNotEmpty;
+
     if (uid.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_username_$uid', username);
-      await prefs.setString('user_email_$uid', email);
+
+      // Username and profile update — direct upsert is fine
       try {
         await Supabase.instance.client.from('profiles').upsert({
           'id': uid,
           'username': username,
-          'email': email,
           'updated_at': DateTime.now().toIso8601String(),
         });
       } catch (_) {}
+
+      // Email change requires auth.updateUser() — triggers verification email
+      if (emailChanged) {
+        try {
+          await Supabase.instance.client.auth.updateUser(
+            UserAttributes(email: email),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          setState(() => _isSaving = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Email update failed: ${e.toString().split(']').last.trim()}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              backgroundColor: Colors.red.shade800,
+            ),
+          );
+          return;
+        }
+      }
     }
+
+    if (!mounted) return;
     setState(() => _isSaving = false);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Account settings saved! 🚀',
-            style: TextStyle(fontSize: 14),
-          ),
-          backgroundColor: Color(0xFF00E5FF),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          emailChanged
+              ? 'Settings saved! Check your inbox to verify the new email. 📬'
+              : 'Account settings saved! 🚀',
+          style: const TextStyle(fontSize: 14),
         ),
-      );
-    }
+        backgroundColor: const Color(0xFF00E5FF),
+        duration: Duration(seconds: emailChanged ? 5 : 3),
+      ),
+    );
   }
 
   @override
@@ -178,7 +208,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(LucideIcons.arrowLeft, color: Colors.white70),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            );
+                          }
+                        },
                       ),
                       const SizedBox(width: 8),
                       const Text(
@@ -298,6 +336,40 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                 letterSpacing: 0.5,
                               ),
                             ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Community Guidelines Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF00E5FF),
+                        side: BorderSide(color: const Color(0xFF00E5FF).withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CommunityGuidelinesScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(LucideIcons.shieldCheck, size: 18),
+                      label: const Text(
+                        'Rules & Regulations',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
                   ),
 

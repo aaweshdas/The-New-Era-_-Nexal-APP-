@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/gallery/premium_timeline_gallery.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
+import 'home_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../services/device_gallery_service.dart';
+import '../widgets/common/permission_bottom_sheet.dart';
 
 class GalleryView extends StatefulWidget {
   const GalleryView({super.key});
@@ -26,6 +30,27 @@ class _GalleryViewState extends State<GalleryView> {
   bool _enableAnimations = true;
   bool _enableHDPreviews = true;
   bool _enableHaptics = true;
+
+  // Device Photos State
+  List<DevicePhotoItem> _devicePhotos = [];
+  bool _isLoadingPhotos = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhotos();
+  }
+
+  Future<void> _loadPhotos({bool forceRefresh = false}) async {
+    setState(() => _isLoadingPhotos = true);
+    final photos = await DeviceGalleryService.instance.loadDevicePhotos(forceRefresh: forceRefresh);
+    if (mounted) {
+      setState(() {
+        _devicePhotos = photos;
+        _isLoadingPhotos = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -440,6 +465,12 @@ class _GalleryViewState extends State<GalleryView> {
                 isNewestFirst: _isNewestFirst,
                 selectedCategory: _selectedCategory,
                 searchQuery: _searchController.text,
+                devicePhotos: _devicePhotos,
+                isLoadingDevicePhotos: _isLoadingPhotos,
+                onRequestPermission: () async {
+                  await PermissionBottomSheet.show(context);
+                  _loadPhotos(forceRefresh: true);
+                },
               ),
             ),
 
@@ -612,8 +643,13 @@ class _GalleryViewState extends State<GalleryView> {
                             size: 19,
                           ),
                           onPressed: () {
+                            HapticFeedback.lightImpact();
                             if (Navigator.canPop(context)) {
                               Navigator.pop(context);
+                            } else {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (_) => const HomeScreen()),
+                              );
                             }
                           },
                         ),

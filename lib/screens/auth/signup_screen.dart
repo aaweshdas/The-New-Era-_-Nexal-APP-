@@ -108,26 +108,36 @@ class _SignupScreenState extends State<SignupScreen>
 
     HapticFeedback.lightImpact();
     setState(() => _isLoading = true);
-    final success = await AuthService.instance.signup(name, email, pass);
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    if (success) {
-      HapticFeedback.mediumImpact();
-      Navigator.of(context).pushAndRemoveUntil(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, _) => ProfileSetupScreen(
-            initialName: name,
-            initialEmail: email,
-          ),
-          transitionsBuilder: (context, animation, _, child) =>
-              FadeTransition(opacity: animation, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
-        (route) => false,
+    try {
+      final success = await AuthService.instance.createAccountAndLogin(
+        name: name,
+        email: email,
+        password: pass,
       );
-    } else {
-      _showSnackBar('Signup failed. Please try again.', isError: true);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (success) {
+        HapticFeedback.mediumImpact();
+        Navigator.of(context).pushAndRemoveUntil(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, _) => ProfileSetupScreen(
+              initialName: name,
+              initialEmail: email,
+            ),
+            transitionsBuilder: (context, animation, _, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+          (route) => false,
+        );
+      } else {
+        _showSnackBar('Signup failed. Please try again.', isError: true);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showSnackBar('Signup error: $e', isError: true);
     }
   }
 

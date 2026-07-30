@@ -11,6 +11,7 @@ import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import 'home_screen.dart';
 import 'auth/login_screen.dart';
 
 class ProfileView extends StatefulWidget {
@@ -82,7 +83,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     final displayBio = _displayBio(user);
     final displayLink = _displayLink(user);
     final displayUsername = _displayUsername(user);
-    final avatarUrl = cur?.avatarUrl ?? user?.avatarUrl ?? 'https://images.unsplash.com/photo-1665700301987-b2a5f789f6d5?w=200';
+    final avatarUrl = cur?.avatarUrl ?? user?.avatarUrl ?? 'assets/images/default_avatar.png';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(children: [
@@ -110,7 +111,16 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(children: [
-        _iconBtn(LucideIcons.arrowLeft, () => Navigator.maybePop(context)),
+        _iconBtn(LucideIcons.arrowLeft, () {
+          HapticFeedback.lightImpact();
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+          }
+        }),
         const SizedBox(width: 12),
         Expanded(child: Center(child: Text(displayName, style: GoogleFonts.rye(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)))),
         const SizedBox(width: 12),
@@ -148,19 +158,30 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       {'icon': LucideIcons.rocket, 'label': 'Pioneer', 'color': AppTheme.purple500},
     ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Left achievements
           Expanded(child: Column(children: leftBadges.asMap().entries.map((e) => _badgeTile(e.value, e.key)).toList())),
-          // Center avatar — uses real user photo
           Container(
             padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: [AppTheme.purple500, AppTheme.cyan500]), boxShadow: [BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2)]),
-            child: CircleAvatar(radius: 48, backgroundColor: Colors.black, child: CircleAvatar(radius: 44, backgroundImage: CachedNetworkImageProvider(avatarUrl), backgroundColor: Colors.grey[900])),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(colors: [AppTheme.purple500, AppTheme.cyan500]),
+              boxShadow: [BoxShadow(color: AppTheme.purple500.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2)],
+            ),
+            child: CircleAvatar(
+              radius: 48,
+              backgroundColor: Colors.black,
+              child: CircleAvatar(
+                radius: 44,
+                backgroundImage: avatarUrl.startsWith('http')
+                    ? NetworkImage(avatarUrl) as ImageProvider
+                    : AssetImage(avatarUrl),
+                backgroundColor: Colors.grey[900],
+              ),
+            ),
           ).animate().fadeIn(delay: 200.ms, duration: 500.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1), duration: 500.ms),
-          // Right achievements
           Expanded(child: Column(children: rightBadges.asMap().entries.map((e) => _badgeTile(e.value, e.key + 2)).toList())),
         ],
       ),

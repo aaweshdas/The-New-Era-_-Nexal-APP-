@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfig {
@@ -22,42 +21,11 @@ class AppConfig {
   static String get apiBaseUrl => gatewayUrl;
   static String get ariaBackendUrl => gatewayUrl;
 
-  /// Resolve & verify best working backend gateway URL (Render Cloud -> Saved -> Emulator / Localhost)
+  /// Resolve gateway URL (returns default offline gateway URL without network delay)
   static Future<String> resolveGatewayUrl() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final customUrl = prefs.getString(_customGatewayKey);
-
-      final candidates = <String>[
-        if (customUrl != null && customUrl.isNotEmpty) customUrl,
-        renderGatewayUrl,
-        if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) devGatewayUrl else emulatorGatewayUrl,
-        'http://localhost:10000',
-      ];
-
-      for (final url in candidates) {
-        if (await _pingGateway(url)) {
-          _resolvedGatewayUrl = url;
-          debugPrint('[AppConfig] Gateway resolved & active: $url');
-          return url;
-        }
-      }
-    } catch (e) {
-      debugPrint('[AppConfig] Gateway resolution notice: $e');
-    }
-
     _resolvedGatewayUrl = defaultGatewayUrl;
+    debugPrint('[AppConfig] Using standalone client mode: $defaultGatewayUrl');
     return defaultGatewayUrl;
-  }
-
-  static Future<bool> _pingGateway(String url) async {
-    try {
-      final uri = Uri.parse('$url/health');
-      final res = await http.get(uri).timeout(const Duration(milliseconds: 2500));
-      return res.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
   }
 
   static Future<void> setCustomGatewayUrl(String url) async {

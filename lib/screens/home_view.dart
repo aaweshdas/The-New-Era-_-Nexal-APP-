@@ -18,6 +18,7 @@ import '../widgets/notifications/notification_view.dart';
 import 'create_post_screen.dart';
 import 'story_viewer_screen.dart';
 import 'post_detail_screen.dart';
+import 'home_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import '../models/post_model.dart';
@@ -255,9 +256,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // ── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
         children: [
           // 1. Lightweight gradient background (no duplicate video player)
           // The parent HomeScreen already runs SmartBackground — creating
@@ -347,8 +357,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   // ═══════════════════════════════════════════════════════
   // HEADER
@@ -361,7 +372,24 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         children: [
           Row(children: [
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (_showSearch) {
+                  setState(() {
+                    _showSearch = false;
+                    _searchController.clear();
+                    _searchQuery = '';
+                  });
+                } else {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    );
+                  }
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -1790,7 +1818,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.network('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600', height: 100, width: double.infinity, fit: BoxFit.cover),
+                                  child: Image.network(
+                                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600',
+                                    height: 100,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (ctx, err, st) => Container(
+                                      color: Colors.white10,
+                                      height: 100,
+                                      child: const Icon(LucideIcons.image, color: Colors.white38),
+                                    ),
+                                  ),
                                 ),
                                 Positioned(
                                   top: 6, right: 6,
@@ -2224,7 +2262,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                               ],
                             ),
                           )
-                        : Image.network(generatedImageUrl, fit: BoxFit.cover),
+                        : Image.network(
+                            generatedImageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, st) => Container(
+                              color: Colors.black54,
+                              child: const Center(
+                                child: Icon(LucideIcons.sparkles, color: Color(0xFFA855F7), size: 40),
+                              ),
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 18),

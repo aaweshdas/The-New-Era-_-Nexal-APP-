@@ -17,8 +17,16 @@ import 'services/socket_service.dart';
 import 'services/supabase_service.dart';
 import 'config/app_config.dart';
 
-void main() async {
+import 'services/auth_service.dart';
+
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Handle command-line deep links on desktop (e.g. Windows protocol invocation)
+  if (args.isNotEmpty && args.first.contains('://')) {
+    debugPrint('[Main] Received startup deep link arg: ${args.first}');
+    AuthService.instance.handleAuthCallbackUrl(args.first);
+  }
 
   // 🚀 Ultra-Smooth Performance: Expand Image Cache & prevent rendering jank
   PaintingBinding.instance.imageCache.maximumSizeBytes = 200 * 1024 * 1024; // 200 MB cache limit

@@ -60,7 +60,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _socketSub = SocketService.instance.onMessageReceived.listen((data) {
       final senderId = data['senderId'] as String?;
       final text = data['text'] as String?;
-      if ((senderId == widget.item.name || senderId == widget.item.avatar) && text != null && mounted) {
+      if (senderId == widget.item.name && text != null && mounted) {
         final incoming = ChatMessage(text: text, isSent: false, time: DateTime.now());
         setState(() => _messages.add(incoming));
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -110,51 +110,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     widget.onMessageSent(msg);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    // ✓ Try real Socket.IO first
-    final socketConnected = SocketService.instance.isConnected;
-    if (socketConnected) {
+    // ✓ Try real Socket.IO
+    if (SocketService.instance.isConnected) {
       SocketService.instance.sendMessage(widget.item.name, fullText);
-      return; // Real delivery — no simulated reply needed
     }
-
-    // Graceful offline fallback: smart simulated reply (shown only when socket is offline)
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      
-      final query = text.toLowerCase();
-      String replyText = '';
-
-      if (query.contains('photo') || query.contains('pic') || query.contains('image')) {
-        final photoReplies = ['Send it over! 📸', 'I love photos!', 'Is it a good one?', "Can't wait to see it! ✨"];
-        photoReplies.shuffle();
-        replyText = photoReplies.first;
-      } else if (query.contains('hello') || query.contains('hi') || query.contains('hey')) {
-        final greetReplies = ['Hey there! 👋', 'Hi!', 'Hello! How are you?', "Hey, what's up?"];
-        greetReplies.shuffle();
-        replyText = greetReplies.first;
-      } else if (query.contains('video') || query.contains('reel')) {
-        final vidReplies = ['I watched it! So cool 🎬', 'Great video 🔥', 'Send the link!'];
-        vidReplies.shuffle();
-        replyText = vidReplies.first;
-      } else if (query.contains('?')) {
-        final questionReplies = ['Hmm, I need to think about that 🤔', 'Yes, absolutely!', 'Not sure, what do you think?', 'Maybe...'];
-        questionReplies.shuffle();
-        replyText = questionReplies.first;
-      } else {
-        final replies = [
-          "That's cool! 🔥", 'Got it 👍', 'Sounds good!', 'Wow, really? ✨',
-          'Haha 😂', 'Nice one!', 'On it 🚀', 'Let me check...',
-          'Interesting perspective 🧠', 'Tell me more.', 'I completely agree 💯',
-          'Whoa, mind blown 🤯', 'Love that energy ⚡', 'Classic! 🎯',
-        ];
-        replies.shuffle();
-        replyText = replies.first;
-      }
-
-      final reply = ChatMessage(text: replyText, isSent: false, time: DateTime.now());
-      setState(() => _messages.add(reply));
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    });
   }
 
   void _showAttachmentOptions() {
