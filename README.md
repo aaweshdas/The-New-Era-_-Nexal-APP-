@@ -6,14 +6,12 @@
 
 <p align="center">
   <strong>The Next-Gen Unified Super App Experience</strong><br/>
-  <sub>A ultra-performant, single-install ecosystem combining Social Feeds, Voice AI, Self-Hosted Navigation, 3D Gaming, Real-Time Messaging, and Smart Vision.</sub>
+  <sub>An ultra-performant, single-install ecosystem combining Social Feeds, ARIA Voice AI, Self-Hosted Navigation, 3D Gaming, Real-Time Cyber Messaging, and Smart Vision.</sub>
 </p>
 
 <p align="center">
-  <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.10+-02569B?style=for-the-badge&logo=flutter&logoColor=white" /></a>
-  <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.10+-0175C2?style=for-the-badge&logo=dart&logoColor=white" /></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white" /></a>
-  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.4+-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /></a>
+  <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.22+-02569B?style=for-the-badge&logo=flutter&logoColor=white" /></a>
+  <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.4+-0175C2?style=for-the-badge&logo=dart&logoColor=white" /></a>
   <a href="https://supabase.com"><img src="https://img.shields.io/badge/Supabase-Supported-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" /></a>
   <a href="https://groq.com"><img src="https://img.shields.io/badge/AI-Groq%20%2B%20Deepgram-F04438?style=for-the-badge" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-EC4899?style=for-the-badge" /></a>
@@ -23,72 +21,42 @@
 
 ## 📌 Overview
 
-**Nexal** is a Flutter-based super app that seamlessly converges six full-fledged digital platforms into a unified, high-performance client application backed by an isolated, multi-port Node.js microservices gateway:
+**Nexal** is a Flutter-powered next-generation super app that seamlessly converges six full-fledged digital platforms into a unified, high-performance client application:
 
-- **🌌 Quantum Feed & Reels ("Feels")**: Social timeline, short video reels with double-tap reactions, story viewer, comments, and interactive bookmarks.
-- **🎙️ ARIA Voice AI Assistant**: Zero-latency voice-to-voice conversational agent built on WebSocket streams, Deepgram STT/TTS, and Groq LLM.
-- **🗺️ Self-Hosted Navigation**: Privacy-first MapLibre GL vector maps with turn-by-turn routing using self-hosted Nominatim & OSRM backends.
-- **🎮 3D Open-World Gaming**: Embedded WebGL game client and Luanti engine rendered through low-overhead Flutter WebViews.
-- **💬 Real-time Cyber Messaging**: Socket.IO direct and group messaging with voice bubbles, media attachments, and thread replies.
-- **📷 Smart Vision & Immersive Gallery**: Real-time camera preview powered by Google ML Kit Face Detection, live color filters, 360° Dome View, and River of Time timeline galleries.
+- **🌌 Quantum Social Feed & Feels**: Interactive social timeline, video reels ("Feels"), story viewers, double-tap reactions, and bookmarks.
+- **🎙️ ARIA Voice AI Assistant**: Zero-latency voice-to-voice conversational AI powered by Deepgram STT/TTS, Groq LLM, and WebSockets.
+- **🗺️ Self-Hosted Map & Navigation**: Vector maps with MapLibre GL, turn-by-turn routing, Nominatim geocoding, and location bookmarking.
+- **🎮 3D Open-World Gaming**: Embedded WebGL game client engine (Voxel Realm & World) rendered via low-overhead WebViews.
+- **💬 Cyber Messaging Hub**: Direct & group chat hub with voice notes, image/video sharing, unread indicators, and live typing status.
+- **📷 Smart Vision & Immersive Gallery**: Live camera preview with Google ML Kit Face Detection, live filters, 360° Dome View, and River of Time timeline gallery.
+- **🔐 Next-Gen Authentication**: Supabase OAuth (Google, Facebook), Email/Password, TOTP 2FA, and Guest Mode, framed in an Obsidian Glassmorphic container.
 
 ---
 
-## 🚀 Key Modules & Feature Highlights
+## 🚀 Key Modules & Capabilities
 
-| Module | Features & Capabilities | Tech Stack |
+| Module | Core Features & Capabilities | Tech Stack / Packages |
 |---|---|---|
-| **Social & Reels** | Infinite scroll timeline, short video reels ("Feels"), story viewer, animated reactions, and bookmarking | `provider`, `video_player`, `cached_network_image` |
-| **ARIA AI Voice** | Real-time streaming voice-to-voice conversation engine with low-latency audio processing | Deepgram STT/TTS, Groq LLM, WebSockets, `record`, `audioplayers` |
-| **Navigation & Maps** | 3D tile rendering, turn-by-turn routing, pre-warmed video loader, and geocoding | MapLibre GL, Nominatim, OSRM, `geolocator`, `geocoding` |
-| **3D Open World** | WebGL 3D game client integration & Luanti engine | `webview_flutter`, Node.js static game server |
-| **Messaging & Chat** | Direct & group chats, voice bubbles, image attachments, and unread counters | `socket_io_client`, Express, `emoji_picker_flutter` |
-| **Smart Vision Camera** | Live camera preview, color filters, Google ML Kit face detection overlay, gesture zoom | `camera`, `google_mlkit_face_detection` |
-| **Immersive Gallery** | 360° Dome View, River of Time, monthly timeline, and high-definition photo viewer | `sensors_plus`, `gal`, `share_plus` |
-| **Auth & Security** | Supabase OAuth (Google, Facebook), Email/Password, TOTP 2FA, and guest exploration | `supabase_flutter`, `google_sign_in`, `qr_flutter` |
-| **Design Engine** | Obsidian glassmorphism, Particle Backgrounds, Gyro Parallax, and Quantum Arc Menu | `glassmorphism_ui`, `flutter_animate`, `lucide_icons_flutter` |
+| **Social Timeline** | Timeline feed, post creation with media uploads, likes, bookmarking, profile analytics, and search | `provider`, `cached_network_image`, `flutter_animate` |
+| **Feels (Video Reels)** | Vertical video reels, auto-play queue, double-tap heart animations, and audio player | `video_player`, `audioplayers` |
+| **ARIA AI Voice** | Full voice-to-voice AI assistant with visual waveform orb and real-time streaming | Deepgram STT/TTS, Groq LLM, WebSockets, `record` |
+| **Map & Navigation** | Vector maps, custom tile styles, turn-by-turn OSRM routing, Nominatim search, and GPS tracking | MapLibre GL, `geolocator`, `geocoding` |
+| **3D Gaming Hub** | WebGL 3D Voxel Realm & World game engine with interactive touch controls | `webview_flutter`, `flutter_inappwebview` |
+| **Cyber Messaging** | Direct & group messaging, voice bubbles, image attachments, call screens, and group management | `socket_io_client`, Supabase Realtime |
+| **Smart Vision Camera** | Live camera preview, color filters, Google ML Kit face detection overlay, snap capture | `camera`, `google_mlkit_face_detection` |
+| **Immersive Gallery** | 360° Gyroscope Dome View, River of Time 3D wall, Monthly Timeline, and HD viewer | `sensors_plus`, `gal`, `share_plus` |
+| **Auth & Security** | Obsidian Glassmorphic Auth Box, Supabase Auth, Google/FB OAuth, TOTP 2FA, and Guest Mode | `supabase_flutter`, `google_sign_in`, `qr_flutter` |
 
 ---
 
-## ⚡ Performance & Optimization Engine
+## 🎨 Design System & Aesthetics
 
-Nexal is engineered for **buttery smooth 60 FPS performance** through comprehensive rendering and memory optimizations:
+Nexal features a **state-of-the-art Obsidian Glassmorphic Design System**:
 
-- **Isolated Layer Repaints**: Critical components (`PostCard`, `VideoPlayer`, `ParticleBackground`) are wrapped in `RepaintBoundary` wrappers to prevent cascading tree redraws.
-- **Smart Background Deduplication**: Prevents duplicate video decoder instances when switching between galaxy menu and sub-screens.
-- **Painter & Layout Caching**: Static `TextPainter` reuse in `_CelestialTextPainter` eliminates over 180 layout recalculations/sec.
-- **Image & Asset Pre-warming**: Critical background wallpapers and nav icons are precached during splash boot up; memory cache limits (`memCacheWidth: 600`) ensure low RAM footprint.
-- **Asynchronous I/O Optimization**: `SharedPreferences` instances and `ThemeData` tokens are cached in memory to eliminate async I/O stutter on UI events.
-
----
-
-## 🏗️ System Architecture
-
-```
-                                ┌────────────────────────┐
-                                │     Flutter Client     │
-                                └───────────┬────────────┘
-                                            │
-                                            ▼
-                                ┌────────────────────────┐
-                                │   Gateway Microservice │  (Port 10000)
-                                └───────────┬────────────┘
-                                            │
-       ┌────────────────┬───────────────────┼───────────────────┬────────────────┬────────────────┐
-       │                │                   │                   │                │                │
-       ▼                ▼                   ▼                   ▼                ▼                ▼
- ┌───────────┐    ┌───────────┐       ┌───────────┐       ┌───────────┐    ┌───────────┐    ┌───────────┐
- │   ARIA    │    │  Search   │       │   Map     │       │   Game    │    │  Camera   │    │ Settings  │
- │ AI Engine │    │REST Backend│       │  Engine   │       │  Server   │    │  Backend  │    │  Backend  │
- │(Port 3003)│    │(Port 3004)│       │(Port 3006)│       │(Port 3005)│    │(Port 3007)│    │(Port 3008)│
- └─────┬─────┘    └─────┬─────┘       └─────┬─────┘       └───────────┘    └───────────┘    └───────────┘
-       │                │                   │
-       ▼                ▼                   ▼
-┌──────────────┐ ┌──────────────┐   ┌──────────────┐
-│ Groq LLM &   │ │ Supabase Auth│   │ Nominatim /  │
-│ Deepgram Voice│ │  & Database  │   │  OSRM Maps   │
-└──────────────┘ └──────────────┘   └──────────────┘
-```
+- **Curated Wallpaper Engine**: Organized background asset management divided into `active_screens` and `preset_wallpapers`.
+- **Dynamic Background Swapper**: Real-time wallpaper picker allowing users to switch background styles live across the app.
+- **Obsidian Glass Cards**: High-density backdrop blurs (`sigma: 30`), translucent dark tint (`0xFF070A14`), specular beam highlights, and 3D squircle logo badges.
+- **Micro-Animations**: Fluid entrance transitions, bouncy squircle badges, and glowing multi-color shimmer typography using `flutter_animate` and Google Fonts (`Outfit`, `Rye`, `Cinzel`).
 
 ---
 
@@ -96,39 +64,66 @@ Nexal is engineered for **buttery smooth 60 FPS performance** through comprehens
 
 ```text
 Nexal_App/
-├── lib/
-│   ├── main.dart                  # App entry point, MultiProvider & global error boundary
-│   ├── config/                    # Global app configuration & API gateway endpoints
-│   ├── models/                    # Typed data models (User, Post, Session)
-│   ├── providers/                 # State management (Auth, Feed, User, Notifications, Background)
-│   ├── services/                  # Network REST, Socket.IO, Supabase & ARIA client services
-│   ├── theme/                     # App Theme, cached text styles, and color tokens
-│   ├── screens/                   # Core application views
-│   │   ├── auth/                  # Splash router, Login & OAuth flows
-│   │   ├── home_screen.dart       # Galaxy mode & Quantum Arc menu home screen
-│   │   ├── home_view.dart         # Main social timeline feed
-│   │   ├── feels_view.dart        # Short video reels player
-│   │   ├── ai_assist_view.dart    # ARIA AI voice assistant screen
-│   │   ├── map_view.dart          # Vector map & turn-by-turn navigation view
-│   │   ├── camera_view.dart       # Smart camera & ML Kit face detection
-│   │   ├── gallery_view.dart      # 360° Dome & River of Time gallery
-│   │   ├── messages_view.dart     # Direct & group messaging hub
-│   │   └── open_world_games_view.dart # WebGL 3D game screen
-│   └── widgets/                   # Reusable UI components (Quantum Arc Menu, Post Cards, Backgrounds)
+├── assets/                        # Organized Static Assets & Wallpapers
+│   ├── backgrounds/               # Managed Background Engine
+│   │   ├── active_screens/        # Active wallpaper images assigned per screen
+│   │   └── preset_wallpapers/     # User-selectable theme background wallpapers
+│   ├── gallery/                   # Sample images & 360° dome panoramas
+│   ├── images/                    # UI branding banners & avatars
+│   ├── map/                       # Offline map styles & vector icons
+│   ├── nav_icons/                 # Custom navigation bar icon assets
+│   ├── videos/                    # Sample Feels video clips
+│   ├── voxel_realm/               # WebGL 3D game assets
+│   ├── nexal_logo.png             # Official Nexal 3D Emblem Logo
+│   └── 3d_map.png                 # Map preview asset
 │
-├── Backend/
-│   ├── src/gateway.ts             # Gateway reverse proxy router (Port 10000)
-│   ├── aria_backend/              # ARIA AI voice WebSocket server (Port 3003)
-│   ├── search_backend/            # Search & feed REST service (Port 3004)
-│   ├── game_backend/              # WebGL static game server (Port 3005)
-│   ├── Map_Backend/               # OpenStreetMap tile proxy, Nominatim & OSRM (Port 3006)
-│   ├── camera_backend/            # Camera uploads & storage server (Port 3007)
-│   └── Setting Backend/           # User preferences sync service (Port 3008)
+├── lib/                           # Flutter Application Codebase
+│   ├── main.dart                  # Application Entrypoint & MultiProvider setup
+│   ├── config/                    # Global App Configuration & Endpoints
+│   ├── controllers/               # Custom UI Controllers
+│   ├── models/                    # Data Models (User, Post, Chat, Story, Notification)
+│   ├── providers/                 # State Management Providers (Auth, Feed, Theme, User)
+│   ├── screens/                   # Core Application Screens & Views
+│   │   ├── auth/                  # LoginScreen, SplashScreen, 2FA Verification
+│   │   ├── settings/              # Settings modal, Wallpaper Picker, Account Settings
+│   │   ├── home_screen.dart       # Main Container with Galaxy Navigation Bar
+│   │   ├── home_view.dart         # Social Timeline Feed View
+│   │   ├── feels_view.dart        # Short Video Reels ("Feels") View
+│   │   ├── ai_assist_view.dart    # ARIA AI Voice Assistant View
+│   │   ├── map_view.dart          # Vector Map & Turn-by-Turn Routing View
+│   │   ├── camera_view.dart       # Smart Vision & ML Kit Face Detection View
+│   │   ├── camera_preview_screen.dart # Camera Post-Capture Preview
+│   │   ├── gallery_view.dart      # Standard Gallery Grid
+│   │   ├── immersive_dome_gallery_view.dart # 360° Gyroscope Dome View
+│   │   ├── monthly_timeline_view.dart # River of Time & Monthly Timeline
+│   │   ├── messages_view.dart     # Cyber Messaging Hub
+│   │   ├── chat_screen.dart       # Direct & Group Chat Screen
+│   │   ├── call_screen.dart       # Audio/Video Call Screen
+│   │   ├── open_world_games_view.dart # 3D WebGL Games Hub
+│   │   ├── game_webview_screen.dart # WebGL Game Viewport Screen
+│   │   ├── profile_view.dart      # User Profile Screen
+│   │   └── search_view.dart       # Global Search View
+│   ├── services/                  # Network REST, WebSockets, Supabase & ML Services
+│   ├── theme/                     # App Theme, Color Tokens & Typography
+│   ├── utils/                     # Helper Utilities & Formatters
+│   └── widgets/                   # Modular UI Components & Cards
 │
-├── android/                       # Android native configuration
-├── ios/                           # iOS native configuration
-└── assets/                        # Background wallpapers, nav icons, map tiles, and game assets
+├── android/                       # Native Android Project Files
+├── ios/                           # Native iOS Project Files
+├── pubspec.yaml                   # Package Dependencies & Asset Manifest
+└── analysis_options.yaml          # Static Analysis & Linter Rules
 ```
+
+---
+
+## ⚡ Performance & Optimization Architecture
+
+Engineered for **fluid 60 FPS performance**:
+
+- **Repaint Boundaries**: High-activity components (`PostCard`, `VideoPlayerWidget`, `ParticleBackground`) are wrapped in `RepaintBoundary` nodes to isolate paint invalidations.
+- **Background Asset Deduplication**: Dedicated active screen wallpaper paths isolate image loading per view.
+- **Lazy Loading & Pre-caching**: Critical UI wallpapers and icons are precached during splash boot.
+- **MemCache Constraints**: All network and local images utilize `memCacheWidth` bounds to reduce GPU memory footprint.
 
 ---
 
@@ -136,89 +131,64 @@ Nexal_App/
 
 ### Prerequisites
 
-- **Flutter SDK**: `>=3.10.7`
-- **Node.js**: `>=20.x` & `npm >=10.x`
-- **Target Device**: Physical Android or iOS device recommended for Camera, GPS, Gyroscope, and Microphone features.
+- **Flutter SDK**: `>=3.22.0`
+- **Dart SDK**: `>=3.4.0`
+- **Physical Device**: Physical Android or iOS device recommended for Camera, ML Kit, Gyroscope, GPS, and Audio recording.
 
 ---
 
-### 1. Mobile App Setup
+### Installation & Run
 
-```bash
-# Clone the repository
-git clone https://github.com/aaweshdas/The-New-Era-_-Nexal-APP-.git
-cd The-New-Era-_-Nexal-APP-
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/aaweshdas/The-New-Era-_-Nexal-APP-.git
+   cd The-New-Era-_-Nexal-APP-
+   ```
 
-# Install Flutter dependencies
-flutter pub get
+2. **Install Flutter dependencies**:
+   ```bash
+   flutter pub get
+   ```
 
-# Run on connected device
-flutter run
-```
+3. **Verify Static Analysis**:
+   ```bash
+   dart analyze lib/
+   ```
 
----
-
-### 2. Microservices Backend Setup
-
-```bash
-# Navigate to the backend directory
-cd Backend
-
-# Install Node.js dependencies
-npm install
-
-# Copy environment configuration for ARIA AI backend
-cp aria_backend/.env.example aria_backend/.env
-
-# Start all microservices via unified Gateway
-npm run dev
-```
-
----
-
-## 🔐 Environment Configuration
-
-Create `Backend/aria_backend/.env`:
-
-```env
-# ARIA AI Service Credentials
-GROQ_API_KEY=your_groq_api_key
-DEEPGRAM_API_KEY=your_deepgram_api_key
-PORT=3003
-```
-
-> [!TIP]
-> - **Groq API Key**: Obtain for free at [console.groq.com](https://console.groq.com)
-> - **Deepgram API Key**: Obtain for free at [console.deepgram.com](https://console.deepgram.com)
+4. **Launch the application**:
+   ```bash
+   flutter run
+   ```
 
 ---
 
 ## 🌐 Platform Matrix
 
-| Platform | Support | Functional Highlights |
+| Platform | Support | Notes |
 |:---:|:---:|---|
-| **Android** | ✅ Supported | Complete feature parity (Camera, ML Kit, Sensors, Maps, Microservices) |
-| **iOS** | ✅ Supported | Complete feature parity (requires iOS camera/microphone permissions in `Info.plist`) |
-| **Web** | ⚠️ Partial | WebGL 3D Games & Vector Maps work seamlessly; microphone requires HTTPS context |
-| **Desktop** | ⚠️ Partial | Navigation, Messaging & REST services supported; hardware camera capabilities limited |
+| **Android** | ✅ Supported | Complete feature parity (Camera, ML Kit, Gyroscope, GPS, WebGL) |
+| **iOS** | ✅ Supported | Full support (requires Camera & Microphone permissions in `Info.plist`) |
+| **Web** | ⚠️ Experimental | WebGL 3D Games & Maps supported; Microphone requires HTTPS context |
+| **Desktop** | ⚠️ Experimental | Messaging & Navigation functional; hardware camera features limited |
 
 ---
 
-## 🧰 Tech Stack
+## 🧰 Technology Stack
 
-- **Frontend**: Flutter, Dart, Material 3, Glassmorphism UI
-- **State Management**: Provider
-- **Backend Gateway**: Node.js, TypeScript, Express, Socket.IO, `http-proxy`
-- **AI & Speech**: Groq LLM API, Deepgram STT & TTS, WebSockets
-- **Maps & Location**: MapLibre GL, Nominatim (Geocoding), OSRM (Routing)
-- **Vision & ML**: Flutter `camera`, Google ML Kit Face Detection
-- **Database & Auth**: Supabase Flutter, Google Sign-In, TOTP 2FA
+- **Framework**: [Flutter](https://flutter.dev) (Dart 3)
+- **State Management**: [Provider](https://pub.dev/packages/provider)
+- **UI & Animations**: Glassmorphism UI, [Flutter Animate](https://pub.dev/packages/flutter_animate), Lucide Icons, Google Fonts (`Outfit`, `Rye`, `Cinzel`)
+- **Backend & Auth**: [Supabase Flutter](https://pub.dev/packages/supabase_flutter), Google Sign-In
+- **AI & Speech**: Groq LLM API, Deepgram STT/TTS, WebSockets
+- **Maps**: MapLibre GL, Nominatim, OSRM
+- **Computer Vision**: Flutter `camera`, Google ML Kit Face Detection
+- **Sensors**: `sensors_plus` (Gyroscope, Accelerometer)
 
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+Distributed under the **MIT License**. See `LICENSE` for details.
 
 ---
 
@@ -227,8 +197,6 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 **Aawesh Das**
 - GitHub: [@aaweshdas](https://github.com/aaweshdas)
 
----
-
 <p align="center">
-  <sub>Built with ❤️ using Flutter & Node.js</sub>
+  <sub>Built with ❤️ using Flutter & Dart</sub>
 </p>
