@@ -699,6 +699,7 @@ class _LoginScreenState extends State<LoginScreen>
     )
         .animate()
         .fadeIn(delay: 200.ms, duration: 600.ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -848,10 +849,10 @@ class _LoginScreenState extends State<LoginScreen>
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () {
-                  if (_emailController.text.trim().isEmpty) {
+                  if (_emailCtrl.text.trim().isEmpty) {
                     _showSnackBar('Please enter your email address first.', isError: true);
                   } else {
-                    _showSnackBar('A password reset link has been sent to ${_emailController.text.trim()}');
+                    _showSnackBar('A password reset link has been sent to ${_emailCtrl.text.trim()}');
                   }
                 },
                 child: Text(
