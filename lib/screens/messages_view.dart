@@ -12,6 +12,7 @@ import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'chat_screen.dart'; // To use ChatScreen
 import 'story_viewer_screen.dart'; // To view stories
+import 'search_view.dart';
 import '../services/auth_service.dart';
 import '../providers/messages_provider.dart';
 
@@ -821,7 +822,7 @@ class _MessagesViewState extends State<MessagesView> with TickerProviderStateMix
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA855F7), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-              onPressed: () {},
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchView())),
               child: Text('Find people', style: GoogleFonts.outfit(color: Colors.white)),
             ),
           ],

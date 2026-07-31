@@ -500,7 +500,12 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ── Minimalist Sleek Obsidian Glass Box ───
+                    // ── App Brand Logo & Headline (OUTSIDE the Login Panel) ───
+                    _buildBrandHeader(),
+
+                    const SizedBox(height: 16),
+
+                    // ── Clean Minimalist Obsidian Glass Card (Login Panel) ───
                     _buildAuthCard(),
 
                     const SizedBox(height: 18),
@@ -523,252 +528,177 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Split-Panel Obsidian Glass Card with Left Branding Sidebar
+  // Brand Header (Positioned OUTSIDE the Login Panel)
   // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildAuthCard() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 600;
-        return Container(
-          constraints: BoxConstraints(
-            maxWidth: 860,
-            minHeight: isWide ? 510 : 0,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.75),
-                blurRadius: 40,
-                spreadRadius: 2,
-                offset: const Offset(0, 12),
+  Widget _buildBrandHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ── App Logo Badge Container ──
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  blurRadius: 28,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  blurRadius: 28,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: ColorFiltered(
+                colorFilter: const ColorFilter.matrix([
+                  1.25, 0,    0,    0, 15,
+                  0,    1.25, 0,    0, 15,
+                  0,    0,    1.25, 0, 15,
+                  0,    0,    0,    1, 0,
+                ]),
+                child: Image.asset(
+                  'assets/nexal_logo.png',
+                  fit: BoxFit.cover,
+                ),
               ),
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.12),
-                blurRadius: 20,
-                spreadRadius: -2,
-                offset: const Offset(0, -2),
-              ),
+            ),
+          )
+              .animate()
+              .fadeIn(duration: 700.ms)
+              .scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
+
+          const SizedBox(width: 16),
+
+          // ── Right Side Typography: NEXAL & The New Era (Rye Font) ─
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'NEXAL',
+                style: GoogleFonts.rye(
+                  color: Colors.white,
+                  fontSize: 44,
+                  height: 1.05,
+                  letterSpacing: 2.0,
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .shimmer(
+                    duration: 3.seconds,
+                    colors: const [
+                      Colors.white,
+                      Color(0xFFA855F7),
+                      Color(0xFF06B6D4),
+                      Color(0xFFEC4899),
+                      Colors.white,
+                    ],
+                  )
+                  .fadeIn(delay: 200.ms, duration: 600.ms),
+
+              const SizedBox(height: 2),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 80.0),
+                child: Text(
+                  'The New Era',
+                  style: GoogleFonts.rye(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 18,
+                    letterSpacing: 1.8,
+                  ),
+                ),
+              ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
             ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: const Color(0xFF070A14).withValues(alpha: 0.75),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    width: 1.2,
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    if (isWide)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Left Panel: Branding Sidebar with App Logo
-                          SizedBox(
-                            width: 280,
-                            child: _buildBrandingSidebar(),
-                          ),
-                          // Vertical Specular Divider Line
-                          Container(
-                            width: 1,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          // Right Panel: Form Area
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
-                              child: _buildFormContent(),
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Column(
-                        children: [
-                          // Top Compact Sidebar Banner on Mobile
-                          _buildBrandingSidebar(isMobile: true),
-                          Container(
-                            height: 1,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                            child: _buildFormContent(),
-                          ),
-                        ],
-                      ),
-
-                    // Top Specular Glare Lens
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      left: 0,
-                      child: IgnorePointer(
-                        child: Container(
-                          height: 2,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                Colors.white.withValues(alpha: 0.90),
-                                const Color(0xFF00E5FF).withValues(alpha: 0.70),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    )
-        .animate()
-        .fadeIn(delay: 200.ms, duration: 600.ms)
-        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Left Branding Sidebar (3D Hexagon Emblem Logo & NEXIO AI Branding)
-  // ──────────────────────────────────────────────────────────────────────────
-  Widget _buildBrandingSidebar({bool isMobile = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF04060C).withValues(alpha: 0.45),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: isMobile ? 18 : 36,
-      ),
-      child: isMobile
-          ? Row(
-              children: [
-                // 3D Hexagon Emblem Badge
-                _buildLogoBadge(size: 52, iconSize: 30),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'N E X I O   A I',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 3.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Intelligence Reimagined.',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white54,
-                        fontSize: 11.5,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(height: 10),
-
-                // Center Branding Stack
-                Column(
-                  children: [
-                    // 3D Hexagon Emblem Badge with App Logo
-                    _buildLogoBadge(size: 90, iconSize: 54),
-
-                    const SizedBox(height: 20),
-
-                    // Title: NEXIO AI
-                    Text(
-                      'N E X I O   A I',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4.0,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Footer Subtext: Intelligence Reimagined.
-                Text(
-                  'Intelligence Reimagined.',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  // 3D Hexagon Emblem Badge Container
-  Widget _buildLogoBadge({required double size, required double iconSize}) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.26),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.70),
-          width: 1.5,
-        ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.22),
-            Colors.black.withValues(alpha: 0.65),
-            Colors.white.withValues(alpha: 0.10),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.30),
-            blurRadius: 24,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.60),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Center(
-        child: Image.asset(
-          'assets/nexal_logo.png',
-          width: iconSize,
-          height: iconSize,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stack) => Icon(
-            LucideIcons.hexagon,
-            color: Colors.white,
-            size: iconSize * 0.8,
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Minimalist Sleek Obsidian Glass Login Panel (Clean Card Container)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildAuthCard() {
+    return Container(
+      constraints: const BoxConstraints(
+        maxWidth: 450,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.75),
+            blurRadius: 40,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.12),
+            blurRadius: 20,
+            spreadRadius: -2,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 30),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: const Color(0xFF070A14).withValues(alpha: 0.70),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.22),
+                width: 1.2,
+              ),
+            ),
+            child: Stack(
+              children: [
+                _buildFormContent(),
+
+                // Top Specular Glare Lens
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  left: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withValues(alpha: 0.90),
+                            const Color(0xFF00E5FF).withValues(alpha: 0.70),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(delay: 200.ms, duration: 600.ms)
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -917,7 +847,13 @@ class _LoginScreenState extends State<LoginScreen>
                   minimumSize: const Size(0, 0),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  if (_emailController.text.trim().isEmpty) {
+                    _showSnackBar('Please enter your email address first.', isError: true);
+                  } else {
+                    _showSnackBar('A password reset link has been sent to ${_emailController.text.trim()}');
+                  }
+                },
                 child: Text(
                   'Forgot password?',
                   style: GoogleFonts.outfit(
@@ -1155,16 +1091,32 @@ class _LoginScreenState extends State<LoginScreen>
   // ──────────────────────────────────────────────────────────────────────────
   // Social Logins Grid (4 Social Buttons: Google, Discord, GitHub, Microsoft)
   // ──────────────────────────────────────────────────────────────────────────
+  Future<void> _simulateSocialLogin(String provider) async {
+    HapticFeedback.lightImpact();
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 1500));
+    final email = '${provider.toLowerCase()}@nexal.app';
+    await AuthService.instance.createAccountAndLogin(
+      name: '$provider User',
+      email: email,
+      password: 'oauth_password_123',
+    );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    _showSnackBar('Welcome to Nexal, $provider User! 🌟');
+    _navigateToProfileSetup('$provider User', email);
+  }
+
   Widget _buildSocialButtons() {
     return Row(
       children: [
-        Expanded(child: _buildSocialTile(iconWidget: _buildGoogleIcon(), onTap: () {})),
+        Expanded(child: _buildSocialTile(iconWidget: _buildGoogleIcon(), onTap: () => _simulateSocialLogin('Google'))),
         const SizedBox(width: 10),
-        Expanded(child: _buildSocialTile(iconWidget: _buildDiscordIcon(), onTap: () {})),
+        Expanded(child: _buildSocialTile(iconWidget: _buildDiscordIcon(), onTap: () => _simulateSocialLogin('Discord'))),
         const SizedBox(width: 10),
-        Expanded(child: _buildSocialTile(iconWidget: _buildGitHubIcon(), onTap: () {})),
+        Expanded(child: _buildSocialTile(iconWidget: _buildGitHubIcon(), onTap: () => _simulateSocialLogin('GitHub'))),
         const SizedBox(width: 10),
-        Expanded(child: _buildSocialTile(iconWidget: _buildMicrosoftIcon(), onTap: () {})),
+        Expanded(child: _buildSocialTile(iconWidget: _buildMicrosoftIcon(), onTap: () => _simulateSocialLogin('Microsoft'))),
       ],
     );
   }

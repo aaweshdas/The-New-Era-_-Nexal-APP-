@@ -234,7 +234,33 @@ class _OpenWorldGamesViewState extends State<OpenWorldGamesView>
 
   void _launchGame(ArcadeGame game) {
     if (!game.isPlayable) {
-      _toast('"${game.title}" is coming soon!');
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF0F172A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: const Color(0xFF06B6D4).withValues(alpha: 0.5), width: 1.5),
+          ),
+          title: Row(
+            children: [
+              const Icon(LucideIcons.gamepad2, color: Color(0xFF06B6D4)),
+              const SizedBox(width: 10),
+              Text('In Development', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Text(
+            '"${game.title}" is currently being built for the Cyber Arcade. Check back later!',
+            style: GoogleFonts.outfit(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('OK', style: GoogleFonts.outfit(color: const Color(0xFF06B6D4), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
       return;
     }
     HapticFeedback.heavyImpact();

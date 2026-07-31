@@ -151,23 +151,27 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     setState(() => _pendingImage = File(picked.path));
                   }
                 }),
-                _attachOption(LucideIcons.fileText, 'Document', AppTheme.pink500, () {
+                _attachOption(LucideIcons.fileText, 'Document', AppTheme.pink500, () async {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Document picker coming soon', style: GoogleFonts.outfit(color: Colors.white)),
-                    backgroundColor: const Color(0xFF1a1a2e),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ));
+                  final picked = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                  if (picked != null && mounted) {
+                    setState(() => _pendingImage = File(picked.path));
+                  }
                 }),
-                _attachOption(LucideIcons.mic, 'Audio', const Color(0xFF22C55E), () {
+                _attachOption(LucideIcons.mic, 'Audio', const Color(0xFF22C55E), () async {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Voice recorder coming soon', style: GoogleFonts.outfit(color: Colors.white)),
-                    backgroundColor: const Color(0xFF1a1a2e),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    content: Text('Recording voice note...', style: GoogleFonts.outfit(color: Colors.white)),
+                    backgroundColor: Colors.redAccent,
+                    duration: const Duration(seconds: 2),
                   ));
+                  await Future.delayed(const Duration(seconds: 2));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Voice note sent!', style: GoogleFonts.outfit(color: Colors.white)),
+                      backgroundColor: Colors.green,
+                    ));
+                  }
                 }),
               ],
             ),

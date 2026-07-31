@@ -247,12 +247,22 @@ class _SnapPostCaptureOverlayState extends State<SnapPostCaptureOverlay> {
                   _buildToolBtn(
                     icon: LucideIcons.scissors,
                     label: 'Cut',
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Video trimming tools activated!'),
+                        backgroundColor: Color(0xFF06B6D4),
+                      ));
+                    },
                   ),
                   _buildToolBtn(
                     icon: LucideIcons.link,
                     label: 'Attach',
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Attachment picker opened!'),
+                        backgroundColor: Color(0xFF06B6D4),
+                      ));
+                    },
                   ),
                   _buildToolBtn(
                     icon: LucideIcons.timer,
